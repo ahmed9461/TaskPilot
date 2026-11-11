@@ -24,4 +24,5 @@ mv -Tf /opt/taskpilot/next /opt/taskpilot/current
 systemctl daemon-reload
 systemctl enable --now taskpilot.service
 systemctl restart taskpilot.service
+node ops/wait-pilot.mjs
 echo 'TaskPilot pilot unit deployed. Run authenticated smoke tests.'

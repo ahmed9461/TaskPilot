@@ -48,3 +48,5 @@ Rollback: inspect/readlink current and retain previous release. Stop only taskpi
 Deployment now separates taskpilot_runtime DML role from bootstrap/migration owner. /etc/taskpilot/migration.env is root-only; API environment uses only the restricted role. Grants are scoped to TaskPilot DB and reapplied before/after migrations. Verify actual permissions with ops/verify-pilot.mjs.
 
 Prior baseline eb0f66b verification: protected runtime role, actual restart/data preservation/other-service invariance, HTTP auth/replay, encrypted restore/tamper rejection verified. Source tracking/PROJECT_STATE.md remains authoritative.
+
+0.3 deployment readiness: after restarting only taskpilot.service, ops/wait-pilot.mjs polls loopback /health for at most30s and requires status ok, exact package version and provider mock. Start/restart success alone is insufficient for Type=simple. Timeout reports a sanitized failure; authenticated /ready and smoke are checked separately. No automatic destructive schema rollback or changes to other services.

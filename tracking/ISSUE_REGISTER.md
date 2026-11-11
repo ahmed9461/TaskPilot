@@ -19,3 +19,7 @@
 
 | I-011 | Notification screen used earliest500 records without pages/read filtering, leaving later records inaccessible | VERIFIED BACKEND FIX | New newest-first snapshot pages/read filter/bulk bounded read;530-event regression PASS. WinUI controls built; visual verification follows |
 | I-012 | Expired SSH session appeared as network outage and mixed manual/SSH auth could retain old reauth identity | VERIFIED LOCAL FIX | Typed401/absolute expiry, explicit reconnect/no mutation retry, old SSH disposal,13 transport/reliability checks PASS; direct interruption/GUI acceptance follows |
+
+| I-013 | First immediate smoke after96e4cbe deployment hit ECONNREFUSED while Type=simple service was starting; unchanged release later healthy0.3/NRestarts0/auth smoke PASS | LOCAL FIX VERIFIED | Added bounded expected-version health wait before deploy success; startup/old-version/timeout regression PASS. Final deployed helper verification follows |
+
+0.3 I-010 follow-up: verifier now reports all own-service checks before returning explicit external-drift exit2; it never treats drift as a passed isolation sample. I-014: hosted runs5833c73/96e4cbe remain queued with jobs=[]; cause unconfirmed. Official status page listed Actions operational at inspection; do not attribute queue to an outage or count prior0.2 CI as current0.3 acceptance.

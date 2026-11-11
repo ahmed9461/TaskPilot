@@ -87,7 +87,9 @@ try {
   ).trim();
   assert.notEqual(pidBefore, pidAfter);
   stage = "other-services";
-  assert.deepEqual(services(), before);
+  const after = services();
+  const otherServicesUnchanged =
+    JSON.stringify(after) === JSON.stringify(before);
   stage = "data-preservation";
   assert.deepEqual(
     (
@@ -111,7 +113,11 @@ try {
       migrationWriteDenied: true,
       restart: "PASS",
       dataPreserved: true,
-      otherRunningServicesUnchanged: true,
+      otherRunningServicesUnchanged: otherServicesUnchanged,
+      addedServiceCount: after.filter((unit) => !before.includes(unit)).length,
+      removedServiceCount: before.filter((unit) => !after.includes(unit))
+        .length,
+      overall: otherServicesUnchanged ? "PASS" : "EXTERNAL_SERVICE_DRIFT",
       startupEnabled: true,
       release: execFileSync("readlink", ["/opt/taskpilot/current"], {
         encoding: "utf8",
@@ -121,6 +127,10 @@ try {
         .at(-1),
     }),
   );
+  if (!otherServicesUnchanged) {
+    console.error("PILOT_VERIFICATION_EXTERNAL_SERVICE_DRIFT");
+    process.exitCode = 2;
+  }
 } catch {
   console.error("PILOT_VERIFICATION_FAILED: " + stage);
   process.exitCode = 1;

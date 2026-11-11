@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using TaskPilot_Windows;
+if (args.Length == 1 && args[0] == "--seed-native-ui") { await NativeUiFixtures.Seed(); return; }
 if (args.Length > 0 && args[0] == "--server-acceptance") { await ServerAcceptance.Run(args.Length > 1 ? args[1] : "New-VPS"); return; }
 if (args.Length == 2 && args[0] == "--cleanup-synthetic-namespace") { await ServerAcceptance.Cleanup(args[1]); return; }
 static void ExpectRejected(Action action) { try { action(); } catch (InvalidOperationException) { return; } throw new Exception("Expected rejection"); }
