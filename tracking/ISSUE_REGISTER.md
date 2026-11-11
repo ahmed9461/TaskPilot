@@ -8,3 +8,5 @@
 | I-004 | Auto-review rejected server-token-to-client launch, generic blocked by policy; no detailed reason | OPEN | User enters token locally for direct pilot acceptance; fixture UI verified |
 | I-005 | Review discovered deletion snapshot could miss a new related source | VERIFIED FIX | Aggregate account version now advances; regression PASS |
 | I-006 | Rebuild hit file lock from own running Windows test app | RESOLVED | Closed app, self-contained publish passed |
+
+| I-007 | f659d9b rollout migration checksum mismatch: deployed CRLF hashes versus LF archive; original62fddfe active | FIXED / VERIFYING ROLLOUT | LF/CRLF-aware integrity regression PASS; deploy next exact commit |

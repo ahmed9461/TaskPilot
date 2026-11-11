@@ -10,6 +10,20 @@ public sealed partial class MainPage : Page
     private string page = "dashboard", cursor = "0";
     private bool busy, polling, renderPending;
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(10) };
+    private static string FriendlyError(string code) => code switch
+    {
+        "CONFLICT" or "STALE_PREVIEW" => "تغيرت البيانات. حدّث القائمة وأنشئ معاينة جديدة.",
+        "REAUTH_REQUIRED" or "PERMISSION_DENIED" => "تحقق من رمز الوصول أو سر إعادة التحقق.",
+        "VALIDATION_ERROR" => "راجع الحقول المطلوبة وصيغتها.",
+        "DELETION_REQUIRES_CONFIRMATION" => "اكتب عبارة التأكيد مطابقة للمعاينة.",
+        "DELIVERY_REQUIRES_RECONCILIATION" => "احسم حالة الرد المجهولة قبل الحذف.",
+        "APPROVAL_EXPIRED_OR_CONSUMED" => "انتهت المعاينة أو استُخدمت. أنشئ معاينة جديدة.",
+        "CREDENTIAL_CONFLICT" => "الاعتماد يختلف عن المحفوظ. حدّثه صراحة من الحساب بعد التحقق.",
+        "SECURE_CONNECTION_REQUIRED" => "استخدم HTTPS أو نفق SSH محليًا.",
+        "INVALID_API_TOKEN" => "رمز الوصول غير مكتمل.",
+        "CONNECTION_REQUIRED" => "أدخل بيانات الاتصال من الإعدادات.",
+        _ => code.Any(c => c >= '\u0600' && c <= '\u06ff') ? code : "تعذرت العملية. تحقق من الاتصال والبيانات ثم أعد المحاولة."
+    };
     private static string V(JsonNode? n, string key) => n?[key]?.ToString() ?? "";
     private static int Ver(JsonNode n) => n["version"]!.GetValue<int>();
     private static TextBlock Text(string s, int size = 14) => new() { Text = s, FontSize = size, TextWrapping = TextWrapping.Wrap };
@@ -44,7 +58,7 @@ public sealed partial class MainPage : Page
         {
             await action();
         }
-        catch (Exception ex) { Connection.Severity = InfoBarSeverity.Warning; Connection.Title = "تعذر تنفيذ العملية"; Connection.Message = ex is InvalidOperationException ? ex.Message : "تعذر الاتصال بالخدمة. تحقق من النفق ثم أعد المحاولة."; }
+        catch (Exception ex) { Connection.Severity = InfoBarSeverity.Warning; Connection.Title = "تعذر تنفيذ العملية"; Connection.Message = ex is InvalidOperationException ? FriendlyError(ex.Message) : "تعذر الاتصال بالخدمة. تحقق من النفق ثم أعد المحاولة."; }
         finally
         {
             busy = false;
@@ -169,19 +183,24 @@ public sealed partial class MainPage : Page
     private async Task Accounts(string search = "")
     {
         var q = Field("ابحث بالاسم أو المستخدم", search);
+        var selectedIds = new HashSet<string>();
+        Body.Children.Add(Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }));
         Body.Children.Add(Stack(q, Button("بحث", async () => { Body.Children.Clear(); await Accounts(q.Text); }), Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف الكل", () => Purge(null))));
         var rows = (await api.Send("GET", "/v1/accounts?limit=500&search=" + Uri.EscapeDataString(search))).AsArray();
         foreach (var r in rows)
         {
             var n = r!;
-            Card(V(n, "display_name"), $"{V(n, "namespace")} / {V(n, "username_normalized")} • {(V(n, "archived_at") == "" ? "نشط" : "مؤرشف")}", Button("تعديل", () => AccountForm(n)), Button("عرض الاعتماد", () => Reveal(n)), Button(V(n, "archived_at") == "" ? "أرشفة" : "استرجاع", async () => { await api.Send("POST", $"/v1/accounts/{V(n, "id")}/{(V(n, "archived_at") == "" ? "archive" : "restore")}", new { version = Ver(n) }); await Render(); }), Button("حذف", () => Purge(V(n, "id"))));
+            var select = new CheckBox { Content = "تحديد" };
+            select.Checked += (_, _) => selectedIds.Add(V(n, "id"));
+            select.Unchecked += (_, _) => selectedIds.Remove(V(n, "id"));
+            Card(V(n, "display_name"), $"{V(n, "namespace")} / {V(n, "username_normalized")} • {(V(n, "archived_at") == "" ? "نشط" : "مؤرشف")}", select, Button("تعديل", () => AccountForm(n)), Button("عرض الاعتماد", () => Reveal(n)), Button(V(n, "archived_at") == "" ? "أرشفة" : "استرجاع", async () => { await api.Send("POST", $"/v1/accounts/{V(n, "id")}/{(V(n, "archived_at") == "" ? "archive" : "restore")}", new { version = Ver(n) }); await Render(); }), Button("حذف", () => Purge(V(n, "id"))));
         }
         if (rows.Count == 0)
             Body.Children.Add(Text("لا توجد حسابات مطابقة."));
     }
     private async Task AccountForm(JsonNode? n)
     {
-        var ns = Field("النظام / namespace", n is null ? "synthetic" : V(n, "namespace"));
+        var ns = Field("النظام", n is null ? "synthetic" : V(n, "namespace"));
         var user = Field("المستخدم", V(n, "username_normalized"));
         ns.IsEnabled = user.IsEnabled = n is null;
         var name = Field("الاسم", V(n, "display_name"));
@@ -223,14 +242,15 @@ public sealed partial class MainPage : Page
         secret.Password = "";
         expiry.Stop();
     }
-    private async Task Purge(string? id)
+    private async Task Purge(string? id, string[]? selected = null)
     {
-        var p = await api.Send("POST", "/v1/deletions/preview", id is null ? new
+        var targets = selected ?? (id is null ? null : new[] { id });
+        var p = await api.Send("POST", "/v1/deletions/preview", targets is null ? new
         {
             all = true
         } : (object)new
         {
-            ids = new[] { id }
+            ids = targets
         });
         var phrase = Field("اكتب " + V(p, "confirmation"));
         var reauth = Secret("سر إعادة التحقق");
@@ -334,7 +354,7 @@ public sealed partial class MainPage : Page
                 }, reauth.Password);
                 var name = Field("الاسم");
                 var user = Field("المستخدم");
-                var ns = Field("النظام / namespace");
+                var ns = Field("النظام");
                 var pass = Secret("كلمة المرور (اختياري)");
                 var view = new TextBox { Header = "محتوى محمي — يُخفى بعد 30 ثانية", Text = V(raw, "text"), IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MaxHeight = 120 };
                 var hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
@@ -411,7 +431,29 @@ public sealed partial class MainPage : Page
             Card(V(n, "code"), V(n, "body"));
         Body.Children.Add(Text("سجل الردود", 24));
         foreach (var n in (await api.Send("GET", "/v1/reply-jobs")).AsArray())
-            Card(V(n, "status"), V(n, "body") + "\n" + V(n, "provider_message_id"));
+        {
+            if (V(n, "status") == "UNKNOWN_DELIVERY")
+                Card("تسليم يحتاج تحققًا", V(n, "body"), Button("حسم حالة التسليم", () => Reconcile(n!)));
+            else
+                Card(V(n, "status"), V(n, "body") + "\n" + V(n, "provider_message_id"));
+        }
+    }
+    private async Task Reconcile(JsonNode job)
+    {
+        var outcome = new ComboBox { Header = "نتيجة تحققك الفعلي", ItemsSource = new[] { "تأكدت أن الرد وصل", "تأكدت أن الرد لم يُرسل" }, SelectedIndex = 0 };
+        var confirmed = new CheckBox { Content = "تحققت من النتيجة بنفسي؛ ليست تخمينًا" };
+        var reauth = Secret("سر إعادة التحقق");
+        if (!await Dialog("حسم حالة تسليم مجهولة", Stack(Text("لن يُعاد إرسال الرد تلقائيًا بعد الحسم."), outcome, confirmed, reauth), "تسجيل التحقق"))
+            return;
+        if (confirmed.IsChecked != true)
+            throw new InvalidOperationException("يلزم تأكيد تحققك من التسليم.");
+        await api.Send("POST", "/v1/reply-jobs/" + V(job, "id") + "/reconcile", new
+        {
+            outcome = outcome.SelectedIndex == 0 ? "CONFIRMED_SENT" : "CONFIRMED_NOT_SENT",
+            evidenceKind = "MANUAL"
+        }, reauth.Password);
+        reauth.Password = "";
+        await Render();
     }
     private async Task Notifications()
     {

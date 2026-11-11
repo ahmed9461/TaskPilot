@@ -31,6 +31,7 @@ Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts an
 | GET/POST /v1/reply-templates | `{code,body}`; only `{displayName}`/`{taskName}` placeholders |
 | POST /v1/reply-jobs/preview | `{assignmentId,sourceMessageId,templateId}`; body/target/provider and five-minute one-use approvalToken |
 | POST /v1/reply-jobs/approve | reauth; `{approvalToken,idempotencyKey}`; stale assignment/group rejected; key conflict rejected; repeated logical key reuses job with fresh preview |
+| POST /v1/reply-jobs/:id/reconcile | reauth; `{outcome:CONFIRMED_SENT or CONFIRMED_NOT_SENT,evidenceKind:MANUAL or PROVIDER_RECEIPT,providerMessageId?}`; UNKNOWN_DELIVERY only; provider receipt requires message ID; manual owner verification is explicit; records SENT/FAILED, never requeues |
 | GET /v1/reply-jobs | status distinct from task; mock dispatch only; SENDING crash/ambiguous exception becomes UNKNOWN_DELIVERY, no automatic retry |
 | POST /v1/issue-flags | `{accountId,kind,evidenceKind}`; INVALID_ACCOUNT_PASSWORD/INVALID_ACCOUNT_CODE require reauth and MANUAL/AUTHORIZED_CHECK; UNVERIFIED_CREDENTIALS cannot prove error |
 | POST /v1/deletions/preview | `{ids:[...]}` or `{all:true}`; fixed IDs/aggregate versions/counts; max1000 |
@@ -40,4 +41,4 @@ Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts an
 | GET /v1/audit | redacted action/UUID/time, no raw message/password |
 
 ## Pilot limits / pending contracts
-Live pairing/disconnect/session health, editable advanced rules, production JWT/MFA, rate limiting across multiple API hosts, paged Windows lists beyond 500, true push/toast notifications, user-approved UNKNOWN_DELIVERY reconciliation, single assignment purge, bulk selected Windows purge, production retention/key rotation and live AI are not implemented. UI uses safe polling and server persistence. Backup/restore uses isolated operator tooling (not public API).
+Live pairing/disconnect/session health, editable advanced rules, production JWT/MFA, rate limiting across multiple API hosts, paged Windows lists beyond 500, true push/toast notifications, single assignment purge, production retention/key rotation and live AI are not implemented. UI uses safe polling and server persistence. Backup/restore uses isolated operator tooling (not public API).

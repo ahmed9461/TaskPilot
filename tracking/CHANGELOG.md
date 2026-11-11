@@ -26,3 +26,11 @@
 - Deferred navigation refresh during active actions and serialized poll refresh.
 ### Pending
 - Live WhatsApp/AI, production identity/retention/escrow, selected bulk UI, advanced rules/paging/toasts, unknown reconciliation, signed installer and update channel.
+
+## Stability/adapters phase — 2026-11-11
+### Added
+- Owner-confirmed unknown-delivery reconciliation with evidence/reauth; no automatic resend. Selected-account Windows purge preview.
+- DeepSeek/OpenRouter task-code-only adapters with disabled/approval gates, bounded output/time, usage counters and mocked tests; not activated in runtime.
+### Fixed
+- Historical Windows CRLF migration archive caused checksum guard to block Linux rollout. Verify LF/CRLF byte equivalence only and store canonical LF checksum; SQL edits still rejected. Prior release stayed running.
+- Arabic validation feedback in Windows.

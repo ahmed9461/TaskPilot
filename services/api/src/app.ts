@@ -458,6 +458,54 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       .parse(req.body);
     return service.approveReply(p.approvalToken, p.idempotencyKey);
   });
+  app.post("/v1/reply-jobs/:id/reconcile", async (req) => {
+    reauth(req);
+    const { id: jobId } = uuidParam.parse(req.params);
+    const p = z
+      .object({
+        outcome: z.enum(["CONFIRMED_SENT", "CONFIRMED_NOT_SENT"]),
+        evidenceKind: z.enum(["MANUAL", "PROVIDER_RECEIPT"]),
+        providerMessageId: text.optional(),
+      })
+      .strict()
+      .parse(req.body);
+    if (p.outcome === "CONFIRMED_NOT_SENT" && p.providerMessageId)
+      throw new Fault("VALIDATION_ERROR", 400);
+    if (p.evidenceKind === "PROVIDER_RECEIPT" && !p.providerMessageId)
+      throw new Fault("EVIDENCE_REQUIRED", 400);
+    return transaction(pool, async (c) => {
+      const account = (
+        await c.query(
+          "SELECT ac.id FROM accounts ac JOIN assignments a ON a.account_id=ac.id JOIN reply_jobs r ON r.assignment_id=a.id WHERE r.id=$1 FOR UPDATE OF ac",
+          [jobId],
+        )
+      ).rows[0];
+      if (!account) throw new Fault("NOT_FOUND", 404);
+      const job = (
+        await c.query(
+          "UPDATE reply_jobs SET status=$2,reconciled_at=now(),reconciliation_evidence=$3,provider_message_id=COALESCE($4,provider_message_id) WHERE id=$1 AND status='UNKNOWN_DELIVERY' RETURNING *",
+          [
+            jobId,
+            p.outcome === "CONFIRMED_SENT" ? "SENT" : "FAILED",
+            p.evidenceKind,
+            p.providerMessageId ?? null,
+          ],
+        )
+      ).rows[0];
+      if (!job) throw new Fault("CONFLICT");
+      await c.query("UPDATE accounts SET version=version+1 WHERE id=$1", [
+        account.id,
+      ]);
+      await event(
+        c,
+        p.outcome === "CONFIRMED_SENT"
+          ? "REPLY_RECONCILED_SENT"
+          : "REPLY_RECONCILED_NOT_SENT",
+        job.id,
+      );
+      return job;
+    });
+  });
   app.post("/v1/issue-flags", async (req) => {
     const p = z
       .object({

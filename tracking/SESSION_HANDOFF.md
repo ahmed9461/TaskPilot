@@ -15,3 +15,6 @@ No live WhatsApp/AI outbound until authorized and scoped; real-data retention/pr
 
 ## الاستئناف
 Current checkout work/TaskPilot, feat/mvp-foundation. Own runtime /opt/taskpilot/current → releases/FULL_SHA. `/etc/taskpilot` owns secret files; never print/copy to Git/outputs. `ops/deploy-pilot.sh` prepared release; `scripts/pilot-smoke.mjs` on VPS. Integration tests only *_test; restores only *_restore_test. Local SDK ../dotnet. Project state always wins over old planning language.
+
+## Stability additions
+Added migration003 delivery reconciliation and selected Windows purge; 4 mocked AI adapter tests and line-ending checksum regression. Old deployment remained safe after checksum guard stopped f659d9b; next deployment uses LF/CRLF-aware checks while retaining SQL integrity. CI43059625322 passed. Finish final deploy/restart/restore/CI/ZIP and replace this pending handoff with exact evidence.

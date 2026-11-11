@@ -33,3 +33,6 @@
 - **Delete / purge:** حذف المعلومات الشخصية والاعتمادات وربط المصادر وفق سياسة احتفاظ محددة؛ إلغاء الردود المعلقة؛ منع بقايا في cache.
 - **Delete all:** عملية ذات صلاحية أعلى وإقرار خطوة ثانية ومعاينة عدد السجلات ونسخة احتياطية معتمدة إذا كانت سياسة الاحتفاظ تسمح.
 - سجلات التدقيق تحفظ حدًا أدنى غير سري بدل الاحتفاظ باسم المستخدم وكلمات المرور بعد محو البيانات؛ النسخ الاحتياطية تنقضي وفق دورة احتفاظ معلنة.
+
+## Implemented schema additions
+Migration003 adds reply_jobs.reconciled_at/reconciliation_evidence for owner-confirmed unknown delivery. The account aggregate version advances when task/source/reply state changes, invalidating destructive previews. Migration checksum comparison normalizes only historical LF/CRLF variants; SQL text changes remain rejected.

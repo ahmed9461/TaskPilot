@@ -32,3 +32,5 @@ D-018: صاحب المشروع طلب التنفيذ الفعلي والنشر �
 
 ## D-018..D-024 التنفيذ التجريبي
 Native WinUI3 client built/published and observed with synthetic local API + isolated remote test PostgreSQL. New-VPS API is actually deployed independently on loopback8240/database15488; mock only. Manual encrypted backup/restore verified on same host; no production retention/escrow approval. Do not merge fixture UI evidence with direct Windows-to-pilot auth acceptance (automatic token launch blocked). Exact commits/results always in tracking files.
+
+D-025..027: optional AI code-only privacy boundary/offline contract tests, actual runtime still disabled; explicit unknown-delivery reconciliation never resends; migration byte integrity tolerates only LF/CRLF. Old pilot remained running on failed rollout; use exact final state, not attempt, as deployment truth.

@@ -3,6 +3,17 @@ import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { Vault, equal } from "../src/security.js";
 import { parseMessage, normalize } from "../src/parser.js";
+import { matchesMigration, migrationChecksum } from "../src/migrate.js";
+import { hash } from "../src/security.js";
+test("migration integrity tolerates only LF/CRLF, never changed SQL", () => {
+  const sql = "SELECT 1;\nSELECT 2;\n";
+  assert.equal(matchesMigration(sql, hash(sql.replaceAll("\n", "\r\n"))), true);
+  assert.equal(
+    migrationChecksum(sql),
+    migrationChecksum(sql.replaceAll("\n", "\r\n")),
+  );
+  assert.equal(matchesMigration(sql.replace("2", "3"), hash(sql)), false);
+});
 test("AEAD randomized, context-bound and tamper resistant", () => {
   const v = new Vault(randomBytes(32).toString("base64"));
   const sealed = v.seal("synthetic-secret", "account:a");

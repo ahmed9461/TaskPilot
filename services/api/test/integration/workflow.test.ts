@@ -551,9 +551,48 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
         ).statusCode,
         409,
       );
-      await pool.query(
-        "UPDATE reply_jobs SET status='FAILED' WHERE status='UNKNOWN_DELIVERY'",
+      const uncertain = (await api("GET", "/v1/reply-jobs")).filter(
+        (j: any) => j.status === "UNKNOWN_DELIVERY",
       );
+      assert.equal(
+        (
+          await app.inject({
+            method: "POST",
+            url: `/v1/reply-jobs/${job.id}/reconcile`,
+            headers,
+            payload: { outcome: "CONFIRMED_SENT", evidenceKind: "MANUAL" },
+          })
+        ).statusCode,
+        403,
+      );
+      assert.equal(
+        (
+          await app.inject({
+            method: "POST",
+            url: `/v1/reply-jobs/${job.id}/reconcile`,
+            headers: sensitive,
+            payload: {
+              outcome: "CONFIRMED_SENT",
+              evidenceKind: "PROVIDER_RECEIPT",
+            },
+          })
+        ).statusCode,
+        400,
+      );
+      for (const [i, j] of uncertain.entries()) {
+        const result = await api(
+          "POST",
+          `/v1/reply-jobs/${j.id}/reconcile`,
+          {
+            outcome: i === 0 ? "CONFIRMED_SENT" : "CONFIRMED_NOT_SENT",
+            evidenceKind: "MANUAL",
+          },
+          true,
+        );
+        assert.ok(result.reconciled_at);
+        assert.equal(result.status, i === 0 ? "SENT" : "FAILED");
+      }
+      assert.equal(await dispatchOne(pool, new MockTransport()), null);
       await api("PATCH", `/v1/accounts/${account.id}`, {
         version: (await api("GET", "/v1/accounts")).find(
           (a: any) => a.id === account.id,

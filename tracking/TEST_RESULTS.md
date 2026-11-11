@@ -29,3 +29,9 @@ Reproduce: dedicated DB named `*_test`, set TASKPILOT_TEST_DATABASE_URL securely
 - Backup file creation encrypted=true,32302 bytes; isolated restore PASS. No off-host/VPS-loss recovery claim.
 - Direct Windows-to-VPS authenticated launch BLOCKED by auto-review; substitute fixture UI pass is distinct evidence.
 - CI workflow committed next; hosted runs not yet observed.
+
+## Stability/adapters phase
+- `npm run check`: build +8 tests PASS (3 original,4 mocked AI provider/privacy cases,1 LF/CRLF migration-integrity regression).
+- CI https://github.com/ahmed9461/TaskPilot/actions/runs/43059625322: PASS, both Ubuntu/PostgreSQL and Windows/.NET jobs on f659d9b.
+- Deploy f659d9b: safely BLOCKED by checksum guard. Verified old SQL hash equals CRLF form of new LF SQL for both files; old62fddfe active. Corrected comparison preserves rejection of actual SQL changes; new full deployment evidence follows.
+- AI live requests/billing and direct Windows-pilot auth remain NOT RUN.

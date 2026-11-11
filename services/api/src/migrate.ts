@@ -1,6 +1,17 @@
 import { readdir, readFile } from "node:fs/promises";
 import { createPool, transaction } from "./db.js";
 import { hash } from "./security.js";
+export const migrationChecksum = (sql: string) =>
+  hash(sql.replaceAll("\r\n", "\n"));
+export function matchesMigration(sql: string, checksum: string) {
+  const normalized = sql.replaceAll("\r\n", "\n");
+  // Accept only historical LF/CRLF byte variants; SQL edits still fail integrity checks.
+  return [
+    hash(sql),
+    hash(normalized),
+    hash(normalized.replaceAll("\n", "\r\n")),
+  ].includes(checksum);
+}
 export async function migrate(url: string) {
   const pool = createPool(url);
   try {
@@ -19,14 +30,18 @@ export async function migrate(url: string) {
           [name],
         );
         if (prior.rowCount) {
-          if (prior.rows[0].checksum !== hash(sql))
+          if (!matchesMigration(sql, prior.rows[0].checksum))
             throw new Error("MIGRATION_CHECKSUM_MISMATCH");
+          await c.query(
+            "UPDATE schema_migrations SET checksum=$2 WHERE name=$1",
+            [name, migrationChecksum(sql)],
+          );
           continue;
         }
         await c.query(sql);
         await c.query(
           "INSERT INTO schema_migrations(name,checksum) VALUES($1,$2)",
-          [name, hash(sql)],
+          [name, migrationChecksum(sql)],
         );
       }
     });

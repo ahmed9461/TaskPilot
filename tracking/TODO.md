@@ -42,3 +42,5 @@
 - P2-001: actual Arabic RTL native window VERIFIED. P2-002..005 IMPLEMENTED main forms; comprehensive UI acceptance, selected bulk purge and advanced rules remain open.
 - P3-002: closed synthetic pilot actually DEPLOYED; no public port or change to shared services. Final restart/CI evidence to follow.
 - P3-001: API workflow E2E and fixture UI PASS; direct Windows-to-pilot and full UI actions remain partial.
+
+Stability work: delivery reconciliation and selected Windows purge IMPLEMENTED (backend reconciliation included in integration suite); final UI human acceptance remains open. P3-004 adapter/privacy contract tests PASS but live activation, UI configuration, billing and persistence remain TODO. No claim of live AI completion.
