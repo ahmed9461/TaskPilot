@@ -8,10 +8,13 @@ test -f /etc/taskpilot/pilot.env
 cd "/opt/taskpilot/releases/$release"
 npm ci --no-audit
 npm run build
+node ops/setup-runtime-role.mjs
+docker exec -i taskpilot-db psql -v ON_ERROR_STOP=1 -U taskpilot -d taskpilot_pilot < ops/runtime-grants.sql
 set -a
-. /etc/taskpilot/pilot.env
+. /etc/taskpilot/migration.env
 set +a
 node dist/services/api/src/migrate.js
+docker exec -i taskpilot-db psql -v ON_ERROR_STOP=1 -U taskpilot -d taskpilot_pilot < ops/runtime-grants.sql
 npm prune --omit=dev --no-audit
 chown -R root:root "/opt/taskpilot/releases/$release"
 chmod -R go-w "/opt/taskpilot/releases/$release"

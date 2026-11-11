@@ -22,3 +22,5 @@ All data synthetic. Existing services/configs untouched; no public API, firewall
 - Implemented explicit owner reconciliation of UNKNOWN_DELIVERY with reauth/evidence, SENT/FAILED terminal state and no resend. Windows selected-account preview added.
 - Offline DeepSeek/OpenRouter adapter tests PASS; adapters default-disabled, not connected to ingest or live keys. They accept only allowlisted task codes; account extraction/real provider acceptance remain open.
 - f659d9b deployment aborted before switch due historical CRLF checksum versus new LF. Old62fddfe continued active. Byte hashes verified line endings only; migration runner now accepts LF/CRLF-equivalent checksums, rejects SQL changes; regression PASS. Exact successful release evidence follows.
+
+Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.

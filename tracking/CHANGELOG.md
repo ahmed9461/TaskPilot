@@ -34,3 +34,5 @@
 ### Fixed
 - Historical Windows CRLF migration archive caused checksum guard to block Linux rollout. Verify LF/CRLF byte equivalence only and store canonical LF checksum; SQL edits still rejected. Prior release stayed running.
 - Arabic validation feedback in Windows.
+
+Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.

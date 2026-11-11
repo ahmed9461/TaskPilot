@@ -18,3 +18,5 @@ Current checkout work/TaskPilot, feat/mvp-foundation. Own runtime /opt/taskpilot
 
 ## Stability additions
 Added migration003 delivery reconciliation and selected Windows purge; 4 mocked AI adapter tests and line-ending checksum regression. Old deployment remained safe after checksum guard stopped f659d9b; next deployment uses LF/CRLF-aware checks while retaining SQL integrity. CI43059625322 passed. Finish final deploy/restart/restore/CI/ZIP and replace this pending handoff with exact evidence.
+
+Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.

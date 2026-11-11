@@ -40,3 +40,5 @@
 Access: `ssh -N -L 18240:127.0.0.1:8240 New-VPS`; Windows address `http://127.0.0.1:18240`. The owner must enter the API token locally. Do not copy keys into documentation, output ZIPs, shell history or logs. Auto-review blocked automatic server-token-to-client launch during this session; direct Windows-to-pilot acceptance remains open. UI was instead observed against a separate synthetic test API/DB.
 
 Rollback: inspect/readlink current and retain previous release. Stop only taskpilot, point current to a schema-compatible prior release, start taskpilot and run authenticated smoke. Never roll back DB by deleting the volume or run an older binary against incompatible migrations. Full rollback execution has not been tested yet.
+
+Deployment now separates taskpilot_runtime DML role from bootstrap/migration owner. /etc/taskpilot/migration.env is root-only; API environment uses only the restricted role. Grants are scoped to TaskPilot DB and reapplied before/after migrations. Verify actual permissions with ops/verify-pilot.mjs.
