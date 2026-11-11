@@ -21,6 +21,7 @@ try
 }
 catch (InvalidOperationException e) { if (e.Message != "REAUTH_REQUIRED") throw; }
 Console.WriteLine("PASS: 6 client checks (transport, address, auth, response, errors); no network used.");
+await ClientReliabilityChecks.Run();
 sealed class FixtureHandler : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

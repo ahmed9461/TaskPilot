@@ -12,6 +12,8 @@ public sealed class SshConnection : IAsyncDisposable
     private readonly Process tunnel;
     private readonly string sessionId;
     private int stopped;
+    public string Alias => alias;
+    public bool IsTunnelAlive => Volatile.Read(ref stopped) == 0 && !tunnel.HasExited;
     public string Address
     {
         get;
@@ -85,7 +87,8 @@ public sealed class SshConnection : IAsyncDisposable
             var address = $"http://127.0.0.1:{port}";
             using var probe = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(2) };
             var ready = false;
-            for (var i = 0; i < 40; i++)
+            var deadline = Stopwatch.StartNew();
+            while (deadline.Elapsed < TimeSpan.FromSeconds(25))
             {
                 if (tunnel.HasExited)
                     break;
@@ -105,7 +108,14 @@ public sealed class SshConnection : IAsyncDisposable
         }
         catch { if (!tunnel.HasExited) tunnel.Kill(true); tunnel.Dispose(); throw; }
     }
-    public async Task<string> Reauthorize() => (await Issue(alias, sessionId))["grant"]!.GetValue<string>();
+    public async Task<string> Reauthorize()
+    {
+        if (ExpiresAt <= DateTimeOffset.UtcNow)
+            throw new ApiFailure("SESSION_EXPIRED", 401);
+        if (!IsTunnelAlive)
+            throw new HttpRequestException("SSH_TUNNEL_FAILED");
+        return (await Issue(alias, sessionId))["grant"]!.GetValue<string>();
+    }
     public async ValueTask DisposeAsync()
     {
         if (Volatile.Read(ref stopped) != 0)

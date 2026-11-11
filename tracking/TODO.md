@@ -50,3 +50,5 @@ Checked means verified only within the stated synthetic pilot scope; production 
 المصدر المثبت للإصدار وCI والنشر والنسخ: PROJECT_STATE.md وTEST_RESULTS.md. التأشير يعني نطاق pilot فقط.
 
 Final continuation: deployed17f846e / Windows binarybfcbbd4, CI43093897111 both jobs PASS; encrypted restore5 migrations PASS. I-010 external existing-service restart loop remains outside TaskPilot scope and must not be silently treated as fixed.
+
+0.3 stage1: explicit reconnect/expiry/backoff and no-mutation-retry VERIFIED by simulated C# checks and native build; actual transport interruption/GUI verification pending. Activity/notifications/monitoring stage follows D-033.

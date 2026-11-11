@@ -123,3 +123,6 @@ Native WinUI observed against actual New-VPS: connected SSH login, Arabic render
 - Final diagnostic full verifier on17f846e PASS for actual runtime role/DDL denial/migration denial/changed TaskPilot PID/data counts/startup and other-running-service equality for that sample. No repeated stability/continuous host invariance claim.
 - Authenticated HTTP health/ready/replay PASS after final rollout; liveSending=false, provider mock, API0.2.0; service active/running/NRestarts0.
 - Final backup/restore5 migrations and package integrity evidence above still applies; ops-only change does not alter schema or Windows binary. No live WhatsApp, AI calls, host reboot or schema rollback was performed.
+
+## 0.3 continuation — connection reliability (local VERIFIED)
+Windows distinguishes401/revocation/local session expiry from transient transport failures. Read polling backs off10/20/40/60s; mutations are never retried automatically. Explicit reconnect preserves same-workspace cursor/filters; manual token mode disposes prior SSH session; logout clears identity. Added reconnect UI, expiry display, shutdown guards and draft protection when deselecting accounts/changing task status. Release build0 warnings/errors and6 original +7 simulated reliability checks PASS. Not deployed/visually accepted yet; server remains17f846e.

@@ -58,3 +58,6 @@ Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/
 Operations follow-up: a single generic verifier failure was not reproducible on the unchanged bfcbbd4 release. Added safe per-check stage diagnostics and bounded DB/HTTP probes rather than exposing raw errors/secrets; cause remains unconfirmed in I-010. Five-migration encrypted restore and bfcbbd4 CI both PASS.
 
 Final0.2.0 source17f846e deployed; CI43093897111 both jobs PASS. Encrypted5-migration restore and portable ZIP verified. I-010 later isolated to independent existing-service auto-restart, left untouched; final single-sample diagnostic full verifier PASS. No claim that the other service is repaired.
+
+## 0.3 continuation — connection reliability (local VERIFIED)
+Windows distinguishes401/revocation/local session expiry from transient transport failures. Read polling backs off10/20/40/60s; mutations are never retried automatically. Explicit reconnect preserves same-workspace cursor/filters; manual token mode disposes prior SSH session; logout clears identity. Added reconnect UI, expiry display, shutdown guards and draft protection when deselecting accounts/changing task status. Release build0 warnings/errors and6 original +7 simulated reliability checks PASS. Not deployed/visually accepted yet; server remains17f846e.

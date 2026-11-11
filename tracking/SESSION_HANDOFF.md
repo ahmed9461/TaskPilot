@@ -21,3 +21,6 @@ Own taskpilot.service loopback8240, own taskpilot-db loopback15488. Root-owned r
 5. Whole-host reboot/rollback requires safe coordination to protect existing services; no host restart was performed.
 
 Local native test app closed and scoped UI account removed; server remains active. No local helper required. Isolated SDK ../dotnet retained. See task outputs for portable package/hash/report; files contain no credentials. Old attempts and evidence remain in TEST_RESULTS, not proof of current release.
+
+## 0.3 continuation — connection reliability (local VERIFIED)
+Windows distinguishes401/revocation/local session expiry from transient transport failures. Read polling backs off10/20/40/60s; mutations are never retried automatically. Explicit reconnect preserves same-workspace cursor/filters; manual token mode disposes prior SSH session; logout clears identity. Added reconnect UI, expiry display, shutdown guards and draft protection when deselecting accounts/changing task status. Release build0 warnings/errors and6 original +7 simulated reliability checks PASS. Not deployed/visually accepted yet; server remains17f846e.
