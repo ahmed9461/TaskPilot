@@ -6,7 +6,7 @@ Checked means verified only within the stated synthetic pilot scope; production 
 - [ ] P0-002 قبول موصل واتساب الحقيقي ومخاطره وإثبات رقم مخصص.
 - [ ] P0-003 اعتماد احتفاظ/محو/تدوير مفاتيح/نسخ خارجية وتفويض بيانات حقيقية.
 - [x] P0-004 عقود وهوية namespace/task/period منفذة ومختبرة في pilot؛ لا ادعاء اعتماد إنتاجي شامل.
-- [ ] P0-005 هوية إنتاجية Windows↔VPS؛ SSH + bearer/reauth التجريبي مثبتان، اتصال Windows المباشر يحتاج قبولًا يدويًا.
+- [ ] P0-005 هوية إنتاجية Windows↔VPS؛ جلسات SSH قصيرة العمر وإعادة تحقق أحادية مثبتتان مع Windows والخادم؛ MFA/RBAC وقبول الإنتاج مفتوحة.
 
 ## P1 — Backend
 - [x] P1-001 API/tests/checksum migrations.
@@ -22,23 +22,29 @@ Checked means verified only within the stated synthetic pilot scope; production 
 
 ## P2 — Windows
 - [x] P2-001 actual native Arabic RTL dashboard/navigation, dark/system/light theme.
-- [ ] P2-002 session/group/task-type forms IMPLEMENTED; advanced rule editor/live pairing and full UI acceptance open.
-- [ ] P2-003 accounts/search/tasks/status IMPLEMENTED, read views observed; deep filters/paging and mutation acceptance open.
+- [ ] P2-002 session/group/task-type forms and keyword/priority rule editor IMPLEMENTED; rule backend/C# acceptance VERIFIED; live pairing and full UI acceptance open.
+- [ ] P2-003 accounts/search/tasks/status + pages/filters IMPLEMENTED; C# direct-server workflow19 checks PASS; native create/edit/filter/archive/restore observed. Broad task UI acceptance open.
 - [ ] P2-004 inbox reveal/resolve + synthetic message form IMPLEMENTED; full manual acceptance open.
-- [ ] P2-005 preview/cancel observed; sensitive confirmations/selected purge/reconciliation forms IMPLEMENTED, full UI acceptance/signing/installer still open.
+- [ ] P2-005 preview/cancel observed on deployed server; task-only and account purge VERIFIED by API/C#; sensitive confirmations/reconciliation full GUI acceptance/signing/installer still open.
 
 ## P3 — الاستقرار والتكاملات
-- [ ] P3-001 backend workflow and HTTP smoke PASS; fixture UI PASS; direct Windows-pilot/full UI end-to-end remains partial.
+- [ ] P3-001 backend workflow and direct Windows-pilot19-check acceptance PASS; actual native account workflow PASS; full GUI confirmations/accessibility/load remain partial.
 - [x] P3-002 protected isolated New-VPS pilot DEPLOYED; actual restart/least privilege/data/service isolation verified.
 - [ ] P3-003 two mock sessions/source isolation PASS; multiple live sessions not approved/tested.
 - [ ] P3-004 DeepSeek/OpenRouter adapters + privacy gates/mock tests PASS; runtime/UI/live key/model/accounting not connected.
-- [ ] P3-005 dashboard counts implemented; advanced export/reports/alerts/off-host scheduled recovery not complete.
+- [ ] P3-005 dashboard + safe filtered-page CSV VERIFIED; broader reports/toasts/alerts/off-host scheduled recovery open.
 
-## الأدلة
-Implementation:62fddfe, f659d9b,60bd2b6,eb0f66b. TEST_RESULTS and PROJECT_STATE describe exact environments; do not equate synthetic tests with live WhatsApp/provider/human production acceptance.
+## الإصدار 0.2.0 — نتائج الاستمرار
+- [x] اتصال Windows بجلسة SSH مؤقتة دون تصدير مفاتيح دائمة، expiry/revoke/single-use reauth.
+- [x] قواعد كلمات وأولويات مع مراجعة التعادل، تجاهل المحادثة غير المتعلقة وتقليل نصها.
+- [x] صفحات وفلاتر API/Windows، تسميات حالات عربية، CSV منقح، حذف تكليف دون الحساب.
+- [x] اختبارات Windows C# مع New-VPS:19 فحصًا؛ الواجهة الفعلية: إنشاء/تعديل/تصفية/أرشفة/استعادة/معاينة وإلغاء.
+- [x] حماية مسودات الفلاتر وتحديد الحسابات أثناء المزامنة ومؤشر انتظار (build verification; extended GUI acceptance pending).
 
-## Continuation stage1 — SSH sessions
-Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.
+## التالي ضمن التفويض الحالي
+1. استكمال سيناريوهات الواجهة للقواعد والمراجعة والمهام والتصدير والمصالحة؛ اختبارات accessibility/load/reconnect وانتهاء الجلسة.
+2. توسيع التشغيل التجريبي للمراقبة والتقارير وسجل الواجهة مع إبقاء التنقيح؛ توقيع/installer يتطلب مواد إصدار مناسبة.
+3. هوية الإنتاج واحتفاظ/تدوير مفاتيح/استعادة خارج الخادم تحتاج قرارات المالك قبل بيانات حقيقية.
+4. موصل واتساب الحقيقي والرسائل وAI live تبقى خلف موافقة/تهيئة منفصلة؛ لا استنتاج قبول من synthetic tests.
 
-## Continuation stage2
-Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/minimization for unrelated chat, backward-compatible page envelopes and scoped filters, safe filtered-page CSV export, task-only purge preserving accounts/other tasks, and Windows editor/filter/pager/export/purge controls.10 Node tests and16 PostgreSQL suite tests PASS (including parent), Release build PASS. Direct previous auth-stage C# server acceptance15 checks PASS. Final expanded acceptance/visual/CI/deployment still to verify.
+المصدر المثبت للإصدار وCI والنشر والنسخ: PROJECT_STATE.md وTEST_RESULTS.md. التأشير يعني نطاق pilot فقط.

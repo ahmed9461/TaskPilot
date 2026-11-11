@@ -24,24 +24,14 @@
 - اسم النطاق أو طريقة الوصول إلى New-VPS، والمنافذ، وحساب الخدمة.
 - تنفيذ إرسال الردود دون تأكيد، أو الاعتماد على ذكاء اصطناعي لتمييز الرمز الخاطئ: **غير معتمد**.
 
-## لا تختلق حالة تنفيذ
-D-018: صاحب المشروع طلب التنفيذ الفعلي والنشر التجريبي التدريجي مع حماية الخدمات، ومنع الربط والإرسال الحقيقيين. Backend MVP مثبت ببيانات وهمية وقاعدة مستقلة على New-VPS؛ تشغيل API وWindows قيد التنفيذ. راجع دائمًا tracking/PROJECT_STATE.md لأحدث حالة مثبتة.
+## التنفيذ التجريبي المثبت
+D-018 يجيز التنفيذ والنشر التجريبي التدريجي على موارد TaskPilot المعزولة، مع حماية خدمات New-VPS. لا يجيز ربط واتساب أو إرسالًا حقيقيًا. TypeScript/PostgreSQL وWinUI3 native منفذة ومنشورة ومختبرة ببيانات وهمية. الحالة الدقيقة والـSHA والنتائج في tracking/PROJECT_STATE.md؛ لا تعتمد على نتيجة قديمة كدليل للإصدار الحالي.
 
-## التحديث
-غيّر هذا الملف عند حدوث اعتماد جوهري جديد فقط، مع إدخال مرجع قرار في tracking/DECISION_LOG.md؛ التفاصيل اليومية مكانها SESSION_HANDOFF وCHANGELOG.
+D-019..028: حساب مستقل namespace/username وتكليف account/task/period مع كل المصادر؛ حالات المهمة والرد منفصلة؛ encrypted review/credentials؛ preview/reauth/stale guards؛ UNKNOWN_DELIVERY لا يعاد إرساله تلقائيًا؛ DB runtime DML محدود مستقل عن migration owner. النسخ مشفرة ومجربة على نفس الخادم فقط؛ لا احتفاظ أو escrow/off-host معتمد. AI task-code-only adapters مع mock privacy tests، غير موصولة بالـruntime ولا مفاتيح حية.
 
-## D-018..D-024 التنفيذ التجريبي
-Native WinUI3 client built/published and observed with synthetic local API + isolated remote test PostgreSQL. New-VPS API is actually deployed independently on loopback8240/database15488; mock only. Manual encrypted backup/restore verified on same host; no production retention/escrow approval. Do not merge fixture UI evidence with direct Windows-to-pilot auth acceptance (automatic token launch blocked). Exact commits/results always in tracking files.
+D-029 (0.2.0): اتصال Windows عبر SSH موثوق سابقًا ونفق يملكه التطبيق، جلسة مؤقتة30 دقيقة مخزنة hash فقط، وإعادة تحقق60 ثانية أحادية لكل عملية حساسة، مع revoke/expiry. لا تصدير لمفتاح API الدائم؛ الطريقة القديمة رُفضت آليًا وتبقى غير مستخدمة. هذا ليس هوية إنتاج/MFA. Direct C# server acceptance19 checks PASS؛ الواجهة الفعلية على New-VPS أنشأت وعدلت وصفّت وأرشفت واستعادت سجلًا وهميًا، ومعاينة الحذف أُلغيت. نُظفت حسابات الاختبار المحددة. لا تدمج API tests مع قبول كل الحوارات الحساسة يدويًا.
 
-D-025..027: optional AI code-only privacy boundary/offline contract tests, actual runtime still disabled; explicit unknown-delivery reconciliation never resends; migration byte integrity tolerates only LF/CRLF. Old pilot remained running on failed rollout; use exact final state, not attempt, as deployment truth.
+D-030..031: قواعد كلمات وأولويات محددة؛ تعادل مهمتين يحتاج مراجعة؛ حذف raw text للمحادثة غير المتعلقة؛ page/filters محفوظة في الواجهة؛ CSV allowlist دون أسرار مع إعادة تحقق؛ حذف تكليف مستقل يبقي الحساب والمهام الأخرى. اختبار16 PostgreSQL و10 Node و6 offline C# PASS. التحقق النهائي لكل إصدار في ملفات التتبع.
 
-Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.
-
-## Final verified pointer — 2026-11-11
-Deployed source eb0f66bbc35ff008767501526612bdf0e9a94999 on New-VPS; CI43061180349 both jobs PASS. API runtime least privilege and actual restart/data/other-service preservation verified. Final backup/restore3 migrations and tamper rejection PASS. Portable Windows built/observed on fixture path; direct VPS auth/manual production gates remain open. Temporary local UI/API/tunnels stopped; server pilot remains active.
-
-## Continuation stage1 — SSH sessions
-Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.
-
-## Continuation stage2
-Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/minimization for unrelated chat, backward-compatible page envelopes and scoped filters, safe filtered-page CSV export, task-only purge preserving accounts/other tasks, and Windows editor/filter/pager/export/purge controls.10 Node tests and16 PostgreSQL suite tests PASS (including parent), Release build PASS. Direct previous auth-stage C# server acceptance15 checks PASS. Final expanded acceptance/visual/CI/deployment still to verify.
+## الاستمرار
+أكمل خطة TODO بالبيانات الوهمية ضمن التفويض الحالي. الإنتاج وموصل واتساب وAI الحي وMFA والاحتفاظ والتدوير/off-host والتوقيع وقبول الواجهة الكامل تبقى بوابات واضحة. لا تعِد كتابة المتطلبات بدل التنفيذ، ولا تدّعِ قبولًا حيًا من المحاكاة. حدّث هذه الذاكرة عند قرار جوهري جديد؛ التفاصيل اليومية في CHANGELOG وSESSION_HANDOFF.

@@ -16,7 +16,8 @@ public sealed partial class MainPage : Page
     }
     private async Task<string?> Reauth(string value) => sshConnection is null ? value : await sshConnection.Reauthorize();
     private string page = "dashboard", cursor = "0";
-    private bool busy, polling, renderPending;
+    private bool busy, polling, renderPending, pendingChanges, hasDraft;
+    private bool Editing() => hasDraft || Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot) is TextBox or PasswordBox or ComboBox or NumberBox or CheckBox;
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(10) };
     private static string FriendlyError(string code) => code switch
     {
@@ -63,6 +64,8 @@ public sealed partial class MainPage : Page
         if (busy)
             return;
         busy = true;
+        BusyIndicator.IsActive = true;
+        BusyIndicator.Visibility = Visibility.Visible;
         try
         {
             await action();
@@ -71,6 +74,8 @@ public sealed partial class MainPage : Page
         finally
         {
             busy = false;
+            BusyIndicator.IsActive = false;
+            BusyIndicator.Visibility = Visibility.Collapsed;
             if (renderPending)
             {
                 renderPending = false;
@@ -114,8 +119,11 @@ public sealed partial class MainPage : Page
                 Connection.Severity = InfoBarSeverity.Success;
                 Connection.Title = "متصل بالخادم";
                 Connection.Message = "المزامنة تعمل • الإرسال الحقيقي غير مفعّل";
-                if ((n["items"]?.AsArray().Count ?? 0) > 0 && page != "settings")
+                pendingChanges |= (n["items"]?.AsArray().Count ?? 0) > 0;
+                if (pendingChanges && page != "settings" && !Editing())
                     await Run(Render);
+                else if (pendingChanges)
+                    Connection.Message = "توجد تغييرات جديدة؛ تُحدّث القائمة بعد الانتهاء من التحرير.";
             }
             catch { Connection.Severity = InfoBarSeverity.Warning; Connection.Title = "الاتصال منقطع"; Connection.Message = "البيانات محفوظة على الخادم. ستستأنف المزامنة بعد عودة الاتصال."; }
             finally { polling = false; }
@@ -137,6 +145,8 @@ public sealed partial class MainPage : Page
     private async Task<bool> Dialog(string title, UIElement content, string primary = "حفظ") => await new ContentDialog { Title = title, Content = content, PrimaryButtonText = primary, CloseButtonText = "إلغاء", DefaultButton = ContentDialogButton.Close, XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft }.ShowAsync() == ContentDialogResult.Primary;
     private async Task Render()
     {
+        pendingChanges = false;
+        hasDraft = false;
         Body.Children.Clear();
         if (page == "settings" || !api.Connected)
         {
@@ -215,8 +225,8 @@ public sealed partial class MainPage : Page
         {
             var n = r!;
             var select = new CheckBox { Content = "تحديد" };
-            select.Checked += (_, _) => selectedIds.Add(V(n, "id"));
-            select.Unchecked += (_, _) => selectedIds.Remove(V(n, "id"));
+            select.Checked += (_, _) => { selectedIds.Add(V(n, "id")); hasDraft = true; };
+            select.Unchecked += (_, _) => { selectedIds.Remove(V(n, "id")); hasDraft = selectedIds.Count > 0; };
             Card(V(n, "display_name"), $"{V(n, "namespace")} / {V(n, "username_normalized")} • {(V(n, "archived_at") == "" ? "نشط" : "مؤرشف")}", select, Button("تعديل", () => AccountForm(n)), Button("عرض الاعتماد", () => Reveal(n)), Button(V(n, "archived_at") == "" ? "أرشفة" : "استرجاع", async () => { await api.Send("POST", $"/v1/accounts/{V(n, "id")}/{(V(n, "archived_at") == "" ? "archive" : "restore")}", new { version = Ver(n) }); await Render(); }), Button("حذف", () => Purge(V(n, "id"))));
         }
         if (rows.Count == 0)

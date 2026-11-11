@@ -46,11 +46,20 @@ public sealed partial class MainPage
         next.IsEnabled = offset + limit < total;
         Body.Children.Add(Stack(Text($"النتائج {Math.Min(offset + 1, total)}–{Math.Min(offset + limit, total)} من {total}"), new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { prev, next } }));
     }
+    private void TrackDraft(params Control[] controls)
+    {
+        foreach (var control in controls)
+            if (control is TextBox text)
+                text.TextChanged += (_, _) => hasDraft = true;
+            else if (control is ComboBox choice)
+                choice.SelectionChanged += (_, _) => hasDraft = true;
+    }
     private void AccountFilters()
     {
         var search = Field("الاسم أو المستخدم", Filter("accounts", "search"));
         var ns = Field("النظام", Filter("accounts", "namespace"));
         var archived = Choice("الأرشفة", [("all", "الكل"), ("active", "نشط"), ("archived", "مؤرشف")], Filter("accounts", "archived"));
+        TrackDraft(search, ns, archived);
         Body.Children.Add(Stack(new Expander { Header = "البحث والتصفية", Content = Stack(search, ns, archived, Button("تطبيق التصفية", async () => { filters["accounts"] = new() { ["search"] = search.Text, ["namespace"] = ns.Text, ["archived"] = Selected(archived) }; offsets["accounts"] = 0; await Render(); })) }, Button("تصدير الصفحة CSV", () => ExportPage("accounts"))));
     }
     private async Task AssignmentFilters()
@@ -63,6 +72,7 @@ public sealed partial class MainPage
         var groups = Choice("المجموعة", Options((await api.Send("GET", "/v1/groups")).AsArray(), "title"), Filter(r, "groupId"));
         var tasks = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), Filter(r, "taskTypeId"));
         var priority = Choice("الحد الأدنى للأولوية", [("", "الكل"), ("50", "عالية: 50"), ("80", "حرجة: 80")], Filter(r, "minPriority"));
+        TrackDraft(search, period, status, sessions, groups, tasks, priority);
         Body.Children.Add(Stack(new Expander { Header = "البحث وتصفية المهام", Content = Stack(search, period, status, sessions, groups, tasks, priority, Button("تطبيق التصفية", async () => { filters[r] = new() { ["search"] = search.Text, ["periodKey"] = period.Text, ["status"] = Selected(status), ["sessionId"] = Selected(sessions), ["groupId"] = Selected(groups), ["taskTypeId"] = Selected(tasks), ["minPriority"] = Selected(priority) }; offsets[r] = 0; await Render(); })) }, Button("تصدير الصفحة CSV", () => ExportPage(r))));
     }
     private async Task ExportPage(string resource)

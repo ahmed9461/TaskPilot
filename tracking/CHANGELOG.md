@@ -45,3 +45,12 @@ Implemented30-minute SSH-issued client sessions,60-second single-use reauth gran
 
 ## Continuation stage2
 Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/minimization for unrelated chat, backward-compatible page envelopes and scoped filters, safe filtered-page CSV export, task-only purge preserving accounts/other tasks, and Windows editor/filter/pager/export/purge controls.10 Node tests and16 PostgreSQL suite tests PASS (including parent), Release build PASS. Direct previous auth-stage C# server acceptance15 checks PASS. Final expanded acceptance/visual/CI/deployment still to verify.
+
+## [0.2.0-pilot] — 2026-11-11
+- SSH-issued30-minute Windows sessions with hashed storage, revoke/expiry and60-second one-use reauth; permanent server keys stay server-local.
+- Deterministic group keyword/priority rules and ambiguity review; unrelated chat raw text is discarded.
+- Snapshot page envelopes and scoped filters, Arabic statuses, safe filtered-page CSV, task-only preview/purge preserving account/other tasks.
+- Windows busy indicator and deferred polling refresh while draft filters/selection are active.
+- Direct C# Windows↔New-VPS19-check acceptance PASS, actual native account create/edit/filter/archive/restore and deletion preview/cancel observed. Own fixtures cleaned.
+- Fixed acceptance fixture missing routing keyword; explicit UTF-8 edit/scan enforcement after locale corruption was repaired.
+- Still synthetic-only and unsigned; real WhatsApp/AI, production MFA/retention/off-host recovery and full human GUI acceptance remain open.

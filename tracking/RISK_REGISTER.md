@@ -18,3 +18,5 @@
 
 ## Pilot mitigation evidence — 2026-11-11
 R-02/R-03/R-04/R-05/R-06: synthetic encryption/dedup/outbox/evidence/purge tests PASS; residual production risk remains open. R-08: own isolated loopback resources, no existing service changes. R-07: same-host encrypted restore PASS; off-host key recovery/reboot not verified. R-11: closed SSH pilot bearer+independent reauth, not production identity/MFA. R-01/R-09: live providers disabled.
+
+0.2.0 continuation: R-11 mitigated for closed pilot with30-minute hashed SSH-issued sessions,60-second one-use reauth, revoke/expiry regression and actual Windows-server workflow. Root SSH dependency and production MFA/RBAC remain residual risks. R-05 task-only purge preserves account/other tasks in regression; broad human GUI acceptance remains open. No live-provider or production-data risk is closed by these tests.

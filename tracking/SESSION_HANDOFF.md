@@ -1,31 +1,23 @@
 # تسليم قابل للاستئناف — 2026-11-11
-## النتيجة
-Project moved from docs only to working closed synthetic Backend/PostgreSQL/WinUI pilot. Four implementation commits pushed on feat/mvp-foundation; deployed code `eb0f66bbc35ff008767501526612bdf0e9a94999`. Final tracking-only commit records these results. All initial repository docs were read.
+Read AGENTS.md, PROJECT_STATE, TODO and DECISION_LOG first. All initial project docs/memory were read; latest user instruction is to continue implementation, Windows-server tests and commits. User authorized protected pilot deployment; real WhatsApp pairing/messages remain prohibited without separate approval.
 
-## Reproducible evidence
-`npm run check`:8 tests/build PASS; `npm run test:integration` against dedicated *_test DB:14/14 including parent PASS; `dotnet run --project apps/windows-tests/TaskPilot.ClientChecks.csproj -c Release`:6 checks PASS. WinUI Release/publish PASS. Final CI https://github.com/ahmed9461/TaskPilot/actions/runs/43061180349 PASS for backend and Windows. Known-pattern repository scan/format/npm audit PASS.
-On VPS run `node ops/verify-pilot.mjs` and `node scripts/pilot-smoke.mjs` from /opt/taskpilot/current: least privilege/restart/data preservation/other service isolation/auth/replay pass. These scripts read keys locally and do not print them.
-Backup02 restore:1 synthetic account,1 assignment,3 migrations,0 SENDING. Tamper rejected before DB creation. No off-host/key-loss claim.
+## Work completed this continuation
+8b49ae5: temporary SSH client sessions/reauth and Windows transport lifecycle. a95b018: group rules/priority, paging/filters, safe CSV and task-only purge plus Windows controls.0.2.0 follow-up:19-check acceptance fixture correction, strict synthetic cleanup helper, busy indicator and draft-preserving poll deferral. Exact final deployed SHA/CI follows in PROJECT_STATE.
 
-## Runtime
-Own taskpilot.service API loopback8240; own taskpilot-db loopback15488. Root-owned releases, dedicated user and runtime DB role. Secrets /etc/taskpilot; migration.env root-only, pilot.env restricted service access. Never print or commit their values. Existing services/configs untouched. No real WhatsApp/AI.
-Windows observed with local fixture API18241 and separate PostgreSQL UI test DB via tunnel; direct pilot auth was blocked by auto-review when launching client with server token. Do not export that key automatically; owner enters it locally. No live send/reveal/delete UI confirmation was automated.
-Local test app/API/SSH forwards closed; no local background helper needed. VPS pilot remains running. Scratch SDK ../dotnet retained; source work/TaskPilot.
+## Evidence and boundaries
+10 Node tests/build,16 dedicated PostgreSQL suite tests including parent,6 offline C# checks, WinUI Release0 warnings/errors PASS. Direct C# Windows→SSH→New-VPS19 checks PASS; synthetic account fixtures purged and session revoked. Actual native UI against server: create/edit/filter/archive/restore and deletion preview/cancel observed. No GUI send/delete/reveal confirmation automated; API/C# sensitive tests remain distinct. CI a95b018 backend+Windows PASS.
+Own service restart/data/other running services preservation and least privilege verified on a95b018. Final backup/package/runtime verification after follow-up deployment is recorded in PROJECT_STATE/TEST_RESULTS. No real WhatsApp/AI or production data used.
+
+## Runtime and reproduction
+Own taskpilot.service loopback8240, own taskpilot-db loopback15488. Root-owned releases and /etc/taskpilot external keys; migration.env root-only. Never print/copy values. Windows settings «اتصال عبر SSH» uses existing trusted New-VPS alias;30-minute session then reconnect,60-second one-use reauth per sensitive action. No permanent API key export; no host-trust bypass or password automation.
+`npm run check`, `npm run secrets`, `npm run format:check`; integration only TASKPILOT_TEST_DATABASE_URL ending _test. New-VPS /opt/taskpilot/stage retains dev dependencies for that isolated test DB; deployed current prunes them. `dotnet run --project apps/windows-tests/TaskPilot.ClientChecks.csproj -c Release -- --server-acceptance New-VPS` runs19 direct-server checks. Cleanup mode allows only named synthetic fixture namespaces and never delete-all; harmless synthetic session/group/task/template config remains as audit evidence.
+`node ops/verify-pilot.mjs` restarts only taskpilot and checks invariants; `node scripts/pilot-smoke.mjs` auth/readiness/replay. Backup tool creates encrypted unique file and restores only fresh *_restore_test DB,64MiB memory cap. Never delete/reset volumes or mutate applied migrations.
 
 ## Next useful work
-1. Complete native UI acceptance with synthetic fixtures: create/edit/review/status/reconcile/selected purge; list paging, Arabic status labels, accessibility and advanced filters/rules.
-2. Production identity/session/MFA and retention/key escrow/off-host recovery decisions before real data. No assumed approval for live WhatsApp or sending.
-3. Choose/review live WhatsApp adapter and isolated dedicated-number test only after owner authorization.
-4. Wire optional AI task-code suggestions into explicit approved workflow; live provider/model/cost and billing persistence remain open. Current adapters are isolated/offline-tested only.
-5. Test whole-host reboot and schema-compatible rollback in a safe window; no global server restart was performed.
+1. Broaden native UI acceptance: review/task/status/rules/export/reconciliation, reconnect/session-expiry/accessibility/load. Draft/poll refinement was built; extended visual checks open.
+2. Native toast/push, reports and operational monitoring can progress with synthetic data.
+3. Production identity/MFA and data retention/key escrow/off-host recovery need owner decisions before real data. Installer/signing needs release materials.
+4. Live WhatsApp adapter and live AI require explicit approved setup; do not reuse another project's secrets/sessions.
+5. Whole-host reboot/rollback requires safe coordination to protect existing services; no host restart was performed.
 
-## Cautions
-Never edit applied SQL except newline-equivalence handled by checksum runner; create new migrations. Integration runner truncates only *_test databases; restore tool only creates fresh *_restore_test. Backup64MiB in-memory cap is pilot-only. Runtime cannot migrate; root deploy loads migration.env. Do not reuse other projects' DBs, WhatsApp sessions or services.
-
-## Continuation stage1 — SSH sessions
-Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.
-
-Stage1 predeployment evidence:8 Node tests/build PASS, dedicated New-VPS PostgreSQL suite15/15 PASS including session lifecycle, WinUI Release0 warnings/errors and6 offline C# checks PASS. Direct server acceptance is next, not yet claimed.
-
-## Continuation stage2
-Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/minimization for unrelated chat, backward-compatible page envelopes and scoped filters, safe filtered-page CSV export, task-only purge preserving accounts/other tasks, and Windows editor/filter/pager/export/purge controls.10 Node tests and16 PostgreSQL suite tests PASS (including parent), Release build PASS. Direct previous auth-stage C# server acceptance15 checks PASS. Final expanded acceptance/visual/CI/deployment still to verify.
+Local native test app closed and scoped UI account removed; server remains active. No local helper required. Isolated SDK ../dotnet retained. See task outputs for portable package/hash/report; files contain no credentials. Old attempts and evidence remain in TEST_RESULTS, not proof of current release.

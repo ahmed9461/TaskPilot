@@ -108,7 +108,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.1.0",
+    version: "0.2.0",
     provider: "mock",
   }));
   app.get("/ready", async () => {
