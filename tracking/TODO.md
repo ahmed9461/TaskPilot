@@ -1,60 +1,45 @@
-# خطة التنفيذ والتتبع — 2026-11-11
-Checked means verified only within the stated synthetic pilot scope; production gates remain explicit.
+# خطة التنفيذ والتتبع —2026-11-12
+Checked means verified within synthetic pilot scope only. Exact source/CI/evidence in PROJECT_STATE and TEST_RESULTS.
 
 ## P0 — القرارات
-- [x] P0-001 المتطلبات والذاكرة والقرارات والخطة والمخاطر.
-- [ ] P0-002 قبول موصل واتساب الحقيقي ومخاطره وإثبات رقم مخصص.
-- [ ] P0-003 اعتماد احتفاظ/محو/تدوير مفاتيح/نسخ خارجية وتفويض بيانات حقيقية.
-- [x] P0-004 عقود وهوية namespace/task/period منفذة ومختبرة في pilot؛ لا ادعاء اعتماد إنتاجي شامل.
-- [ ] P0-005 هوية إنتاجية Windows↔VPS؛ جلسات SSH قصيرة العمر وإعادة تحقق أحادية مثبتتان مع Windows والخادم؛ MFA/RBAC وقبول الإنتاج مفتوحة.
+- [x] P0-001 المتطلبات والذاكرة والقرارات والتتبع.
+- [x] P0-004 namespace/account/task/period/source contracts in pilot.
+- [ ] P0-002 live WhatsApp choice/risk/dedicated number authorization.
+- [ ] P0-003 production retention/purge/rotation/off-host escrow and real-data authorization.
+- [ ] P0-005 production MFA/RBAC identity; temporary SSH sessions/reauth/recovery already VERIFIED.
 
 ## P1 — Backend
-- [x] P1-001 API/tests/checksum migrations.
-- [x] P1-002 mock session adapter + explicit group bindings.
-- [x] P1-003 encrypted review inbox + concurrent replay dedupe.
-- [x] P1-004 accounts/assignments/all sources + namespace/period identities.
-- [x] P1-005 conservative Arabic/English explicit-field parsing/review/errors.
-- [x] P1-006 durable notifications/cursor + client polling (native push/toast pending).
-- [x] P1-007 templates/preview/reauth/outbox/quoted mock transport; real send absent.
-- [x] P1-008 verified/unverified credential flags/evidence, no AI proof.
-- [x] P1-009 account archive/restore/single/selected/all purge, stale and unknown-delivery safeguards.
-- [x] P1-010 redacted audit + manual encrypted backup/isolated restore/tamper rejection. Production scheduler/escrow/retention open under P0/P3.
+- [x] P1-001 executable API/checksum migrations/CI.
+- [x] P1-002 mock sessions/group bindings/rules/priority and source isolation.
+- [x] P1-003 encrypted review/concurrent dedupe/minimized ignored chat.
+- [x] P1-004 account/assignment/multiple sources and scoped identity.
+- [x] P1-005 conservative extraction/manual ambiguous routing.
+- [x] P1-006 durable event cursor/head/read state/pages; cloud push/background Windows reception not implemented.
+- [x] P1-007 versioned editable scoped templates/preview/reauth/mock quoted outbox; approved snapshot immutability.
+- [x] P1-008 verified/manual versus UNVERIFIED credential flags.
+- [x] P1-009 archive/restore/scoped account/task-only purge and stale/uncertain-delivery safeguards.
+- [x] P1-010 redacted audit/manual encrypted backup/same-host restore. Production scheduler/off-host/escrow remain gated.
 
 ## P2 — Windows
-- [x] P2-001 actual native Arabic RTL dashboard/navigation, dark/system/light theme.
-- [ ] P2-002 session/group/task-type forms and keyword/priority rule editor IMPLEMENTED; rule backend/C# acceptance VERIFIED; live pairing and full UI acceptance open.
-- [ ] P2-003 accounts/search/tasks/status + pages/filters IMPLEMENTED; C# direct-server workflow19 checks PASS; native create/edit/filter/archive/restore observed. Broad task UI acceptance open.
-- [ ] P2-004 inbox reveal/resolve + synthetic message form IMPLEMENTED; full manual acceptance open.
-- [ ] P2-005 preview/cancel observed on deployed server; task-only and account purge VERIFIED by API/C#; sensitive confirmations/reconciliation full GUI acceptance/signing/installer still open.
+- [x] P2-001 native Arabic RTL/dashboard/theme/self-contained x64 build.
+- [ ] P2-002 session/group/task/rule forms implemented; full config/live pairing acceptance open.
+- [ ] P2-003 accounts/task/paged filters/status verified partly; account details/flags/history and broad acceptance open.
+- [ ] P2-004 review reveal/resolve implemented and direct C# verified; full GUI review acceptance open.
+- [ ] P2-005 preview/cancel verified; sensitive GUI confirmations/reconciliation/export/signing/installer acceptance open.
+- [x] P2-006 template create/edit/scope/disable/filter/reload observed on deployed0.4; server stale/snapshot tests PASS. Source-switch visual race acceptance open.
+- [x] P2-007 paged notifications/unread badge/redacted audit/monitoring observed; generic silent OS receipt/storage PASS. Popup/click/closed-app delivery not claimed.
+- [x] P2-008 explicit SSH recovery/no write replay/read backoff; actual own-tunnel interruption/reconnect preserved draft. Local/server expiry/revocation tests PASS.
 
 ## P3 — الاستقرار والتكاملات
-- [ ] P3-001 backend workflow and direct Windows-pilot19-check acceptance PASS; actual native account workflow PASS; full GUI confirmations/accessibility/load remain partial.
-- [x] P3-002 protected isolated New-VPS pilot DEPLOYED; actual restart/least privilege/data and scoped service-isolation checks verified; existing-service drift I-010 recorded, no continuous-host claim.
-- [ ] P3-003 two mock sessions/source isolation PASS; multiple live sessions not approved/tested.
-- [ ] P3-004 DeepSeek/OpenRouter adapters + privacy gates/mock tests PASS; runtime/UI/live key/model/accounting not connected.
-- [ ] P3-005 dashboard + safe filtered-page CSV VERIFIED; broader reports/toasts/alerts/off-host scheduled recovery open.
+- [ ] P3-001 current11 Node/19 PG/20 local C#/28 direct Windows-server tests and CI PASS; full GUI/accessibility/load remains partial.
+- [x] P3-002 isolated pilot0.4 DEPLOYED; own role/restart/data/startup verified. Other-service drift I-010 returns nonzero; no continuous host-wide claim.
+- [ ] P3-003 multiple mock sessions verified; multiple live sessions not approved/tested.
+- [ ] P3-004 DeepSeek/OpenRouter isolated privacy adapters offline tested; runtime/UI/live keys/model/accounting not connected.
+- [ ] P3-005 safe page CSV and own-app operations snapshot done; broader reports/alerts/off-host recovery remain open.
+- [x] P3-006 exact-version bounded deployment readiness fixes Type=simple startup race; real rollout and regression PASS.
 
-## الإصدار 0.2.0 — نتائج الاستمرار
-- [x] اتصال Windows بجلسة SSH مؤقتة دون تصدير مفاتيح دائمة، expiry/revoke/single-use reauth.
-- [x] قواعد كلمات وأولويات مع مراجعة التعادل، تجاهل المحادثة غير المتعلقة وتقليل نصها.
-- [x] صفحات وفلاتر API/Windows، تسميات حالات عربية، CSV منقح، حذف تكليف دون الحساب.
-- [x] اختبارات Windows C# مع New-VPS:19 فحصًا؛ الواجهة الفعلية: إنشاء/تعديل/تصفية/أرشفة/استعادة/معاينة وإلغاء.
-- [x] حماية مسودات الفلاتر وتحديد الحسابات أثناء المزامنة ومؤشر انتظار (build verification; extended GUI acceptance pending).
-
-## التالي ضمن التفويض الحالي
-1. استكمال سيناريوهات الواجهة للقواعد والمراجعة والمهام والتصدير والمصالحة؛ اختبارات accessibility/load/reconnect وانتهاء الجلسة.
-2. توسيع التشغيل التجريبي للمراقبة والتقارير وسجل الواجهة مع إبقاء التنقيح؛ توقيع/installer يتطلب مواد إصدار مناسبة.
-3. هوية الإنتاج واحتفاظ/تدوير مفاتيح/استعادة خارج الخادم تحتاج قرارات المالك قبل بيانات حقيقية.
-4. موصل واتساب الحقيقي والرسائل وAI live تبقى خلف موافقة/تهيئة منفصلة؛ لا استنتاج قبول من synthetic tests.
-
-المصدر المثبت للإصدار وCI والنشر والنسخ: PROJECT_STATE.md وTEST_RESULTS.md. التأشير يعني نطاق pilot فقط.
-
-Final continuation: deployed17f846e / Windows binarybfcbbd4, CI43093897111 both jobs PASS; encrypted restore5 migrations PASS. I-010 external existing-service restart loop remains outside TaskPilot scope and must not be silently treated as fixed.
-
-0.3 stage1: explicit reconnect/expiry/backoff and no-mutation-retry VERIFIED by simulated C# checks and native build; actual transport interruption/GUI verification pending. Activity/notifications/monitoring stage follows D-033.
-
-0.3 stage2: notification/audit pages, read state/badge, operational snapshot and generic local toasts IMPLEMENTED; backend530-event/late-commit tests18 total PASS,20 local C# checks PASS, native OS receipt stored/generic/silent PASS. Actual-server25-check/visual activity/recovery acceptance and rollout follow; no popup/click/background delivery claim.
-
-0.3 checkpoint: connection/read-backoff/state and notification/audit/monitoring features VERIFIED/DEPLOYED dc76227 within above scope. Native task status, page2, quoted preview cancel and recovery/draft retention VERIFIED; remaining UI/sensitive/accessibility/load gates not closed. Hosted CI is pending. Editable/scoped reply templates remain a concrete accepted feature gap to implement next.
-
-0.4 in progress: accepted template editing/scopes implemented and19-test DB regression PASS; final race/direct-server/UI/deployment pending. Template edit must not rewrite approved replies or weaken independent send confirmation.
+## Next
+1. Account details/flags/tasks/source history and duplicate-name selectors with codes (I-016).
+2. Synthetic native review/reconciliation/CSV/source-switch/accessibility and bounded load/recovery checks.
+3. Production identity/retention/key recovery and signing/off-host/live provider decisions before real data.
+No real WhatsApp or outbound messages without explicit separate permission. Completed code87f986b; latest hosted CI43100482889 backend+Windows SUCCESS.
