@@ -56,3 +56,5 @@ Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/
 - Still synthetic-only and unsigned; real WhatsApp/AI, production MFA/retention/off-host recovery and full human GUI acceptance remain open.
 
 Operations follow-up: a single generic verifier failure was not reproducible on the unchanged bfcbbd4 release. Added safe per-check stage diagnostics and bounded DB/HTTP probes rather than exposing raw errors/secrets; cause remains unconfirmed in I-010. Five-migration encrypted restore and bfcbbd4 CI both PASS.
+
+Final0.2.0 source17f846e deployed; CI43093897111 both jobs PASS. Encrypted5-migration restore and portable ZIP verified. I-010 later isolated to independent existing-service auto-restart, left untouched; final single-sample diagnostic full verifier PASS. No claim that the other service is repaired.

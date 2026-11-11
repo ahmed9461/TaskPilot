@@ -35,3 +35,6 @@ D-030..031: قواعد كلمات وأولويات محددة؛ تعادل مه�
 
 ## الاستمرار
 أكمل خطة TODO بالبيانات الوهمية ضمن التفويض الحالي. الإنتاج وموصل واتساب وAI الحي وMFA والاحتفاظ والتدوير/off-host والتوقيع وقبول الواجهة الكامل تبقى بوابات واضحة. لا تعِد كتابة المتطلبات بدل التنفيذ، ولا تدّعِ قبولًا حيًا من المحاكاة. حدّث هذه الذاكرة عند قرار جوهري جديد؛ التفاصيل اليومية في CHANGELOG وSESSION_HANDOFF.
+
+## Final0.2.0 pointer
+Runtime17f846e5051eebe64bdeb6659c8bb949304fff72, Windows binarybfcbbd4; CI43093897111 both jobs PASS. Backup5-migration restore/portable ZIP verified. Strict global running-service comparison can fail because an existing unrelated service independently auto-restarts; read-only observation confirmed TaskPilot stable while it cycled. Leave it untouched and report the distinction (I-010), never repair other projects opportunistically or claim full host stability. Final single-sample full diagnostic verification PASS; details remain in tracking.

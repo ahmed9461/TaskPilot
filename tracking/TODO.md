@@ -29,7 +29,7 @@ Checked means verified only within the stated synthetic pilot scope; production 
 
 ## P3 — الاستقرار والتكاملات
 - [ ] P3-001 backend workflow and direct Windows-pilot19-check acceptance PASS; actual native account workflow PASS; full GUI confirmations/accessibility/load remain partial.
-- [x] P3-002 protected isolated New-VPS pilot DEPLOYED; actual restart/least privilege/data/service isolation verified.
+- [x] P3-002 protected isolated New-VPS pilot DEPLOYED; actual restart/least privilege/data and scoped service-isolation checks verified; existing-service drift I-010 recorded, no continuous-host claim.
 - [ ] P3-003 two mock sessions/source isolation PASS; multiple live sessions not approved/tested.
 - [ ] P3-004 DeepSeek/OpenRouter adapters + privacy gates/mock tests PASS; runtime/UI/live key/model/accounting not connected.
 - [ ] P3-005 dashboard + safe filtered-page CSV VERIFIED; broader reports/toasts/alerts/off-host scheduled recovery open.
@@ -48,3 +48,5 @@ Checked means verified only within the stated synthetic pilot scope; production 
 4. موصل واتساب الحقيقي والرسائل وAI live تبقى خلف موافقة/تهيئة منفصلة؛ لا استنتاج قبول من synthetic tests.
 
 المصدر المثبت للإصدار وCI والنشر والنسخ: PROJECT_STATE.md وTEST_RESULTS.md. التأشير يعني نطاق pilot فقط.
+
+Final continuation: deployed17f846e / Windows binarybfcbbd4, CI43093897111 both jobs PASS; encrypted restore5 migrations PASS. I-010 external existing-service restart loop remains outside TaskPilot scope and must not be silently treated as fixed.
