@@ -1,22 +1,6 @@
-# سجل الأخطاء والملاحظات ذات الأدلة
-
-**آخر تحديث:** 2026-11-11. لا توجد أعطال تطبيقية مؤكدة لأن التنفيذ لم يبدأ.
-
-| ID | الوصف | المصدر/الدليل | الحالة | التأثير | الفحص التالي |
-|---|---|---|---|---|---|
-| — | لا يوجد عطل مثبت حتى الآن | — | — | — | بدء اختبارات MVP |
-
-## نموذج تذكرة
-- ID / العنوان:
-- التاريخ / البيئة / الإصدار / commit:
-- الوصف المتوقع:
-- ما حدث بالفعل:
-- خطوات إعادة الإنتاج:
-- الأدلة (منقحة دون أسماء و كلمات مرور):
-- التأثير والأولوية:
-- الحالة: UNCONFIRMED / INVESTIGATING / CONFIRMED / FIXED / VERIFIED / CLOSED
-- الاستنتاجات المرفوضة / أسباب عدم اليقين:
-- الإجراء التالي / مسؤول المراجعة:
-- رابط اختبار التحقق:
-
-**قاعدة:** لا توصف مشكلة مشتبه بها بأنها مثبتة دون إعادة إنتاج أو أثر موثق. لا تنسخ تفاصيل حسابات حقيقية إلى GitHub Issues في مستودع عام.
+# سجل المشكلات
+| ID | Evidence | Status | Next |
+|---|---|---|---|
+| I-001 | Initial tunnel-based concurrency test exceeded 5s pool wait, returned sanitized 503; whole server-local rerun 13/13 passes after 20s wait | VERIFIED FIX | Track real load once authorized |
+| I-002 | No .NET SDK initially installed; isolated .NET 10 SDK and official WinUI templates downloaded | IN_PROGRESS | Build and inspect real Windows app |
+| I-003 | Production identity/MFA and real-data retention policy remain open from specification | OPEN | Pilot uses synthetic data, SSH and independent auth/reauth secrets |

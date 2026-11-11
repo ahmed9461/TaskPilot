@@ -1,19 +1,21 @@
 # نتائج الاختبار الفعلية
+Date: 2026-11-11 UTC. Evidence: commands in repository, phase-1 backend commit containing this file.
 
-**التاريخ:** 2026-11-11  
-**الوضع:** NOT RUN — لا شيفرة تنفيذية ولا بيئة اختبار/نشر في هذه المرحلة.
+| ID | Test / environment | Result |
+|---|---|---|
+| T-001 | Windows Node 24.15 `npm run check`, server Node 24.19 same command | PASS: tsc + 3 unit tests |
+| T-101 | New-VPS own PostgreSQL 17, 12 concurrent same-message ingests + 6 same-account new sources | PASS: one assignment, all sources |
+| T-102 | Multiple task types/periods/namespaces | PASS |
+| T-103 | Source-scoped preview, reauth, one-use token, mock quoted transport, timeout/crash unknown handling | PASS; no real message sent |
+| T-104 | Verified/manual versus UNVERIFIED flags | PASS |
+| T-105 | Wrong phrase/reauth/stale preview/uncertain delivery block; single/all purge; archive/restore | PASS on synthetic records |
+| T-107 | Two synthetic sessions; cross-session spoof rejected | PASS |
+| T-109 | Unauthorized API/reveal denial, AEAD, minimized lists/events, encrypted-at-rest fixture | PASS |
+| T-110 | `npm run test:integration` on server, ~4.7s | PASS: 13 tests including parent, zero skipped |
+| T-111 | `npm audit --audit-level=low` | PASS: zero known vulnerabilities |
+| T-106 | Windows close/service restart | NOT RUN |
+| T-108 | Encrypted backup/restore | NOT RUN |
 
-| ID | الاختبار | النتيجة | البيئة/الدليل |
-|---|---|---|---|
-| T-000 | تهيئة مستندات التخطيط | DOCUMENTATION ONLY | الملفات في المستودع؛ لا يعد اختبار تشغيل |
-| T-101 | تكرار استقبال نفس الرسالة | NOT RUN | — |
-| T-102 | الحساب الواحد ومهام متعددة | NOT RUN | — |
-| T-103 | الرد المقتبس ومنع إرسال مكرر | NOT RUN | — |
-| T-104 | خطأ رمز مؤكد مقابل غير مؤكد | NOT RUN | — |
-| T-105 | الحذف الفردي والجماعي والكلي | NOT RUN | — |
-| T-106 | بقاء الخدمة بعد إغلاق Windows | NOT RUN | — |
-| T-107 | تعدد الجلسات والعزل | NOT RUN | — |
-| T-108 | استعادة نسخة DB مشفرة | NOT RUN | — |
-| T-109 | مصادقة وتشفير وتنقيح السجلات | NOT RUN | — |
+Initial integration execution over high-latency SSH tunnel: FAIL (pool 5s acquisition timeout; downstream tests lacked fixture). Corrected pool wait to 20s and ran whole suite adjacent to PostgreSQL: PASS. Do not treat that failed attempt as a service deployment failure or live-user evidence.
 
-أضف لكل اختبار منفذ: وقت التشغيل UTC، commit، البيئة، steps، expected، observed، PASS/FAIL/BLOCKED، رابط الدليل. لا تستبدل NOT RUN بـ PASS دون تنفيذ.
+Reproduce: dedicated DB named `*_test`, set TASKPILOT_TEST_DATABASE_URL securely, run `npm ci`, `npm run check`, `npm run test:integration`. Tests truncate only that dedicated database. Real WhatsApp, live AI and human UI acceptance NOT RUN.

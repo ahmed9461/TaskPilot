@@ -1,30 +1,19 @@
 # الحالة الحالية — المصدر المرجعي
+As of: 2026-11-11. Phase 1 backend: VERIFIED on isolated synthetic PostgreSQL; API not yet running as a service. Windows: IN_PROGRESS.
 
-**As of:** 2026-11-11  
-**Phase:** 0 — وثائق التأسيس  
-**Overall:** PLANNING / NOT IMPLEMENTED  
-**Target deployment:** New-VPS (NOT DEPLOYED)
+## مثبت
+- TypeScript/Fastify authenticated API, versioned PostgreSQL migrations with checksums/advisory locking.
+- Session/group mock adapter only; durable encrypted review inbox, namespace identity, task/period/source deduplication.
+- Account/assignment management, notifications and reconnect cursor, AEAD credential storage and reauthentication for reveal.
+- Reply preview/one-use approval/outbox, source/session checks; uncertain sends and crash recovery become UNKNOWN_DELIVERY.
+- Evidence-based flags, archive/restore and snapshot/reauth protected purge.
+- `npm run check`: build + 3 unit tests PASS. `npm run test:integration` on New-VPS dedicated synthetic database: 13/13 PASS (including parent suite), 2026-11-11. `npm audit`: zero known vulnerabilities.
 
-## ما ثبت
-- تحديد رؤية Windows + New-VPS، الحسابات/المهام/المجموعات، تعدد جلسات مستقبلي، إدارة ردود، حذف، تنبيهات واعتمادات خاطئة، AI اختياري.
-- إنشاء وثائق متطلبات وهندسة وخصوصية وخارطة طريق واختبارات وتتبع في GitHub.
-- لا توجد ملفات كود لتطبيق Windows أو Backend في هذه المرحلة.
+## البيئة
+- Own PostgreSQL 17 container taskpilot-db, loopback port 15488, independent Docker volume; limits 384 MiB/0.5 CPU.
+- Own service user taskpilot, separate /etc/taskpilot secret files. Existing services/configuration not modified.
+- SSH transport; no public API binding, WhatsApp dependency, real pairing, real messages, or AI requests.
 
-## غير منفذ
-- Backend/API/DB migrations، WhatsApp connector، Windows UI، auth، AI، notifications.
-- أي عملية نشر أو ربط رقم واتساب أو قراءة مجموعات حقيقية على New-VPS.
-- أي اختبار وظيفي أو أمني أو إثبات تشغيل.
-- اعتماد خيار موصل واتساب وخطة البيانات الحساسة.
-
-## أولويات التنفيذ التالية
-1. مراجعة مخاطر وسياسات موصل واتساب، وتثبيت قرار التنفيذ قبل ربط رقم حقيقي.
-2. تثبيت نموذج البيانات وواجهات API وحالات الحذف والرد وخطأ الرمز.
-3. بناء Backend mock/inbox/outbox مع اختبارات idempotency باستخدام بيانات وهمية.
-4. تطبيق Windows الأولي وربطه ببيئة تطوير، ثم الانتقال للاختبارات على New-VPS بعد الإذن.
-
-## الأدلة
-- ملف README.md وبقية وثائق المستودع بعد commit التأسيسي.
-- tracking/TEST_RESULTS.md: لا اختبارات منفذة بعد.
-
-## قواعد تغيير هذا الملف
-لا يُكتب VERIFIED/DEPLOYED إلا مع دليل commit/اختبار/أمر حالة أو نتيجة تشغيل موثقة وغير حساسة. لمجرد وجود الملفات لا يُعد المشروع منفذًا.
+## لم يثبت/متبقٍ
+Windows UI/build, persistent API deployment/restart/backup recovery, live WhatsApp, production identity/MFA, real-data retention policy, AI integration. No production readiness claim.
+See TEST_RESULTS.md and SESSION_HANDOFF.md for reproducible commands and next steps.
