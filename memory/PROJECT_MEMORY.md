@@ -36,3 +36,6 @@ Native WinUI3 client built/published and observed with synthetic local API + iso
 D-025..027: optional AI code-only privacy boundary/offline contract tests, actual runtime still disabled; explicit unknown-delivery reconciliation never resends; migration byte integrity tolerates only LF/CRLF. Old pilot remained running on failed rollout; use exact final state, not attempt, as deployment truth.
 
 Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.
+
+## Final verified pointer — 2026-11-11
+Deployed source eb0f66bbc35ff008767501526612bdf0e9a94999 on New-VPS; CI43061180349 both jobs PASS. API runtime least privilege and actual restart/data/other-service preservation verified. Final backup/restore3 migrations and tamper rejection PASS. Portable Windows built/observed on fixture path; direct VPS auth/manual production gates remain open. Temporary local UI/API/tunnels stopped; server pilot remains active.

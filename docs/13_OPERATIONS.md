@@ -32,3 +32,5 @@
 - `node ops/backup.mjs restore-test /var/lib/taskpilot/backups/UNIQUE.tpg UNIQUE_restore_test` verifies authentication tag, creates a fresh isolated database and uses single-transaction pg_restore. Existing target/production restore refused. Tested snapshot: 1 synthetic account,1 assignment,2 migrations,0 SENDING jobs.
 - Key recovery/escrow and off-host backups are not established. A same-host restore drill is not proof of VPS-loss recovery. Production retention/deletion cycle and scheduled backups remain pending approval.
 - No data/secret dumps or raw service logs are public deliverables. UNKNOWN_DELIVERY blocks purge/retry until the owner explicitly reconciles actual delivery in the Replies screen or authenticated reconciliation endpoint; reconciliation never requeues.
+
+Final deployed code eb0f66bbc35ff008767501526612bdf0e9a94999: protected runtime role, actual restart/data preservation/other-service invariance, HTTP auth/replay, encrypted restore/tamper rejection verified. Source tracking/PROJECT_STATE.md remains authoritative.

@@ -37,3 +37,12 @@ Reproduce: dedicated DB named `*_test`, set TASKPILOT_TEST_DATABASE_URL securely
 - AI live requests/billing and direct Windows-pilot auth remain NOT RUN.
 
 - Stability rerun on New-VPS dedicated test DB:8 unit/adapter/integrity tests and14 PostgreSQL workflow tests PASS, including reauth/evidence reconciliation and no resend after reconciliation. WinUI rebuild0 errors/warnings. Runtime least-privilege separation and restart verifier added; actual verification pending deployment.
+
+## Final code acceptance — eb0f66b
+- CI43061180349 PASS: Ubuntu/PG backend and Windows/.NET jobs. Source https://github.com/ahmed9461/TaskPilot/commit/eb0f66bbc35ff008767501526612bdf0e9a94999 .
+- New-VPS runtime role least-privilege PASS: NOSUPERUSER, no create DB/role, CREATE TABLE denied42501, schema_migrations UPDATE denied42501.
+- Actual taskpilot restart PASS: changed PID, counts identical, other running service list identical, enabled at startup. Active, NRestarts0, observed MemoryCurrent28762112. Host reboot/rollback NOT RUN.
+- Final HTTP auth/ready/replay PASS after restart; liveSendingfalse. API8240/DB15488 only127.0.0.1.
+- Final encrypted backup32635 bytes; fresh restore DB1 account/1 assignment/3 migrations/0 SENDING. Tampered ciphertext rejected with no target database created.
+- Self-contained Windows publish PASS and6 client checks PASS. ZIP96852413 bytes/527 entries: testzip PASS, executable present, no runtime key/backup/log files. SHA2564FEE0763349A0A0258302CDD1F9526FA14FF4BBEFA1618AA02B38EED88708C04.
+- Temporary Windows fixture client/API/SSH forwards stopped; VPS pilot intentionally remains active. Full live acceptance not claimed.

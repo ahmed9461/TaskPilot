@@ -1,6 +1,6 @@
 # خارطة طريق TaskPilot
 
-## Phase 0 — تأسيس التوثيق والقرارات (الحالية)
+## Phase 0 — تأسيس التوثيق والقرارات
 - [x] تثبيت الرؤية الأولية والبنية الهدف وخرائط المخاطر والملفات الدائمة
 - [ ] اعتماد موصل واتساب واختبار سياسة/ملاءمة المجموعات
 - [ ] مراجعة نموذج البيانات والاحتفاظ والحذف مع المالك
@@ -35,3 +35,6 @@
 
 ## تعريف الإنجاز
 لا يُعلّم بند Done بالاعتماد على كتابة خطة/ملف فقط؛ مطلوب commit ونتيجة اختبار وربط إصدار عند النشر. سجّل ما هو منفذ ولم يختبر كحالة منفصلة.
+
+## Current execution pointer
+Phase1 synthetic backend/native client/pilot deployment achieved with explicit acceptance limits. Several Phase2 adapter/stability foundations also implemented. Original checklist is target scope; per-item actual status/tests in tracking/TODO.md and PROJECT_STATE.md override planning checkboxes. Live provider/production gates remain open.

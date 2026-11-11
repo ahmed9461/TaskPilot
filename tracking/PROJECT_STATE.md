@@ -1,26 +1,30 @@
 # الحالة الحالية — المصدر المرجعي
-As of 2026-11-11. Phase 1: Backend + Windows pilot implemented; closed synthetic deployment on New-VPS. Live production acceptance NOT COMPLETE.
+As of: 2026-11-11. Synthetic pilot IMPLEMENTED / VERIFIED / DEPLOYED. Production acceptance remains open.
+Runtime code commit: `eb0f66bbc35ff008767501526612bdf0e9a94999`. Branch: `feat/mvp-foundation`. Final documentation-only commit does not change deployed code.
 
-## VERIFIED
-- API, PostgreSQL migrations, encrypted credentials/review, mock sessions/groups and deduplicated account/task/period/all sources.
-- Separate task/outbox status, five-minute one-use preview approvals, reauth, unknown-delivery recovery, archive/restore/purge and aggregate-version stale protection.
-- Local/server build + 8 unit/adapter/integrity tests PASS; isolated PostgreSQL integration 14/14 PASS (including parent). C# client checks 6/6 PASS; npm audit zero.
-- WinUI 3 Arabic RTL client builds/publishes self-contained x64. Actual window observed: connected synthetic fixture, account list (no password), task list, quote source/template and final preview, cancellation. No UI send/reveal/delete confirmation performed.
-- API running as taskpilot.service, independent user, loopback8240; own PostgreSQL17 taskpilot-db/volume, loopback15488; CPU/memory bounded. Initial source62fddfe. Next release exact SHA recorded after deployment.
-- HTTP auth/readiness/replay smoke PASS. AES-GCM pg_dump backup + isolated pg_restore PASS:1 synthetic account,1 assignment,2 migrations,0 SENDING. Same-host restore only.
+## DEPLOYED — New-VPS
+- taskpilot.service active/enabled, own taskpilot system user, root-owned immutable release symlink `/opt/taskpilot/current`.
+- API only127.0.0.1:8240. Own PostgreSQL17 taskpilot-db container/volume only127.0.0.1:15488, memory/CPU bounded; no shared DB/proxy/firewall/SSH changes.
+- Runtime role taskpilot_runtime: NOSUPERUSER/NOCREATEDB/NOCREATEROLE, DML only. Tested DDL and migration-write denial. Root-only migration.env separate from service env.
+- Actual restart changed PID, retained account/assignment/message counts, other running service list unchanged, startup enabled. Automatic NRestarts0; observed memory28,762,112 bytes after checks. Host reboot not tested.
 
-## DELIVERABLE
-`apps/windows` source + lockfile; portable app published under task outputs. No installer/signature/update channel yet. CI run43059625322 PASS for f659d9b: Node/Postgres and Windows build/client checks. Final revision rerun follows.
+## VERIFIED functionality
+- Auth/independent reauth, input limits, encrypted AEAD credentials/review, conservative parser, explicit namespace/task/period/all-source identities and concurrent replay deduplication.
+- Separate task/outbox states, source-scoped five-minute approval, mock quoted dispatch, UNKNOWN_DELIVERY recovery and explicit owner reconciliation without resend.
+- Evidence flags, archive/restore, fixed-snapshot single/selected/all account purge with aggregate-version staleness protection; redacted audit, durable reconnect notifications.
+- Native WinUI3 Arabic RTL client built/published self-contained x64; account/task display and reply source/text preview/cancel actually observed using fixture API + isolated test DB. New selected purge/reconciliation forms build; full human confirmation acceptance remains open.
+-8 Node tests,14 PostgreSQL integration tests including parent,6 C# client checks PASS. npm audit zero; repository known-pattern/forbidden-file scan PASS. CI PASS: https://github.com/ahmed9461/TaskPilot/actions/runs/43061180349.
+- HTTP deployed auth/readiness/replay smoke PASS; liveSending=false. Backup32635 bytes AES-256-GCM; isolated restore1 account/1 assignment/3 migrations/0 sending. Corrupted backup rejected before any restore DB created. Same-host recovery only.
+- DeepSeek/OpenRouter adapters have4 offline mock/privacy tests; not wired into runtime, no live keys/requests. Only trusted task codes are accepted, always review; freeform account extraction/prices/persistent usage accounting absent.
 
-## NOT VERIFIED / OPEN
-- Direct Windows-to-pilot-server connection: automatic server-token-to-client launch rejected by auto-review (generic blocked by policy); safer Windows test used separate local API + dedicated remote synthetic UI DB via SSH. Owner token was not exported to the client.
-- Live WhatsApp pairing/messages, provider selection, live AI, production identity/MFA, real-data retention/key rotation, off-host key escrow/backups, host reboot/rollback drill.
-- Advanced rules, large-list paging, native toast/push, per-assignment purge remain TODO.
-All data synthetic. Existing services/configs untouched; no public API, firewall/Nginx/SSH changes.
+## Outputs
+Portable `TaskPilot-Windows-x64-0.1.0-pilot.zip` (96,852,413 bytes,527 entries), integrity checked, no runtime key/config/backups. SHA256 in task outputs. No signed installer/update channel.
 
-## Stability/adapters phase
-- Implemented explicit owner reconciliation of UNKNOWN_DELIVERY with reauth/evidence, SENT/FAILED terminal state and no resend. Windows selected-account preview added.
-- Offline DeepSeek/OpenRouter adapter tests PASS; adapters default-disabled, not connected to ingest or live keys. They accept only allowlisted task codes; account extraction/real provider acceptance remain open.
-- f659d9b deployment aborted before switch due historical CRLF checksum versus new LF. Old62fddfe continued active. Byte hashes verified line endings only; migration runner now accepts LF/CRLF-equivalent checksums, rejects SQL changes; regression PASS. Exact successful release evidence follows.
+## OPEN / NOT VERIFIED
+- Direct Windows-to-pilot authenticated connection: auto-review blocked automatic launch carrying server token (generic blocked by policy). Owner must enter token locally; fixture UI evidence is separate.
+- Live WhatsApp connector choice/risk approval, pairing/receiving/sending; no real messages or accounts used.
+- Production short sessions/MFA, real-data retention, key rotation/escrow/off-host scheduled backups, full host reboot/rollback, broad UI/accessibility/load acceptance.
+- Advanced rules/editor, large-list paging/filters, native toast/push, per-assignment purge, live AI UI/runtime/billing integration.
 
-Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.
+## Resolved rollout issue
+f659d9b deployment safely stopped on CRLF/LF checksum mismatch; old62fddfe stayed active. Verified byte-equivalent SQL, added normalization-only compatibility and SQL-change rejection test; final eb0f66b deployed successfully without DB reset.

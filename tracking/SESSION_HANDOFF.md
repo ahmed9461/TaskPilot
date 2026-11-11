@@ -1,22 +1,23 @@
-# التسليم — 2026-11-11
-## المنفذ
-Backend foundation commit62fddfe. Subsequent working release adds native WinUI3/.NET10 self-contained client, protected forms/preview/polling, backup/deploy tools, CI, aggregate deletion-staleness hardening. Every repo document read at start.
+# تسليم قابل للاستئناف — 2026-11-11
+## النتيجة
+Project moved from docs only to working closed synthetic Backend/PostgreSQL/WinUI pilot. Four implementation commits pushed on feat/mvp-foundation; deployed code `eb0f66bbc35ff008767501526612bdf0e9a94999`. Final tracking-only commit records these results. All initial repository docs were read.
 
-## الأدلة
-3 Node unit tests;14 PostgreSQL integration tests including parent (server-local, own dedicated *_test DB);6 C# client checks; zero npm audit findings; WinUI Release build/publish pass. Actual Windows fixture/account/task/reply preview/cancel observed. Initial tunnel pool-timeout fixed5s→20s; incidental rebuild failed because running test EXE locked output, then app closed and publish passed.
-New-VPS taskpilot.service on loopback8240 + own PostgreSQL container15488. Auth/replay smoke and encrypted backup/isolated restore pass. No live external messages or AI calls.
+## Reproducible evidence
+`npm run check`:8 tests/build PASS; `npm run test:integration` against dedicated *_test DB:14/14 including parent PASS; `dotnet run --project apps/windows-tests/TaskPilot.ClientChecks.csproj -c Release`:6 checks PASS. WinUI Release/publish PASS. Final CI https://github.com/ahmed9461/TaskPilot/actions/runs/43061180349 PASS for backend and Windows. Known-pattern repository scan/format/npm audit PASS.
+On VPS run `node ops/verify-pilot.mjs` and `node scripts/pilot-smoke.mjs` from /opt/taskpilot/current: least privilege/restart/data preservation/other service isolation/auth/replay pass. These scripts read keys locally and do not print them.
+Backup02 restore:1 synthetic account,1 assignment,3 migrations,0 SENDING. Tamper rejected before DB creation. No off-host/key-loss claim.
 
-## الإكمال الجاري
-Commit/push native pilot, deploy exact immutable release, restart only taskpilot and compare other running services; wait CI and fix failures. Package portable Windows output with instructions/checksum.
+## Runtime
+Own taskpilot.service API loopback8240; own taskpilot-db loopback15488. Root-owned releases, dedicated user and runtime DB role. Secrets /etc/taskpilot; migration.env root-only, pilot.env restricted service access. Never print or commit their values. Existing services/configs untouched. No real WhatsApp/AI.
+Windows observed with local fixture API18241 and separate PostgreSQL UI test DB via tunnel; direct pilot auth was blocked by auto-review when launching client with server token. Do not export that key automatically; owner enters it locally. No live send/reveal/delete UI confirmation was automated.
+Local test app/API/SSH forwards closed; no local background helper needed. VPS pilot remains running. Scratch SDK ../dotnet retained; source work/TaskPilot.
 
-## المعلّق
-Do not fetch server bearer token into client automatically: auto-review rejected launch carrying that key with generic blocked-by-policy; no detailed reason. Windows direct pilot connection remains manual acceptance; synthetic fixture path works safely.
-No live WhatsApp/AI outbound until authorized and scoped; real-data retention/production MFA/key escrow not approved. No other services or shared config changes.
+## Next useful work
+1. Complete native UI acceptance with synthetic fixtures: create/edit/review/status/reconcile/selected purge; list paging, Arabic status labels, accessibility and advanced filters/rules.
+2. Production identity/session/MFA and retention/key escrow/off-host recovery decisions before real data. No assumed approval for live WhatsApp or sending.
+3. Choose/review live WhatsApp adapter and isolated dedicated-number test only after owner authorization.
+4. Wire optional AI task-code suggestions into explicit approved workflow; live provider/model/cost and billing persistence remain open. Current adapters are isolated/offline-tested only.
+5. Test whole-host reboot and schema-compatible rollback in a safe window; no global server restart was performed.
 
-## الاستئناف
-Current checkout work/TaskPilot, feat/mvp-foundation. Own runtime /opt/taskpilot/current → releases/FULL_SHA. `/etc/taskpilot` owns secret files; never print/copy to Git/outputs. `ops/deploy-pilot.sh` prepared release; `scripts/pilot-smoke.mjs` on VPS. Integration tests only *_test; restores only *_restore_test. Local SDK ../dotnet. Project state always wins over old planning language.
-
-## Stability additions
-Added migration003 delivery reconciliation and selected Windows purge; 4 mocked AI adapter tests and line-ending checksum regression. Old deployment remained safe after checksum guard stopped f659d9b; next deployment uses LF/CRLF-aware checks while retaining SQL integrity. CI43059625322 passed. Finish final deploy/restart/restore/CI/ZIP and replace this pending handoff with exact evidence.
-
-Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.
+## Cautions
+Never edit applied SQL except newline-equivalence handled by checksum runner; create new migrations. Integration runner truncates only *_test databases; restore tool only creates fresh *_restore_test. Backup64MiB in-memory cap is pilot-only. Runtime cannot migrate; root deploy loads migration.env. Do not reuse other projects' DBs, WhatsApp sessions or services.

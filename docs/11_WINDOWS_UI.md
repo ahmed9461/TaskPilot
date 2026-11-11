@@ -26,3 +26,6 @@
 
 ## أخطاء الرموز
 حقل نوع الخطأ (كلمة المرور/رمز حساب/ربط واتساب)، مصدر التحقق (ملاحظة يدوية/تجربة مصرح بها)، درجة الثقة، وتنبيه قابل للتخصيص. زر اقتراح رد لا يرسل حتى الموافقة.
+
+## Actual pilot implementation
+WinUI3/.NET10 self-contained x64 source under apps/windows. Main navigation/forms, timed protected reveal, preview, selected/all purge, unknown reconciliation, theme and polling implemented. Actual fixture account/task/reply preview/cancel observed; sensitive confirmations and broad accessibility/paging/rules acceptance remain open. No installer/signature/update channel. See TEST_RESULTS for boundaries.

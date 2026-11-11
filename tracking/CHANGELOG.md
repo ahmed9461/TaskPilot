@@ -36,3 +36,6 @@
 - Arabic validation feedback in Windows.
 
 Security deployment follow-up: runtime DB role separated from root-only migration owner; grants limited to DML in own pilot DB, DDL/migration writes denied by design. ops/verify-pilot.mjs checks actual privileges, restart/data preservation and unchanged other running services. Final deployed evidence follows.
+
+## Final pilot verification — 2026-11-11
+Deployment eb0f66b, restart/least-privilege/isolation/HTTP smoke and encrypted restore/tamper checks PASS. CI43061180349 both jobs PASS. Portable Windows ZIP validated; temporary local fixtures stopped. Remaining production and UI work is explicit in TODO.
