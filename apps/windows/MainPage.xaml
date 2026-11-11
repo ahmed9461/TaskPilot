@@ -10,7 +10,9 @@
     <NavigationViewItem Content="الردود والقوالب" Tag="replies" Icon="Message"/>
     <NavigationViewItem Content="المجموعات" Tag="groups" Icon="World"/>
     <NavigationViewItem Content="الجلسات" Tag="sessions" Icon="Link"/>
-    <NavigationViewItem Content="الإشعارات" Tag="notifications" Icon="Flag"/>
+    <NavigationViewItem x:Name="NotificationsNav" Content="الإشعارات" Tag="notifications" Icon="Flag"><NavigationViewItem.InfoBadge><InfoBadge x:Name="UnreadBadge" Value="0" Visibility="Collapsed"/></NavigationViewItem.InfoBadge></NavigationViewItem>
+    <NavigationViewItem Content="سجل النشاط" Tag="audit" Icon="List"/>
+    <NavigationViewItem Content="المراقبة" Tag="operations" Icon="View"/>
    </NavigationView.MenuItems>
    <Grid Padding="32,24" RowSpacing="20">
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>

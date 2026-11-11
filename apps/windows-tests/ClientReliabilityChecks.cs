@@ -4,7 +4,11 @@ using TaskPilot_Windows;
 
 static class ClientReliabilityChecks
 {
-    static void Check(bool value, string message) { if (!value) throw new Exception(message); }
+    static void Check(bool value, string message)
+    {
+        if (!value)
+            throw new Exception(message);
+    }
     public static async Task Run()
     {
         var clock = new ManualClock();
@@ -13,13 +17,25 @@ static class ClientReliabilityChecks
         api.Configure("http://127.0.0.1:8240", "synthetic-test-token-00000000000000", clock.GetUtcNow().AddSeconds(30));
         await api.Send("GET", "/v1/me");
         clock.Advance(30);
-        try { await api.Send("POST", "/v1/change", new { }); throw new Exception("Expired session accepted"); }
+        try
+        {
+            await api.Send("POST", "/v1/change", new
+            {
+            });
+            throw new Exception("Expired session accepted");
+        }
         catch (ApiFailure e) { Check(e.StatusCode == 401 && e.Message == "SESSION_EXPIRED", "Expiry was not explicit"); }
         Check(handler.Calls == 1, "Expired mutation reached transport");
 
         using var uncertain = new ApiClient(new CountingHandler(fail: true));
         uncertain.Configure("http://127.0.0.1:8240", "synthetic-test-token-00000000000000");
-        try { await uncertain.Send("POST", "/v1/approve", new { }); throw new Exception("Expected transport failure"); }
+        try
+        {
+            await uncertain.Send("POST", "/v1/approve", new
+            {
+            });
+            throw new Exception("Expected transport failure");
+        }
         catch (HttpRequestException) { }
         Check(CountingHandler.FailedCalls == 1, "Uncertain mutation retried automatically");
 
@@ -68,7 +84,11 @@ static class ClientReliabilityChecks
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Calls++;
-            if (fail) { FailedCalls++; throw new HttpRequestException("synthetic uncertain delivery"); }
+            if (fail)
+            {
+                FailedCalls++;
+                throw new HttpRequestException("synthetic uncertain delivery");
+            }
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}", Encoding.UTF8, "application/json") });
         }
     }

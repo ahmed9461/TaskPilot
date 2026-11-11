@@ -1,4 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
- <ItemGroup><Compile Include="../windows/ApiClient.cs" Link="ApiClient.cs"/><Compile Include="../windows/SshConnection.cs" Link="SshConnection.cs"/><Compile Include="../windows/ClientConnectionState.cs" Link="ClientConnectionState.cs"/></ItemGroup>
+ <ItemGroup><Compile Include="../windows/ApiClient.cs" Link="ApiClient.cs"/><Compile Include="../windows/SshConnection.cs" Link="SshConnection.cs"/><Compile Include="../windows/ClientConnectionState.cs" Link="ClientConnectionState.cs"/><Compile Include="../windows/ChangeFeed.cs" Link="ChangeFeed.cs"/></ItemGroup>
 </Project>

@@ -9,6 +9,11 @@ import { Service, Fault } from "./service.js";
 import { Vault, equal, hash } from "./security.js";
 import { transaction, event } from "./db.js";
 import {
+  queryActivity,
+  notificationState,
+  operationsSnapshot,
+} from "./activity.js";
+import {
   accountInput,
   assignmentStatus,
   id,
@@ -108,7 +113,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.2.0",
+    version: "0.3.0",
     provider: "mock",
   }));
   app.get("/ready", async () => {
@@ -694,6 +699,11 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     return service.deleteAccounts(p.approvalToken, p.confirmation);
   });
   app.get("/v1/notifications", async (req) => {
+    const paged = z
+      .object({ page: z.enum(["true", "false"]).default("false") })
+      .parse(req.query);
+    if (paged.page === "true")
+      return queryActivity(pool, "notifications", req.query);
     const { cursor } = cursorQuery.parse(req.query);
     return (
       await pool.query(
@@ -702,9 +712,31 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       )
     ).rows;
   });
+  app.get("/v1/notifications/state", async () => notificationState(pool));
+  app.post("/v1/notifications/read", async (req) => {
+    const { ids } = z
+      .object({
+        ids: z
+          .array(
+            z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+          )
+          .min(1)
+          .max(100),
+      })
+      .strict()
+      .parse(req.body);
+    const result = await pool.query(
+      "UPDATE notifications SET read_at=COALESCE(read_at,now()) WHERE id=ANY($1::bigint[]) RETURNING id",
+      [ids],
+    );
+    return { updated: result.rowCount };
+  });
+  app.get("/v1/operations", async () => operationsSnapshot(pool));
   app.post("/v1/notifications/:id/read", async (req) => {
     const p = z
-      .object({ id: z.coerce.number().int().positive() })
+      .object({
+        id: z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      })
       .parse(req.params);
     await pool.query("UPDATE notifications SET read_at=now() WHERE id=$1", [
       p.id,
@@ -719,16 +751,19 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
         [cursor],
       )
     ).rows;
-    return { items, cursor: items.at(-1)?.id ?? String(cursor) };
+    return {
+      items,
+      cursor: items.at(-1)?.id ?? String(cursor),
+      hasMore: items.length === 500,
+    };
   });
-  app.get(
-    "/v1/audit",
-    async () =>
-      (
-        await pool.query(
-          "SELECT * FROM audit_events ORDER BY id DESC LIMIT 500",
-        )
-      ).rows,
-  );
+  app.get("/v1/audit", async (req) => {
+    const result = await queryActivity(pool, "audit", req.query);
+    return z
+      .object({ page: z.enum(["true", "false"]).default("false") })
+      .parse(req.query).page === "true"
+      ? result
+      : result.items;
+  });
   return app;
 }

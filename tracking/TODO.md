@@ -52,3 +52,5 @@ Checked means verified only within the stated synthetic pilot scope; production 
 Final continuation: deployed17f846e / Windows binarybfcbbd4, CI43093897111 both jobs PASS; encrypted restore5 migrations PASS. I-010 external existing-service restart loop remains outside TaskPilot scope and must not be silently treated as fixed.
 
 0.3 stage1: explicit reconnect/expiry/backoff and no-mutation-retry VERIFIED by simulated C# checks and native build; actual transport interruption/GUI verification pending. Activity/notifications/monitoring stage follows D-033.
+
+0.3 stage2: notification/audit pages, read state/badge, operational snapshot and generic local toasts IMPLEMENTED; backend530-event/late-commit tests18 total PASS,20 local C# checks PASS, native OS receipt stored/generic/silent PASS. Actual-server25-check/visual activity/recovery acceptance and rollout follow; no popup/click/background delivery claim.

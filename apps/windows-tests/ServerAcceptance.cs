@@ -55,6 +55,9 @@ static class ServerAcceptance
             Check(S(await Call("GET", "/ready"), "status") == "ready");
             Check((await Call("GET", "/v1/me"))["liveSendingEnabled"]!.GetValue<bool>() == false);
             checks += 2;
+            var syncState = await Call("GET", "/v1/notifications/state");
+            var feed = new ChangeFeed();
+            feed.Seed(S(syncState, "newestId"));
             stage = "setup";
             var session = await Call("POST", "/v1/sessions", new
             {
@@ -156,6 +159,25 @@ static class ServerAcceptance
             var filtered = await Call("GET", $"/v1/assignments?page=true&sessionId={S(session, "id")}&groupId={S(group, "id")}&taskTypeId={S(routedType, "id")}&status=COMPLETED&minPriority=70");
             Check(filtered["total"]!.GetValue<int>() == 1);
             checks++;
+            stage = "activity-feed";
+            var updates = await Call("GET", "/v1/changes?cursor=" + feed.Cursor);
+            var fresh = feed.Consume(updates);
+            Check(fresh.NewItems > 0 && fresh.AttentionItems > 0);
+            Check(feed.Consume(updates).NewItems == 0);
+            checks++;
+            var ownNotices = updates["items"]!.AsArray().Where(n => S(n, "subject_id") == S(account, "id")).Select(n => S(n, "id")).ToArray();
+            Check(ownNotices.Length > 0);
+            Check((await Call("POST", "/v1/notifications/read", new
+            {
+                ids = ownNotices
+            }))["updated"]!.GetValue<int>() == ownNotices.Length);
+            checks++;
+            var audit = await Call("GET", "/v1/audit?page=true&action=ACCOUNT_UPDATED&targetId=" + S(account, "id"));
+            Check(audit["total"]!.GetValue<int>() == 1 && !audit.ToJsonString().Contains("synthetic-updated"));
+            checks++;
+            var operations = await Call("GET", "/v1/operations");
+            Check(operations["migrations"]!.GetValue<int>() >= 6 && operations["liveSendingEnabled"]!.GetValue<bool>() == false);
+            checks++;
             stage = "quoted-mock-reply";
             var preview = await Call("POST", "/v1/reply-jobs/preview", new
             {
@@ -248,6 +270,23 @@ static class ServerAcceptance
             }
             catch (InvalidOperationException e) { Check(e.Message == "PERMISSION_DENIED"); }
             checks++;
+            stage = "owned-tunnel-drop";
+            connection.StopTunnel();
+            try
+            {
+                await api.Send("GET", "/ready");
+                throw new Exception("Stopped tunnel still reachable");
+            }
+            catch (HttpRequestException) { checks++; }
+            catch (TaskCanceledException) { checks++; }
+            stage = "explicit-reconnect";
+            await using (var next = await SshConnection.Connect(alias))
+            {
+                using var restored = new ApiClient();
+                restored.Configure(next.Address, next.Token, next.ExpiresAt);
+                Check(S(await restored.Send("GET", "/ready"), "status") == "ready");
+                checks++;
+            }
             Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
             {
                 status = "PASS",

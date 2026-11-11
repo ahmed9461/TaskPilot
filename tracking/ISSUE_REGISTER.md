@@ -16,3 +16,6 @@
 | I-009 | Expanded C# acceptance filter expected a rule-routed task but test payload omitted the keyword | VERIFIED FIX | Corrected fixture; full19-check acceptance PASS; scoped leftover fixtures removed |
 
 | I-010 | First final bfcbbd4 ops verifier returned generic failure; unchanged release stage-instrumented rerun PASS, active/healthy0.2.0; original failing assertion unknown | OBSERVED EXTERNAL DRIFT / DIAGNOSTICS IMPROVED | Later17f846e failures identified other-services; read-only samples proved an existing service auto-restarts while TaskPilot PID stays stable/NRestarts0. That service untouched. Final diagnostic full check PASS for one sample; continuous invariance not claimed. Original first generic assertion unconfirmed. Sanitized stage/probe bounds retained |
+
+| I-011 | Notification screen used earliest500 records without pages/read filtering, leaving later records inaccessible | VERIFIED BACKEND FIX | New newest-first snapshot pages/read filter/bulk bounded read;530-event regression PASS. WinUI controls built; visual verification follows |
+| I-012 | Expired SSH session appeared as network outage and mixed manual/SSH auth could retain old reauth identity | VERIFIED LOCAL FIX | Typed401/absolute expiry, explicit reconnect/no mutation retry, old SSH disposal,13 transport/reliability checks PASS; direct interruption/GUI acceptance follows |

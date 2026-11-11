@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { createPool } from "../../src/db.js";
+import { createPool, transaction, event } from "../../src/db.js";
 import { migrate } from "../../src/migrate.js";
 import { createApp } from "../../src/app.js";
 import { dispatchOne, startMockWorker } from "../../src/outbox.js";
@@ -1007,6 +1007,198 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
         );
       } finally {
         await feature.close();
+      }
+    },
+  );
+  await t.test(
+    "activity pages expose recent/unread records beyond500 with bounded read and filtered redacted audit",
+    async () => {
+      const activity = await createApp(pool, config);
+      try {
+        const request = async (method: any, path: string, payload?: any) => {
+          const result = await activity.inject({
+            method,
+            url: path,
+            headers,
+            ...(payload ? { payload } : {}),
+          });
+          assert.equal(result.statusCode, 200, `${path}: ${result.statusCode}`);
+          return result.json();
+        };
+        for (const url of [
+          "/v1/operations",
+          "/v1/notifications/state",
+          "/v1/audit?page=true",
+        ])
+          assert.equal((await activity.inject({ url })).statusCode, 401);
+        const before = await request("GET", "/v1/notifications/state");
+        await pool.query(
+          "INSERT INTO notifications(type) SELECT 'SYNTHETIC_ACTIVITY_TEST' FROM generate_series(1,530)",
+        );
+        const state = await request("GET", "/v1/notifications/state");
+        const first = await request(
+          "GET",
+          "/v1/notifications?page=true&type=SYNTHETIC_ACTIVITY_TEST&limit=50",
+        );
+        assert.equal(first.total, 530);
+        assert.equal(first.items.length, 50);
+        assert.equal(first.items[0].id, state.newestId);
+        const tail = await request(
+          "GET",
+          "/v1/notifications?page=true&type=SYNTHETIC_ACTIVITY_TEST&limit=50&offset=500",
+        );
+        assert.equal(tail.items.length, 30);
+        assert.notEqual(tail.items[0].id, first.items[0].id);
+        const changes = await request(
+          "GET",
+          "/v1/changes?cursor=" + before.newestId,
+        );
+        assert.equal(changes.items.length, 500);
+        assert.equal(changes.hasMore, true);
+        const next = await request(
+          "GET",
+          "/v1/changes?cursor=" + changes.cursor,
+        );
+        assert.equal(next.items.length, 30);
+        assert.equal(next.hasMore, false);
+        assert.equal(next.cursor, state.newestId);
+        assert.equal(
+          new Set([...changes.items, ...next.items].map((x: any) => x.id)).size,
+          530,
+        );
+        const ids = first.items.slice(0, 5).map((x: any) => x.id);
+        assert.equal(
+          (await request("POST", "/v1/notifications/read", { ids })).updated,
+          5,
+        );
+        const readAt = (
+          await pool.query("SELECT read_at FROM notifications WHERE id=$1", [
+            ids[0],
+          ])
+        ).rows[0].read_at;
+        await request("POST", "/v1/notifications/read", { ids });
+        assert.deepEqual(
+          (
+            await pool.query("SELECT read_at FROM notifications WHERE id=$1", [
+              ids[0],
+            ])
+          ).rows[0].read_at,
+          readAt,
+        );
+        assert.equal(
+          (
+            await request(
+              "GET",
+              "/v1/notifications?page=true&type=SYNTHETIC_ACTIVITY_TEST&read=unread",
+            )
+          ).total,
+          525,
+        );
+        assert.equal(
+          (await request("GET", "/v1/notifications/state")).unreadCount,
+          state.unreadCount - 5,
+        );
+        const target = randomUUID();
+        await pool.query(
+          "INSERT INTO audit_events(action,target_id,created_at) VALUES('SYNTHETIC_AUDIT_TEST',$1,'2026-01-02T00:00:00Z'),('SYNTHETIC_AUDIT_TEST',$1,'2026-02-02T00:00:00Z')",
+          [target],
+        );
+        const audit = await request(
+          "GET",
+          `/v1/audit?page=true&action=SYNTHETIC_AUDIT_TEST&targetId=${target}&from=2026-01-01T00:00:00Z&to=2026-01-31T00:00:00Z`,
+        );
+        assert.equal(audit.total, 1);
+        assert.equal(audit.items[0].target_id, target);
+        assert.deepEqual(
+          Object.keys(audit.items[0]).sort(),
+          ["id", "actor_id", "action", "target_id", "created_at"].sort(),
+        );
+        for (const path of [
+          "/v1/audit?action=x%27%20OR%201=1",
+          "/v1/audit?page=true&from=2026-02-01T00:00:00Z&to=2026-01-01T00:00:00Z",
+          "/v1/notifications?page=true&limit=501",
+          "/v1/notifications?page=garbage",
+        ])
+          assert.equal(
+            (await activity.inject({ url: path, headers })).statusCode,
+            400,
+          );
+        assert.equal(
+          (
+            await activity.inject({
+              method: "POST",
+              url: "/v1/notifications/read",
+              headers,
+              payload: { ids: [] },
+            })
+          ).statusCode,
+          400,
+        );
+        const operations = await request("GET", "/v1/operations");
+        assert.equal(operations.provider, "mock");
+        assert.equal(operations.liveSendingEnabled, false);
+        assert.ok(operations.migrations >= 6);
+        assert.ok(operations.oldestReviewSeconds >= 0);
+        assert.ok(operations.processUptimeSeconds >= 0);
+        assert.equal(
+          operations.counts.accounts,
+          Number(
+            (await pool.query("SELECT count(*) FROM accounts")).rows[0].count,
+          ),
+        );
+        for (const secret of [
+          "ciphertext",
+          "password",
+          "username",
+          "DATABASE_URL",
+          "token_hash",
+          "synthetic-feature-secret",
+        ])
+          assert.equal(JSON.stringify(operations).includes(secret), false);
+      } finally {
+        await activity.close();
+      }
+    },
+  );
+  await t.test(
+    "notification head never skips transactions that commit after reconnect baseline",
+    async () => {
+      const activity = await createApp(pool, config),
+        writer = await pool.connect();
+      let waiting: Promise<unknown> | undefined;
+      try {
+        const state = (
+          await activity.inject({ url: "/v1/notifications/state", headers })
+        ).json();
+        await writer.query("BEGIN");
+        await event(writer, "SYNTHETIC_LATE_COMMIT", randomUUID());
+        waiting = transaction(pool, async (c) =>
+          event(c, "SYNTHETIC_SECOND_COMMIT", randomUUID()),
+        );
+        assert.equal(
+          (
+            await activity.inject({ url: "/v1/notifications/state", headers })
+          ).json().newestId,
+          state.newestId,
+        );
+        await writer.query("COMMIT");
+        await waiting;
+        const changes = (
+          await activity.inject({
+            url: "/v1/changes?cursor=" + state.newestId,
+            headers,
+          })
+        ).json();
+        assert.deepEqual(
+          changes.items.map((x: any) => x.type),
+          ["SYNTHETIC_LATE_COMMIT", "SYNTHETIC_SECOND_COMMIT"],
+        );
+        assert.ok(Number(changes.items[1].id) > Number(changes.items[0].id));
+      } finally {
+        await writer.query("ROLLBACK");
+        writer.release();
+        if (waiting) await waiting;
+        await activity.close();
       }
     },
   );

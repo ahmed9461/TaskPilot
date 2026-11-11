@@ -13,13 +13,16 @@ public sealed partial class MainPage : Page
     private bool shuttingDown;
     public void Shutdown()
     {
+        if (shuttingDown)
+            return;
         shuttingDown = true;
         timer.Stop();
         sshConnection?.StopTunnel();
+        desktop.Dispose();
         api.Dispose();
     }
     private async Task<string?> Reauth(string value) => sshConnection is null ? value : await sshConnection.Reauthorize();
-    private string page = "dashboard", cursor = "0";
+    private string page = "dashboard";
     private bool busy, polling, renderPending, pendingChanges, hasDraft;
     private bool Editing() => hasDraft || Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot) is TextBox or PasswordBox or ComboBox or NumberBox or CheckBox;
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(10) };
@@ -106,6 +109,7 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         InitializeComponent();
+        desktop.OpenRequested += () => DispatcherQueue.TryEnqueue(async () => { if (shuttingDown) return; App.CurrentWindow?.Activate(); page = "notifications"; Heading.Text = "الإشعارات"; if (busy) renderPending = true; else await Run(Render); });
         Loaded += async (_, _) =>
         {
             await Run(async () =>
@@ -127,10 +131,16 @@ public sealed partial class MainPage : Page
                 await ConnectSsh(sshAlias);
             if (api.Connected && sshConnection is null)
                 connectionState.Connected(null);
+            if (api.Connected && sshConnection is null)
+                await InitializeSync("manual:" + api.Address);
             await Render();
         });
             if (!shuttingDown)
                 timer.Start();
+            var probeFile = Environment.GetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_FILE");
+            Environment.SetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_FILE", null);
+            if (probeFile is not null)
+                await Run(() => NotificationProbe.Run(desktop, probeFile));
         };
         Unloaded += async (_, _) => { timer.Stop(); if (sshConnection is not null) await sshConnection.DisposeAsync(); api.Dispose(); };
         timer.Tick += async (_, _) => await PollChanges();
@@ -185,16 +195,22 @@ public sealed partial class MainPage : Page
         {
             if (sshConnection is not null && !sshConnection.IsTunnelAlive)
                 throw new HttpRequestException("SSH_TUNNEL_FAILED");
-            var n = await api.Send("GET", "/v1/changes?cursor=" + cursor);
+            var n = await api.Send("GET", "/v1/changes?cursor=" + changes.Cursor);
             if (shuttingDown)
                 return;
-            cursor = V(n, "cursor");
+            var notificationState = await api.Send("GET", "/v1/notifications/state");
+            if (shuttingDown)
+                return;
+            var batch = changes.Consume(n);
+            UpdateUnread(notificationState);
+            if (batch.AttentionItems > 0)
+                desktop.Show(batch.AttentionItems);
             connectionState.Succeeded();
             ReconnectButton.Visibility = Visibility.Collapsed;
             Connection.Severity = InfoBarSeverity.Success;
             Connection.Title = "متصل بالخادم";
             Connection.Message = "المزامنة تعمل • الإرسال الحقيقي غير مفعّل";
-            pendingChanges |= (n["items"]?.AsArray().Count ?? 0) > 0;
+            pendingChanges |= batch.NewItems > 0;
             if (pendingChanges && page != "settings" && !Editing())
                 await Run(Render);
             else if (pendingChanges)
@@ -220,6 +236,8 @@ public sealed partial class MainPage : Page
     private async Task<bool> Dialog(string title, UIElement content, string primary = "حفظ") => await new ContentDialog { Title = title, Content = content, PrimaryButtonText = primary, CloseButtonText = "إلغاء", DefaultButton = ContentDialogButton.Close, XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft }.ShowAsync() == ContentDialogResult.Primary;
     private async Task Render()
     {
+        if (shuttingDown)
+            return;
         pendingChanges = false;
         hasDraft = false;
         Body.Children.Clear();
@@ -229,6 +247,10 @@ public sealed partial class MainPage : Page
             return;
         }
         await api.Send("GET", "/v1/me");
+        var notificationState = await api.Send("GET", "/v1/notifications/state");
+        if (shuttingDown)
+            return;
+        UpdateUnread(notificationState);
         Connection.Severity = InfoBarSeverity.Success;
         Connection.Title = "متصل بالخادم";
         Connection.Message = "المزامنة تعمل • موصل وهمي فقط";
@@ -259,26 +281,38 @@ public sealed partial class MainPage : Page
             case "notifications":
                 await Notifications();
                 break;
+            case "audit":
+                await Audit();
+                break;
+            case "operations":
+                await Operations();
+                break;
         }
     }
     private void Settings()
     {
         var alias = Field("اسم اتصال SSH المحفوظ", lastSshAlias ?? "New-VPS");
-        Body.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); page = "dashboard"; cursor = "0"; await Render(); })));
+        Body.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); page = "dashboard"; await Render(); })));
         if (sshConnection is not null)
             Body.Children.Add(Text("انتهاء الجلسة: " + sshConnection.ExpiresAt.ToLocalTime().ToString("HH:mm:ss")));
         if (api.Connected)
-            Body.Children.Add(Button("تسجيل الخروج", async () => { if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
+            Body.Children.Add(Button("تسجيل الخروج", async () => { if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); syncWorkspace = null; changes.Seed("0"); UnreadBadge.Visibility = Visibility.Collapsed; ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
         var address = Field("عنوان الخدمة الآمن", api.Address);
         address.FlowDirection = FlowDirection.LeftToRight;
         var token = Secret("رمز وصول المالك");
         var theme = new ComboBox { Header = "المظهر", ItemsSource = new[] { "النظام", "داكن", "فاتح" }, SelectedIndex = 0 };
         theme.SelectionChanged += (_, _) => RequestedTheme = theme.SelectedIndex switch { 1 => ElementTheme.Dark, 2 => ElementTheme.Light, _ => ElementTheme.Default };
-        Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; connectionState.Connected(null); ReconnectButton.Visibility = Visibility.Collapsed; cursor = "0"; page = "dashboard"; await Render(); })));
+        Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; connectionState.Connected(null); ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); page = "dashboard"; await Render(); })));
+        DesktopSettings();
     }
     private async Task ConnectSsh(string alias)
     {
         var next = await SshConnection.Connect(alias);
+        if (shuttingDown)
+        {
+            await next.DisposeAsync();
+            return;
+        }
         if (sshConnection is not null)
             await sshConnection.DisposeAsync();
         sshConnection = next;
@@ -286,6 +320,7 @@ public sealed partial class MainPage : Page
         lastSshAlias = alias;
         connectionState.Connected(next.ExpiresAt);
         ReconnectButton.Visibility = Visibility.Collapsed;
+        await InitializeSync("ssh:" + alias);
     }
     private async Task Dashboard()
     {
@@ -577,12 +612,5 @@ public sealed partial class MainPage : Page
         reauth.Password = "";
         await Render();
     }
-    private async Task Notifications()
-    {
-        foreach (var r in (await api.Send("GET", "/v1/notifications")).AsArray())
-        {
-            var n = r!;
-            Card(V(n, "type"), V(n, "created_at"), Button("تمت القراءة", async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); await Render(); }));
-        }
-    }
+
 }
