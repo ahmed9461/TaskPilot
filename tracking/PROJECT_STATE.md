@@ -1,36 +1,22 @@
 # الحالة الحالية — المصدر المرجعي
-As of:2026-11-11. Synthetic pilot0.2.0. Production acceptance remains open.
-Branch:`feat/mvp-foundation`. Current deployed code:`17f846e5051eebe64bdeb6659c8bb949304fff72`. Windows portable binary source:`bfcbbd416b678650c9796929a5e39e607334dc03`; later changes are ops diagnostics/docs only. Final tracking commit does not change deployed code. Historical results remain in TEST_RESULTS.md.
+2026-11-11. Synthetic pilot0.3.0 IMPLEMENTED/VERIFIED/DEPLOYED; production acceptance open.
+Branch feat/mvp-foundation. Runtime `dc762279879392daa02e80fe5d7a95a4269d618f`; Windows binary96e4cbeed6b0ff796240fde83a01cf5cc6fc7b19 (later changes are deployment tooling/tests/docs only).
 
-## DEPLOYED — New-VPS
-- Own taskpilot.service active/enabled, taskpilot Linux user, root-owned immutable releases/current symlink.
-- API only127.0.0.1:8240, own PostgreSQL17 taskpilot-db/container/volume only127.0.0.1:15488 with resource limits. No shared DB/proxy/firewall/SSH changes.
-- Runtime taskpilot_runtime NOSUPERUSER/NOCREATEDB/NOCREATEROLE, DML only; actual DDL/migration-write denial verified. Root-only migration.env separate.
-- Five migrations applied. Final diagnostic run verified actual own restart, DDL/migration denial, data preservation, startup enabled and unchanged other running service list for that sample. Earlier strict comparisons failed on other-services: independent existing service auto-restart observed while TaskPilot PID remained stable (I-010). No changes made to that service; continuous host-wide invariance is not claimed. TaskPilot active, NRestarts0, observed memory29,614,080 bytes. No whole-host reboot or rollback drill.
+## Runtime
+Own taskpilot.service/taskpilot user, root-owned immutable releases/current. API127.0.0.1:8240; own PostgreSQL17/container/volume127.0.0.1:15488, restricted runtime DML role and root-only migrations. Six migrations. Existing services/proxy/firewall/SSH unchanged. Exact-version bounded readiness and authenticated smoke PASS, liveSending=false/provider mock.
 
-## VERIFIED pilot functionality
-- Conservative extraction, encrypted account/review fields, explicit namespace/task/period/all-source identity and concurrent deduplication.
-- Task completion independent of reply; source-scoped approvals/mock quoted outbox, UNKNOWN_DELIVERY reconciliation requires evidence and never automatically resends.
-- Account archive/restore and snapshot single/selected/all purge; task-only purge preserves account/other tasks. Staleness and uncertain-delivery safeguards.
-- D-029: Windows-owned SSH forward with30-minute hashed temporary sessions and60-second one-use reauth grants; revoke/expiry tests. Permanent server keys never exported by this flow. Pilot only, not MFA/RBAC.
-- Deterministic keyword/priority routing with tie review, minimized IGNORED chat, page envelopes/scoped filters, reauthenticated safe filtered-page CSV.
-- Actual C# Windows→SSH→New-VPS acceptance19 checks PASS; namespace synthetic-acceptance-fb76da4ff9 cleaned, session revoked. Earlier auth-only15 checks PASS.
-- Actual WinUI Arabic RTL against deployed server: connection, synthetic account create/edit, namespace filter1/1, archive/restore, deletion preview/cancel. Account cleaned by scoped synthetic API helper. Sensitive GUI confirmation execution and broad UI acceptance are separate and remain open.
--10 Node tests/build,16 PostgreSQL suite tests including parent,6 offline C# checks, WinUI Release0 warnings/errors PASS. Audit0 vulnerabilities, repository encoding/known-secret scan PASS. Final CI17f846e both jobs PASS:https://github.com/ahmed9461/TaskPilot/actions/runs/43093897111.
-- Busy indicator and draft-preserving poll deferral built; full new behavior visual acceptance remains open.
+## Verified0.3
+- Expiry/401 versus network interruption,10/20/40/60s read backoff, explicit SSH reconnect; no mutation replay/perpetual renewal.30-minute sessions and60-second one-use reauth remain pilot-only.
+- Latest-first notification pages/read filter/bounded read IDs/unread badge, committed-head initial sync and replay-safe preserved cursor. Filtered safe audit and own-app count/age monitoring.
+- Optional session-only silent count-only native Windows notifications. Actual local API probe supported/enabled/accepted/stored/generic=true; popup/click/after-close delivery not inferred. No cloud push or background receiver.
+-11 Node tests/build/format/known-secret+UTF8 scan,18 isolated PostgreSQL tests including parent,20 offline C# checks, WinUI Release/publish0 errors/warnings PASS. npm audit0.
+-25 C# Windows→SSH→New-VPS checks PASS, namespace synthetic-acceptance-9da8ad78d8 account fixtures removed/sessions revoked; includes owned-tunnel loss/fresh reconnect/activity/audit/monitoring.
+- Actual WinUI on VPS: monitoring6 migrations; filtered audit1–4/4; notifications page2 results51–100/107; synthetic task saved COMPLETED; reply text/quoted source preview then CANCEL; owned SSH child stopped, outage banner observed, reconnect succeeded with synthetic-draft-preserved still in filter. GUI closed; owned tunnels0; synthetic-ui-acceptance account cleaned (deleted1).
+- Encrypted backup46916 bytes; fresh isolated restore1 account/1 assignment/6 migrations/0 SENDING PASS. Same-host only. Portable ZIP94133913 bytes/527 entries testzip PASS; SHA256DE14479211F94E12538F9A8DE2C2935D421F5AB20E281B90C8216C775F94C71B. No runtime keys/backups/config in ZIP, unsigned.
 
-## Remaining
-Live WhatsApp choice/pairing/receive/send needs explicit approval. AI adapters have4 offline privacy tests but are disconnected from runtime; no keys/live requests/billing. Production MFA/RBAC, retention/key rotation/escrow, off-host scheduled recovery, native toast/push, broader reports/load/accessibility/full GUI acceptance, signed installer/update channel remain open. Final AES-GCM backup42907 bytes: fresh isolated restore1 account/1 assignment/5 migrations/0 SENDING PASS. Same-host only; prior tamper rejection remains separate historical evidence. Portable0.2.0 ZIP94116192 bytes/527 entries testzip PASS; SHA25625AC485AB0D680C8B04753FEFCF396B99B6FDBD744C09D730308DBCFC1B67936. No runtime keys/config/backups in package; unsigned self-contained x64, no installer/update channel.
+## Explicit caveats
+Final ops verifier: own privileges/restart/data/startup PASS; other-service set changed (removed1), overall EXTERNAL_SERVICE_DRIFT/nonzero. Prior independent existing-service restart loop I-010 is untouched. No continuous host-wide invariance claim.
+Hosted CI5833c73/96e4cbe/dc76227 remains QUEUED, latest43097850475 jobs=[] at inspection. Current local/server tests PASS are not hosted CI PASS. Prior0.2 CI is historical only.
 
-## Safety and resolved issues
-Closed synthetic data only. Automatic permanent-token export was historically rejected by auto-review and remains unused; separate temporary SSH protocol solved direct-server tests. SQL checksum compatibility accepts only verified LF/CRLF equivalence, never changed applied SQL. UTF-8 corruption repaired and scan enforced; actual Arabic rendering/mutation verified. Test fixture missing rule keyword corrected before successful full rerun.
-
-Final deployed HTTP auth/ready/replay smoke PASS, /health version0.2.0 provider mock, liveSending=false. Local native app/owned tunnels stopped; dedicated synthetic UI account and acceptance account fixtures cleaned. Synthetic configuration fixtures remain intentionally as audit/test evidence.
-
-## 0.3 continuation — connection reliability (local VERIFIED)
-Windows distinguishes401/revocation/local session expiry from transient transport failures. Read polling backs off10/20/40/60s; mutations are never retried automatically. Explicit reconnect preserves same-workspace cursor/filters; manual token mode disposes prior SSH session; logout clears identity. Added reconnect UI, expiry display, shutdown guards and draft protection when deselecting accounts/changing task status. Release build0 warnings/errors and6 original +7 simulated reliability checks PASS. Not deployed/visually accepted yet; server remains17f846e.
-
-## 0.3 activity/notification stage — local and isolated VERIFIED
-Added newest-first notification pages/read filter/bounded read-page API, committed-head/unread state, safe audit filters, aggregate operations snapshot and migration006 indexes. Windows has unread badge/activity/monitoring views and opt-in silent count-only desktop notifications; replay-safe change feed seeds new-workspace head and preserves same-workspace cursor. Backend10 unit tests/build, isolated PostgreSQL18/18 including parent, Windows Release0 warnings/errors,20 offline C# checks PASS. Local Windows notification probe: supported/enabled/accepted/stored/generic all true; payload XML exactly generic TaskPilot/count text with silent audio. This is API receipt/storage evidence, not observed popup/click/closed-app delivery. Probe app closed. Expanded25-check direct-server acceptance added but not yet run; current server still17f846e pending0.3 rollout.
-
-0.3 rollout follow-up:96e4cbe deployed with6 migrations, initial immediate smoke raced listener startup (I-013); unchanged release health/auth/ready/replay PASS, NRestarts0. Added bounded exact-version readiness wait and regression;11 Node tests PASS. Native GUI fixture seeder added for reproducible scoped synthetic acceptance. Hosted CI runs5833c73/96e4cbe are still queued with no jobs; not counted as PASS.
+## Open
+Editable/scoped reply templates and wider native workflow acceptance; load/accessibility; full GUI sensitive confirmations; native popup/click activation; production MFA/RBAC/retention/key rotation/escrow/off-host schedules; signed installer/update channel. Live WhatsApp and AI disconnected and require separate approval/config. No real accounts/messages/AI calls/host reboot/rollback used. Historical0.1/0.2 evidence in TEST_RESULTS remains distinct.

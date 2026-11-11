@@ -54,3 +54,5 @@ Final continuation: deployed17f846e / Windows binarybfcbbd4, CI43093897111 both 
 0.3 stage1: explicit reconnect/expiry/backoff and no-mutation-retry VERIFIED by simulated C# checks and native build; actual transport interruption/GUI verification pending. Activity/notifications/monitoring stage follows D-033.
 
 0.3 stage2: notification/audit pages, read state/badge, operational snapshot and generic local toasts IMPLEMENTED; backend530-event/late-commit tests18 total PASS,20 local C# checks PASS, native OS receipt stored/generic/silent PASS. Actual-server25-check/visual activity/recovery acceptance and rollout follow; no popup/click/background delivery claim.
+
+0.3 checkpoint: connection/read-backoff/state and notification/audit/monitoring features VERIFIED/DEPLOYED dc76227 within above scope. Native task status, page2, quoted preview cancel and recovery/draft retention VERIFIED; remaining UI/sensitive/accessibility/load gates not closed. Hosted CI is pending. Editable/scoped reply templates remain a concrete accepted feature gap to implement next.
