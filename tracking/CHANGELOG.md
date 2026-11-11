@@ -54,3 +54,5 @@ Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/
 - Direct C# Windows↔New-VPS19-check acceptance PASS, actual native account create/edit/filter/archive/restore and deletion preview/cancel observed. Own fixtures cleaned.
 - Fixed acceptance fixture missing routing keyword; explicit UTF-8 edit/scan enforcement after locale corruption was repaired.
 - Still synthetic-only and unsigned; real WhatsApp/AI, production MFA/retention/off-host recovery and full human GUI acceptance remain open.
+
+Operations follow-up: a single generic verifier failure was not reproducible on the unchanged bfcbbd4 release. Added safe per-check stage diagnostics and bounded DB/HTTP probes rather than exposing raw errors/secrets; cause remains unconfirmed in I-010. Five-migration encrypted restore and bfcbbd4 CI both PASS.

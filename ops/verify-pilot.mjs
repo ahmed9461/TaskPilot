@@ -11,7 +11,12 @@ const env = Object.fromEntries(
       return [l.slice(0, i), l.slice(i + 1)];
     }),
 );
-const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
+const pool = new pg.Pool({
+  connectionString: env.DATABASE_URL,
+  connectionTimeoutMillis: 5000,
+  query_timeout: 5000,
+});
+let stage = "runtime-role";
 try {
   const role = (
     await pool.query(
@@ -22,10 +27,12 @@ try {
   assert.equal(role.rolsuper, false);
   assert.equal(role.rolcreatedb, false);
   assert.equal(role.rolcreaterole, false);
+  stage = "runtime-ddl-denial";
   await assert.rejects(
     () => pool.query("CREATE TABLE forbidden_pilot_permission_check(id int)"),
     (e) => e.code === "42501",
   );
+  stage = "migration-write-denial";
   await assert.rejects(
     () => pool.query("UPDATE schema_migrations SET checksum=checksum"),
     (e) => e.code === "42501",
@@ -46,6 +53,7 @@ try {
       .map((l) => l.trim().split(/\s+/)[0])
       .filter((x) => x && x !== "taskpilot.service")
       .sort();
+  stage = "snapshot";
   const before = services();
   const counts = await pool.query(
     "SELECT (SELECT count(*) FROM accounts) accounts,(SELECT count(*) FROM assignments) assignments,(SELECT count(*) FROM source_messages) messages",
@@ -55,23 +63,32 @@ try {
     ["show", "taskpilot.service", "-p", "MainPID", "--value"],
     { encoding: "utf8" },
   ).trim();
+  stage = "restart";
   execFileSync("systemctl", ["restart", "taskpilot.service"]);
+  stage = "readiness";
   let ready = false;
   for (let i = 0; i < 20; i++) {
     try {
-      ready = (await fetch("http://127.0.0.1:8240/health")).ok;
+      ready = (
+        await fetch("http://127.0.0.1:8240/health", {
+          signal: AbortSignal.timeout(1000),
+        })
+      ).ok;
       if (ready) break;
     } catch {}
     await new Promise((r) => setTimeout(r, 250));
   }
   assert.equal(ready, true);
+  stage = "pid-change";
   const pidAfter = execFileSync(
     "systemctl",
     ["show", "taskpilot.service", "-p", "MainPID", "--value"],
     { encoding: "utf8" },
   ).trim();
   assert.notEqual(pidBefore, pidAfter);
+  stage = "other-services";
   assert.deepEqual(services(), before);
+  stage = "data-preservation";
   assert.deepEqual(
     (
       await pool.query(
@@ -80,6 +97,7 @@ try {
     ).rows,
     counts.rows,
   );
+  stage = "startup";
   assert.equal(
     execFileSync("systemctl", ["is-enabled", "taskpilot.service"], {
       encoding: "utf8",
@@ -104,7 +122,7 @@ try {
     }),
   );
 } catch {
-  console.error("PILOT_VERIFICATION_FAILED");
+  console.error("PILOT_VERIFICATION_FAILED: " + stage);
   process.exitCode = 1;
 } finally {
   await pool.end();

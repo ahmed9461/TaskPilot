@@ -14,3 +14,5 @@
 | I-008 | Windows locale-default Python edits plus formatter exposed mixed encoding/Arabic corruption while building new features | VERIFIED FIX | Explicit UTF-8 edits; scan rejects invalid UTF-8/replacement/mojibake; rebuild and actual Arabic window create/edit/filter PASS |
 
 | I-009 | Expanded C# acceptance filter expected a rule-routed task but test payload omitted the keyword | VERIFIED FIX | Corrected fixture; full19-check acceptance PASS; scoped leftover fixtures removed |
+
+| I-010 | First final bfcbbd4 ops verifier returned generic failure; unchanged release stage-instrumented rerun PASS, active/healthy0.2.0; original failing assertion unknown | UNCONFIRMED / DIAGNOSTICS IMPROVED | Do not infer incident cause or call it fixed; verifier now reports sanitized check stage with bounded DB/HTTP waits, no secrets. Follow subsequent failures if repeated |
