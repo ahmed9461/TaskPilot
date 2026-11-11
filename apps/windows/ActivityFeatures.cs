@@ -56,6 +56,8 @@ public sealed partial class MainPage
         "CLIENT_SESSION_REVOKED" => "أُلغيت جلسة عميل",
         "ACCOUNTS_PURGED" => "حُذفت حسابات محددة",
         "ASSIGNMENT_PURGED" => "حُذف تكليف",
+        "TEMPLATE_CREATED" => "أُضيف قالب رد",
+        "TEMPLATE_UPDATED" => "عُدل قالب رد",
         "REPORT_EXPORTED" => "صُدر تقرير",
         _ => "نشاط في مساحة العمل"
     };

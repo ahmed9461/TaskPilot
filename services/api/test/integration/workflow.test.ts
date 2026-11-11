@@ -1202,4 +1202,255 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
       }
     },
   );
+  await t.test(
+    "editable scoped templates invalidate previews and keep already-approved snapshots immutable",
+    async () => {
+      const feature = await createApp(pool, config);
+      const req = async (
+        method: any,
+        url: string,
+        payload?: any,
+        reauth = false,
+      ) =>
+        feature.inject({
+          method,
+          url,
+          headers: reauth ? sensitive : headers,
+          ...(payload ? { payload } : {}),
+        });
+      const ok = async (
+        method: any,
+        url: string,
+        payload?: any,
+        reauth = false,
+      ) => {
+        const r = await req(method, url, payload, reauth);
+        assert.equal(r.statusCode, 200, `${url}: ${r.statusCode}`);
+        return r.json();
+      };
+      try {
+        const source = await ok("POST", "/v1/mock/messages", {
+          sessionId: session.id,
+          groupId: group.id,
+          externalMessageId: "synthetic-template-source",
+          text: "name: Synthetic template account\nuser: synthetic_template_user",
+        });
+        const a = (
+          await ok("GET", "/v1/assignments?search=synthetic_template_user")
+        )[0];
+        let scoped = await ok("POST", "/v1/reply-templates", {
+          code: "synthetic-template-scoped",
+          body: "قبل {taskName}",
+          groupId: group.id,
+          taskTypeId: task.id,
+        });
+        const global = await ok("POST", "/v1/reply-templates", {
+          code: "synthetic-template-global",
+          body: "عام {taskName}",
+        });
+        const other = await ok("POST", "/v1/reply-templates", {
+          code: "synthetic-template-other",
+          body: "نطاق آخر",
+          groupId: group2.id,
+          taskTypeId: task2.id,
+        });
+        const disabled = await ok("POST", "/v1/reply-templates", {
+          code: "synthetic-template-disabled",
+          body: "متوقف",
+          enabled: false,
+        });
+        const matches = await ok(
+          "GET",
+          `/v1/reply-templates?enabled=true&groupId=${group.id}&taskTypeId=${task.id}&search=synthetic-template`,
+        );
+        assert.deepEqual(
+          matches.map((n: any) => n.id).sort(),
+          [global.id, scoped.id].sort(),
+        );
+        const previewBody = (templateId: string) => ({
+          assignmentId: a.id,
+          sourceMessageId: source.id,
+          templateId,
+        });
+        assert.equal(
+          (
+            await req("POST", "/v1/reply-jobs/preview", previewBody(other.id))
+          ).json().code,
+          "TEMPLATE_SCOPE_MISMATCH",
+        );
+        assert.equal(
+          (
+            await req(
+              "POST",
+              "/v1/reply-jobs/preview",
+              previewBody(disabled.id),
+            )
+          ).json().code,
+          "TEMPLATE_NOT_AVAILABLE",
+        );
+        const preview = await ok(
+          "POST",
+          "/v1/reply-jobs/preview",
+          previewBody(scoped.id),
+        );
+        scoped = await ok("PATCH", "/v1/reply-templates/" + scoped.id, {
+          version: scoped.version,
+          body: "بعد {taskName}",
+        });
+        assert.equal(
+          (
+            await req("PATCH", "/v1/reply-templates/" + scoped.id, {
+              version: 1,
+              body: "stale edit",
+            })
+          ).statusCode,
+          409,
+        );
+        assert.equal(
+          (
+            await req("PATCH", "/v1/reply-templates/" + scoped.id, {
+              version: scoped.version,
+              body: "unsafe {password}",
+            })
+          ).json().code,
+          "UNSAFE_TEMPLATE",
+        );
+        const stale = await req(
+          "POST",
+          "/v1/reply-jobs/approve",
+          {
+            approvalToken: preview.approvalToken,
+            idempotencyKey: "synthetic-template-stale",
+          },
+          true,
+        );
+        assert.equal(stale.statusCode, 409);
+        assert.equal(stale.json().code, "STALE_PREVIEW");
+        assert.equal(
+          Number(
+            (
+              await pool.query(
+                "SELECT count(*) FROM reply_jobs WHERE idempotency_key='synthetic-template-stale'",
+              )
+            ).rows[0].count,
+          ),
+          0,
+        );
+        const legacy = await ok(
+          "POST",
+          "/v1/reply-jobs/preview",
+          previewBody(scoped.id),
+        );
+        await pool.query(
+          "UPDATE approvals SET payload=payload-'templateVersion' WHERE token_hash=$1",
+          [hash(legacy.approvalToken)],
+        );
+        assert.equal(
+          (
+            await req(
+              "POST",
+              "/v1/reply-jobs/approve",
+              {
+                approvalToken: legacy.approvalToken,
+                idempotencyKey: "synthetic-template-legacy",
+              },
+              true,
+            )
+          ).json().code,
+          "STALE_PREVIEW",
+        );
+        const fresh = await ok(
+          "POST",
+          "/v1/reply-jobs/preview",
+          previewBody(scoped.id),
+        );
+        const approved = await ok(
+          "POST",
+          "/v1/reply-jobs/approve",
+          {
+            approvalToken: fresh.approvalToken,
+            idempotencyKey: "synthetic-template-approved",
+          },
+          true,
+        );
+        scoped = await ok("PATCH", "/v1/reply-templates/" + scoped.id, {
+          version: scoped.version,
+          body: "ثالث {taskName}",
+          enabled: false,
+        });
+        assert.equal(
+          (
+            await req("POST", "/v1/reply-jobs/preview", previewBody(scoped.id))
+          ).json().code,
+          "TEMPLATE_NOT_AVAILABLE",
+        );
+        await dispatchOne(pool, new MockTransport());
+        const sent = (
+          await pool.query("SELECT body,status FROM reply_jobs WHERE id=$1", [
+            approved.id,
+          ])
+        ).rows[0];
+        assert.equal(sent.status, "SENT");
+        assert.equal(sent.body, fresh.body);
+        assert.notEqual(sent.body, "ثالث " + task.name);
+        scoped = await ok("PATCH", "/v1/reply-templates/" + scoped.id, {
+          version: scoped.version,
+          enabled: true,
+        });
+        scoped = await ok("PATCH", "/v1/reply-templates/" + scoped.id, {
+          version: scoped.version,
+          groupId: null,
+        });
+        const racing = await ok(
+          "POST",
+          "/v1/reply-jobs/preview",
+          previewBody(scoped.id),
+        );
+        const [edit, approve] = await Promise.all([
+          req("PATCH", "/v1/reply-templates/" + scoped.id, {
+            version: scoped.version,
+            body: "رابع {taskName}",
+            groupId: group.id,
+          }),
+          req(
+            "POST",
+            "/v1/reply-jobs/approve",
+            {
+              approvalToken: racing.approvalToken,
+              idempotencyKey: "synthetic-template-race",
+            },
+            true,
+          ),
+        ]);
+        assert.equal(edit.statusCode, 200);
+        assert.ok([200, 409].includes(approve.statusCode));
+        if (approve.statusCode === 200)
+          assert.equal(approve.json().body, racing.body);
+        else assert.equal(approve.json().code, "STALE_PREVIEW");
+        await pool.query(
+          "INSERT INTO reply_templates(id,code,body) SELECT gen_random_uuid(),'synthetic-template-page-'||n,'synthetic body' FROM generate_series(1,120) n",
+        );
+        const page = await ok(
+          "GET",
+          "/v1/reply-templates?page=true&search=synthetic-template-page&limit=50&offset=100",
+        );
+        assert.equal(page.total, 120);
+        assert.equal(page.items.length, 20);
+        const deletion = await ok("POST", "/v1/deletions/preview", {
+          ids: [a.account_id],
+        });
+        await ok(
+          "POST",
+          "/v1/deletions/confirm",
+          {
+            approvalToken: deletion.approvalToken,
+            confirmation: deletion.confirmation,
+          },
+          true,
+        );
+      } finally {
+        await feature.close();
+      }
+    },
+  );
 });

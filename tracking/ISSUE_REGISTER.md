@@ -23,3 +23,5 @@
 | I-013 | First immediate smoke after96e4cbe deployment hit ECONNREFUSED while Type=simple service was starting; unchanged release later healthy0.3/NRestarts0/auth smoke PASS | LOCAL FIX VERIFIED | Added bounded expected-version health wait before deploy success; startup/old-version/timeout regression PASS. Final deployed helper verification follows |
 
 0.3 I-010 follow-up: verifier now reports all own-service checks before returning explicit external-drift exit2; it never treats drift as a passed isolation sample. I-014: hosted runs5833c73/96e4cbe remain queued with jobs=[]; cause unconfirmed. Official status page listed Actions operational at inspection; do not attribute queue to an outage or count prior0.2 CI as current0.3 acceptance.
+
+| I-015 | Accepted custom/editable reply templates were global and POST-only | LOCAL VERIFIED FIX | Versioned edit/availability/task-group scope with stale-preview/legacy-preview rejection and immutable approved body;19 PostgreSQL tests PASS before final scoped-edit lock-order extension; actual-server/UI verification follows |

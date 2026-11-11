@@ -20,3 +20,8 @@ Hosted CI5833c73/96e4cbe/dc76227 remains QUEUED, latest43097850475 jobs=[] at in
 
 ## Open
 Editable/scoped reply templates and wider native workflow acceptance; load/accessibility; full GUI sensitive confirmations; native popup/click activation; production MFA/RBAC/retention/key rotation/escrow/off-host schedules; signed installer/update channel. Live WhatsApp and AI disconnected and require separate approval/config. No real accounts/messages/AI calls/host reboot/rollback used. Historical0.1/0.2 evidence in TEST_RESULTS remains distinct.
+
+## 0.4 template stage — IN_PROGRESS / local verification
+Implemented editable/versioned/scoped/available templates with migration007, paged administration and source-matching choice UI. Preview/approval scope checks and template version rejection protect old unapproved snapshots; approved body remains unchanged. Group FK locks acquired before template locks to align with approval.11 Node tests and first19 PostgreSQL tests PASS; final race extension/WinUI build/direct28-check acceptance and deployment are being verified. Server remains0.3 dc76227 until rollout; do not infer deployment or full GUI acceptance from implementation.
+
+0.4 final predeployment verification:11 Node/build/format tests,19 isolated PostgreSQL tests including scoped-edit versus approval race PASS, WinUI Release0 warnings/errors and20 offline C# checks PASS. New reply selector queries server candidates per selected source with stale-response guards; editing preserves stored scopes absent from the first100 choice rows. Expanded28-check Windows↔VPS runner prepared; runtime/UI acceptance follows deployment. No real WhatsApp/AI or messages.

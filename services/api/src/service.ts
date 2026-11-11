@@ -306,7 +306,7 @@ export class Service {
       const row = (
         await c.query(
           `SELECT a.id,a.version,a.status,s.id source_id,s.session_id,s.external_message_id,g.id group_id,g.title,g.enabled,g.version group_version,
-        t.body,t.id template_id,ac.display_name,ac.archived_at,tt.name task_name,ws.provider
+        t.body,t.id template_id,t.version template_version,t.enabled template_enabled,t.group_id template_group_id,t.task_type_id template_task_id,a.task_type_id,ac.display_name,ac.archived_at,tt.name task_name,ws.provider
         FROM assignments a JOIN accounts ac ON ac.id=a.account_id JOIN task_types tt ON tt.id=a.task_type_id
         JOIN assignment_sources axs ON axs.assignment_id=a.id JOIN source_messages s ON s.id=axs.source_message_id
         JOIN groups g ON g.id=s.group_id JOIN whatsapp_sessions ws ON ws.id=s.session_id CROSS JOIN reply_templates t
@@ -316,6 +316,12 @@ export class Service {
       ).rows[0];
       if (!row || row.archived_at || !row.enabled)
         throw new Fault("REPLY_TARGET_UNAVAILABLE");
+      if (!row.template_enabled) throw new Fault("TEMPLATE_NOT_AVAILABLE");
+      if (
+        (row.template_group_id && row.template_group_id !== row.group_id) ||
+        (row.template_task_id && row.template_task_id !== row.task_type_id)
+      )
+        throw new Fault("TEMPLATE_SCOPE_MISMATCH");
       const body = row.body
         .replaceAll("{displayName}", row.display_name)
         .replaceAll("{taskName}", row.task_name);
@@ -325,6 +331,7 @@ export class Service {
         ...input,
         version: row.version,
         groupVersion: row.group_version,
+        templateVersion: row.template_version,
         sessionId: row.session_id,
         body,
       });
@@ -349,17 +356,20 @@ export class Service {
       );
       const target = (
         await c.query(
-          `SELECT a.version,g.version group_version,g.enabled,ac.archived_at FROM assignments a
+          `SELECT a.version,g.version group_version,g.enabled,ac.archived_at,t.version template_version,t.enabled template_enabled,(t.group_id IS NULL OR t.group_id=g.id) AND (t.task_type_id IS NULL OR t.task_type_id=a.task_type_id) template_scope_valid FROM assignments a
         JOIN accounts ac ON ac.id=a.account_id JOIN assignment_sources axs ON axs.assignment_id=a.id
-        JOIN source_messages s ON s.id=axs.source_message_id JOIN groups g ON g.id=s.group_id
-        WHERE a.id=$1 AND s.id=$2 FOR UPDATE OF a,ac,g`,
-          [p.assignmentId, p.sourceMessageId],
+        JOIN source_messages s ON s.id=axs.source_message_id JOIN groups g ON g.id=s.group_id JOIN reply_templates t ON t.id=$3
+        WHERE a.id=$1 AND s.id=$2 FOR UPDATE OF a,ac,g,t`,
+          [p.assignmentId, p.sourceMessageId, p.templateId],
         )
       ).rows[0];
       if (
         !target ||
         target.version !== p.version ||
         target.group_version !== p.groupVersion ||
+        target.template_version !== p.templateVersion ||
+        !target.template_enabled ||
+        !target.template_scope_valid ||
         !target.enabled ||
         target.archived_at
       )

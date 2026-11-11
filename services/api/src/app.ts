@@ -5,6 +5,12 @@ import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { querySchema, queryResource, exportCsv } from "./queries.js";
 import { normalize } from "./parser.js";
+import {
+  queryTemplates,
+  templateCreate,
+  templateUpdate,
+  validTemplateBody,
+} from "./templates.js";
 import { Service, Fault } from "./service.js";
 import { Vault, equal, hash } from "./security.js";
 import { transaction, event } from "./db.js";
@@ -113,7 +119,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.3.0",
+    version: "0.4.0",
     provider: "mock",
   }));
   app.get("/ready", async () => {
@@ -529,36 +535,78 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       p.confirmation,
     );
   });
-  app.get(
-    "/v1/reply-templates",
-    async () =>
-      (
-        await pool.query(
-          "SELECT * FROM reply_templates ORDER BY code LIMIT 100",
-        )
-      ).rows,
+  app.get("/v1/reply-templates", async (req) =>
+    queryTemplates(pool, req.query),
   );
   app.post("/v1/reply-templates", async (req) => {
-    const p = z
-      .object({ code: text, body: z.string().trim().min(1).max(2000) })
-      .strict()
-      .parse(req.body);
-    if (
-      /\{(?!(displayName|taskName)\})/.test(p.body) ||
-      p.body
-        .replaceAll("{displayName}", "")
-        .replaceAll("{taskName}", "")
-        .includes("}")
-    )
-      throw new Fault("UNSAFE_TEMPLATE", 400);
+    const p = templateCreate.parse(req.body);
+    if (!validTemplateBody(p.body)) throw new Fault("UNSAFE_TEMPLATE", 400);
     return transaction(pool, async (c) => {
       const row = (
         await c.query(
-          "INSERT INTO reply_templates(id,code,body) VALUES($1,$2,$3) RETURNING *",
-          [randomUUID(), p.code, p.body],
+          "INSERT INTO reply_templates(id,code,body,group_id,task_type_id,enabled) VALUES($1,$2,$3,$4,$5,$6) RETURNING *",
+          [
+            randomUUID(),
+            p.code,
+            p.body,
+            p.groupId ?? null,
+            p.taskTypeId ?? null,
+            p.enabled,
+          ],
         )
       ).rows[0];
       await event(c, "TEMPLATE_CREATED", row.id);
+      return row;
+    });
+  });
+  app.patch("/v1/reply-templates/:id", async (req) => {
+    const templateId = uuidParam.parse(req.params).id,
+      p = templateUpdate.parse(req.body);
+    if (p.body !== undefined && !validTemplateBody(p.body))
+      throw new Fault("UNSAFE_TEMPLATE", 400);
+    return transaction(pool, async (c) => {
+      // Approval locks source groups before template rows. Acquire FK group locks in
+      // the same order before updating a scope, avoiding a group/template lock cycle.
+      const before = (
+        await c.query(
+          "SELECT group_id,version FROM reply_templates WHERE id=$1",
+          [templateId],
+        )
+      ).rows[0];
+      if (!before) throw new Fault("NOT_FOUND", 404);
+      if (before.version !== p.version) throw new Fault("CONFLICT");
+      const groupIds = [
+        ...new Set(
+          [before.group_id, p.groupId].filter(
+            (v): v is string => typeof v === "string",
+          ),
+        ),
+      ].sort();
+      if (groupIds.length)
+        await c.query(
+          "SELECT id FROM groups WHERE id=ANY($1::uuid[]) ORDER BY id FOR KEY SHARE",
+          [groupIds],
+        );
+      const prior = (
+        await c.query("SELECT * FROM reply_templates WHERE id=$1 FOR UPDATE", [
+          templateId,
+        ])
+      ).rows[0];
+      if (!prior) throw new Fault("NOT_FOUND", 404);
+      if (prior.version !== p.version) throw new Fault("CONFLICT");
+      const row = (
+        await c.query(
+          "UPDATE reply_templates SET body=$2,enabled=$3,group_id=$4,task_type_id=$5,version=version+1 WHERE id=$1 RETURNING *",
+          [
+            templateId,
+            p.body ?? prior.body,
+            p.enabled ?? prior.enabled,
+            p.groupId === undefined ? prior.group_id : p.groupId,
+            p.taskTypeId === undefined ? prior.task_type_id : p.taskTypeId,
+          ],
+        )
+      ).rows[0];
+      await event(c, "TEMPLATE_UPDATED", row.id);
       return row;
     });
   });

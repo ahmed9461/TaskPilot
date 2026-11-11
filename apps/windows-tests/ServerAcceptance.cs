@@ -178,6 +178,55 @@ static class ServerAcceptance
             var operations = await Call("GET", "/v1/operations");
             Check(operations["migrations"]!.GetValue<int>() >= 6 && operations["liveSendingEnabled"]!.GetValue<bool>() == false);
             checks++;
+            stage = "scoped-template-edit";
+            var scoped = await Call("POST", "/v1/reply-templates", new
+            {
+                code = ns + "-scoped",
+                body = "قالب {taskName}",
+                groupId = S(group, "id"),
+                taskTypeId = S(routedType, "id")
+            });
+            var scopedPreview = await Call("POST", "/v1/reply-jobs/preview", new
+            {
+                assignmentId = S(assignment, "id"),
+                sourceMessageId = S(assignment["sources"]!.AsArray()[0], "id"),
+                templateId = S(scoped, "id")
+            });
+            Check(S(scopedPreview, "body").Contains("مهمة ذات أولوية"));
+            checks++;
+            scoped = await Call("PATCH", "/v1/reply-templates/" + S(scoped, "id"), new
+            {
+                version = scoped["version"]!.GetValue<int>(),
+                body = "قالب معدل {taskName}"
+            });
+            try
+            {
+                await Call("POST", "/v1/reply-jobs/approve", new
+                {
+                    approvalToken = S(scopedPreview, "approvalToken"),
+                    idempotencyKey = ns + "-stale"
+                }, true);
+                throw new Exception("Stale template accepted");
+            }
+            catch (ApiFailure e) { Check(e.Message == "STALE_PREVIEW"); }
+            checks++;
+            scoped = await Call("PATCH", "/v1/reply-templates/" + S(scoped, "id"), new
+            {
+                version = scoped["version"]!.GetValue<int>(),
+                enabled = false
+            });
+            try
+            {
+                await Call("POST", "/v1/reply-jobs/preview", new
+                {
+                    assignmentId = S(assignment, "id"),
+                    sourceMessageId = S(assignment["sources"]!.AsArray()[0], "id"),
+                    templateId = S(scoped, "id")
+                });
+                throw new Exception("Disabled template accepted");
+            }
+            catch (ApiFailure e) { Check(e.Message == "TEMPLATE_NOT_AVAILABLE"); }
+            checks++;
             stage = "quoted-mock-reply";
             var preview = await Call("POST", "/v1/reply-jobs/preview", new
             {

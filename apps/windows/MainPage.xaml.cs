@@ -37,6 +37,8 @@ public sealed partial class MainPage : Page
         "DELETION_REQUIRES_CONFIRMATION" => "اكتب عبارة التأكيد مطابقة للمعاينة.",
         "DELIVERY_REQUIRES_RECONCILIATION" => "احسم حالة الرد المجهولة قبل الحذف.",
         "APPROVAL_EXPIRED_OR_CONSUMED" => "انتهت المعاينة أو استُخدمت. أنشئ معاينة جديدة.",
+        "TEMPLATE_NOT_AVAILABLE" or "TEMPLATE_SCOPE_MISMATCH" => "القالب متوقف أو لا يطابق المهمة والمجموعة. اختر قالبًا مطابقًا وأنشئ معاينة جديدة.",
+        "UNSAFE_TEMPLATE" => "القالب يتضمن متغيرًا غير مسموح. استخدم اسم الحساب واسم المهمة فقط.",
         "CREDENTIAL_CONFLICT" => "الاعتماد يختلف عن المحفوظ. حدّثه صراحة من الحساب بعد التحقق.",
         "SECURE_CONNECTION_REQUIRED" => "استخدم HTTPS أو نفق SSH محليًا.",
         "INVALID_API_TOKEN" => "رمز الوصول غير مكتمل.",
@@ -448,19 +450,14 @@ public sealed partial class MainPage : Page
     }
     private async Task Reply(JsonNode a)
     {
-        var sources = a["sources"]!.AsArray();
-        var templates = (await api.Send("GET", "/v1/reply-templates")).AsArray();
-        if (sources.Count == 0 || templates.Count == 0)
-            throw new InvalidOperationException("أضف قالبًا وتأكد من وجود مصدر.");
-        var s = new ComboBox { Header = "رسالة المصدر", ItemsSource = sources.Select(n => $"{V(n, "sessionId")} / {V(n, "groupId")} / {V(n, "externalMessageId")}").ToArray(), SelectedIndex = 0, MaxWidth = 440 };
-        var t = new ComboBox { Header = "القالب", ItemsSource = templates.Select(n => V(n, "code")).ToArray(), SelectedIndex = 0 };
-        if (!await Dialog("اختيار الرد", Stack(s, t), "معاينة"))
+        var selection = await ChooseReply(a);
+        if (selection is null)
             return;
         var p = await api.Send("POST", "/v1/reply-jobs/preview", new
         {
             assignmentId = V(a, "id"),
-            sourceMessageId = V(sources[s.SelectedIndex], "id"),
-            templateId = V(templates[t.SelectedIndex], "id")
+            sourceMessageId = V(selection.Value.Source, "id"),
+            templateId = V(selection.Value.Template, "id")
         });
         var reauth = ReauthField();
         if (!await Dialog("إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text($"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionId")}\nالرسالة: {V(p, "externalMessageId")}\nموصل mock؛ لا إرسال واتساب حقيقي."), reauth), "إقرار المحاكاة"))
@@ -583,9 +580,7 @@ public sealed partial class MainPage : Page
     }
     private async Task Replies()
     {
-        Body.Children.Add(Button("إضافة قالب", async () => { var code = Field("رمز القالب"); var body = Field("نص الرد"); body.MaxLength = 2000; body.AcceptsReturn = true; if (await Dialog("قالب رد", Stack(Text("المتغيرات المسموحة: {displayName} و{taskName}"), code, body))) { await api.Send("POST", "/v1/reply-templates", new { code = code.Text, body = body.Text }); await Render(); } }));
-        foreach (var n in (await api.Send("GET", "/v1/reply-templates")).AsArray())
-            Card(V(n, "code"), V(n, "body"));
+        await TemplateList();
         Body.Children.Add(Text("سجل الردود", 24));
         foreach (var n in (await api.Send("GET", "/v1/reply-jobs")).AsArray())
         {

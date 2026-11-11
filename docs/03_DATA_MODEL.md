@@ -40,3 +40,5 @@ Migration003 adds reply_jobs.reconciled_at/reconciliation_evidence for owner-con
 Migration004: hashed short-lived client sessions and one-use SSH reauth grants. Migration005: group_rules, assignment priority0..100, durable per-source routing/ambiguity. Runtime permissions remain DML-only and grants are applied after migrations.
 
 Migration006 adds notification unread-ID and audit action/target/time indexes. No additional account fields, raw logs or retention policy introduced.
+
+Migration007: reply_templates version/enabled plus optional group_id/task_type_id FKs and enabled-scope index. Global rows remain compatible. Approval payload stores templateVersion; approved job body stays an immutable independent snapshot.
