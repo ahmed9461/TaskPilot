@@ -28,3 +28,8 @@ Portable `TaskPilot-Windows-x64-0.1.0-pilot.zip` (96,852,413 bytes,527 entries),
 
 ## Resolved rollout issue
 f659d9b deployment safely stopped on CRLF/LF checksum mismatch; old62fddfe stayed active. Verified byte-equivalent SQL, added normalization-only compatibility and SQL-change rejection test; final eb0f66b deployed successfully without DB reset.
+
+## Continuation stage1 — SSH sessions
+Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.
+
+Stage1 predeployment evidence:8 Node tests/build PASS, dedicated New-VPS PostgreSQL suite15/15 PASS including session lifecycle, WinUI Release0 warnings/errors and6 offline C# checks PASS. Direct server acceptance is next, not yet claimed.

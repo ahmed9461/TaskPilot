@@ -6,6 +6,8 @@ import { migrate } from "../../src/migrate.js";
 import { createApp } from "../../src/app.js";
 import { dispatchOne, startMockWorker } from "../../src/outbox.js";
 import { MockTransport } from "../../src/transport.js";
+import { hash, token } from "../../src/security.js";
+import { randomUUID } from "node:crypto";
 const url = process.env.TASKPILOT_TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("DEDICATED_TEST_DATABASE_REQUIRED");
@@ -29,6 +31,81 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
   });
   const headers = { authorization: `Bearer ${config.apiToken}` };
   const sensitive = { ...headers, "x-reauth-secret": config.reauthSecret };
+  await t.test(
+    "SSH-issued sessions expire/revoke and sensitive grants are single-use and session-bound",
+    async () => {
+      const value = token(),
+        grant = token(),
+        sessionId = randomUUID();
+      await pool.query(
+        "INSERT INTO client_sessions(id,token_hash,expires_at,reauth_hash,reauth_expires_at) VALUES($1,$2,now()+interval '30 minutes',$3,now()+interval '60 seconds')",
+        [sessionId, hash(value), hash(grant)],
+      );
+      const h = { authorization: `Bearer ${value}` };
+      assert.equal(
+        (await app.inject({ url: "/v1/me", headers: h })).statusCode,
+        200,
+      );
+      const request = {
+        method: "POST" as const,
+        url: "/v1/deletions/confirm",
+        payload: { approvalToken: "unused-token", confirmation: "DELETE 1" },
+      };
+      assert.equal(
+        (
+          await app.inject({
+            ...request,
+            headers: { ...h, "x-reauth-secret": config.reauthSecret },
+          })
+        ).statusCode,
+        403,
+      );
+      assert.equal(
+        (
+          await app.inject({
+            ...request,
+            headers: { ...h, "x-reauth-secret": grant },
+          })
+        ).statusCode,
+        409,
+      );
+      assert.equal(
+        (
+          await app.inject({
+            ...request,
+            headers: { ...h, "x-reauth-secret": grant },
+          })
+        ).statusCode,
+        403,
+      );
+      await pool.query(
+        "UPDATE client_sessions SET expires_at=now()-interval '1 second' WHERE id=$1",
+        [sessionId],
+      );
+      assert.equal(
+        (await app.inject({ url: "/v1/me", headers: h })).statusCode,
+        401,
+      );
+      await pool.query(
+        "UPDATE client_sessions SET expires_at=now()+interval '1 minute' WHERE id=$1",
+        [sessionId],
+      );
+      assert.equal(
+        (
+          await app.inject({
+            method: "POST",
+            url: "/v1/client-session/revoke",
+            headers: h,
+          })
+        ).statusCode,
+        200,
+      );
+      assert.equal(
+        (await app.inject({ url: "/v1/me", headers: h })).statusCode,
+        401,
+      );
+    },
+  );
   async function api(method: any, path: string, body?: any, reauth = false) {
     const r = await app.inject({
       method,

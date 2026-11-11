@@ -42,3 +42,6 @@ Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts an
 
 ## Pilot limits / pending contracts
 Live pairing/disconnect/session health, editable advanced rules, production JWT/MFA, rate limiting across multiple API hosts, paged Windows lists beyond 500, true push/toast notifications, single assignment purge, production retention/key rotation and live AI are not implemented. UI uses safe polling and server persistence. Backup/restore uses isolated operator tooling (not public API).
+
+## SSH client sessions (continuation)
+Migration004 stores only hashes of30-minute owner sessions. Root-only issue-client-session CLI uses the existing SSH trust channel, never HTTP or permanent API-key export. Each sensitive action uses a fresh60-second single-use grant from --reauth SESSION_ID. Expiry/revocation/consumption checked server-side; operator file keys remain supported locally. POST /v1/client-session/revoke revokes the caller session. Windows SshConnection owns its loopback tunnel, uses BatchMode and strict existing host trust, and kills only its child tunnel at window close. Explicit logout revokes; expiry is the fallback on lost connection. No passwords/tokens are persisted by Windows. Production MFA remains open.

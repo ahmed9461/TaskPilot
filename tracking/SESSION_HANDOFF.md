@@ -21,3 +21,8 @@ Local test app/API/SSH forwards closed; no local background helper needed. VPS p
 
 ## Cautions
 Never edit applied SQL except newline-equivalence handled by checksum runner; create new migrations. Integration runner truncates only *_test databases; restore tool only creates fresh *_restore_test. Backup64MiB in-memory cap is pilot-only. Runtime cannot migrate; root deploy loads migration.env. Do not reuse other projects' DBs, WhatsApp sessions or services.
+
+## Continuation stage1 — SSH sessions
+Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.
+
+Stage1 predeployment evidence:8 Node tests/build PASS, dedicated New-VPS PostgreSQL suite15/15 PASS including session lifecycle, WinUI Release0 warnings/errors and6 offline C# checks PASS. Direct server acceptance is next, not yet claimed.

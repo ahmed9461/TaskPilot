@@ -4,7 +4,7 @@ import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { Service, Fault } from "./service.js";
-import { Vault, equal } from "./security.js";
+import { Vault, equal, hash } from "./security.js";
 import { transaction, event } from "./db.js";
 import {
   accountInput,
@@ -20,6 +20,11 @@ export interface AppConfig {
   mockEnabled: boolean;
 }
 const uuidParam = z.object({ id });
+declare module "fastify" {
+  interface FastifyRequest {
+    clientSessionId: string | null;
+  }
+}
 const cursorQuery = z.object({
   cursor: z.coerce
     .number()
@@ -47,6 +52,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     requestTimeout: 20000,
   });
   const service = new Service(pool, new Vault(config.encryptionKey));
+  app.decorateRequest("clientSessionId", null);
   await app.register(rateLimit, { max: 120, timeWindow: "1 minute" });
   app.setErrorHandler((err, _req, res) => {
     if (err instanceof z.ZodError)
@@ -69,10 +75,33 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       .header("X-Content-Type-Options", "nosniff");
     if (req.url === "/health") return;
     const supplied = req.headers.authorization?.replace(/^Bearer /, "") ?? "";
-    if (!equal(supplied, config.apiToken))
+    if (equal(supplied, config.apiToken)) return;
+    if (!supplied || supplied.length > 256)
       return res.code(401).send({ code: "PERMISSION_DENIED" });
+    const session = (
+      await pool.query(
+        "SELECT id FROM client_sessions WHERE token_hash=$1 AND revoked_at IS NULL AND expires_at>now()",
+        [hash(supplied)],
+      )
+    ).rows[0];
+    if (!session) return res.code(401).send({ code: "PERMISSION_DENIED" });
+    req.clientSessionId = session.id;
   });
-  function reauth(req: { headers: Record<string, unknown> }) {
+  async function reauth(req: {
+    headers: Record<string, unknown>;
+    clientSessionId?: string | null;
+  }) {
+    if (req.clientSessionId) {
+      const grant = req.headers["x-reauth-secret"];
+      if (typeof grant !== "string" || grant.length > 256)
+        throw new Fault("REAUTH_REQUIRED", 403);
+      const result = await pool.query(
+        "UPDATE client_sessions SET reauth_hash=NULL,reauth_expires_at=NULL WHERE id=$1 AND revoked_at IS NULL AND expires_at>now() AND reauth_hash=$2 AND reauth_expires_at>now() RETURNING id",
+        [req.clientSessionId, hash(grant)],
+      );
+      if (!result.rowCount) throw new Fault("REAUTH_REQUIRED", 403);
+      return;
+    }
     if (
       typeof req.headers["x-reauth-secret"] !== "string" ||
       !equal(req.headers["x-reauth-secret"], config.reauthSecret)
@@ -94,6 +123,17 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     provider: "mock",
     liveSendingEnabled: false,
   }));
+  app.post("/v1/client-session/revoke", async (req) => {
+    if (!req.clientSessionId) throw new Fault("CLIENT_SESSION_REQUIRED", 400);
+    return transaction(pool, async (c) => {
+      await c.query(
+        "UPDATE client_sessions SET revoked_at=now(),reauth_hash=NULL WHERE id=$1",
+        [req.clientSessionId],
+      );
+      await event(c, "CLIENT_SESSION_REVOKED", req.clientSessionId!);
+      return { ok: true };
+    });
+  });
   app.get(
     "/v1/dashboard",
     async () =>
@@ -219,7 +259,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     ).rows;
   });
   app.post("/v1/inbox/:id/reveal", async (req) => {
-    reauth(req);
+    await reauth(req);
     const { id: messageId } = uuidParam.parse(req.params);
     return transaction(pool, async (c) => {
       const row = (
@@ -239,7 +279,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     });
   });
   app.post("/v1/inbox/:id/resolve", async (req) => {
-    reauth(req);
+    await reauth(req);
     const { id: messageId } = uuidParam.parse(req.params);
     const p = z
       .object({ version: z.number().int().positive(), account: accountInput })
@@ -294,7 +334,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       })
       .strict()
       .parse(req.body);
-    if (p.password) reauth(req);
+    if (p.password) await reauth(req);
     return transaction(pool, async (c) => {
       const row = (
         await c.query(
@@ -319,7 +359,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     });
   });
   app.post("/v1/accounts/:id/reveal", async (req) => {
-    reauth(req);
+    await reauth(req);
     const { id: accountId } = uuidParam.parse(req.params);
     return transaction(pool, async (c) => {
       const row = (
@@ -451,7 +491,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     ),
   );
   app.post("/v1/reply-jobs/approve", async (req) => {
-    reauth(req);
+    await reauth(req);
     const p = z
       .object({ approvalToken: text, idempotencyKey: text })
       .strict()
@@ -459,7 +499,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     return service.approveReply(p.approvalToken, p.idempotencyKey);
   });
   app.post("/v1/reply-jobs/:id/reconcile", async (req) => {
-    reauth(req);
+    await reauth(req);
     const { id: jobId } = uuidParam.parse(req.params);
     const p = z
       .object({
@@ -521,7 +561,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       .parse(req.body);
     const verified = p.kind !== "UNVERIFIED_CREDENTIALS";
     if (verified) {
-      reauth(req);
+      await reauth(req);
       if (p.evidenceKind === "UNVERIFIED")
         throw new Fault("UNVERIFIED_CREDENTIALS");
     }
@@ -562,7 +602,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     return service.deletionPreview(p.ids, p.all);
   });
   app.post("/v1/deletions/confirm", async (req) => {
-    reauth(req);
+    await reauth(req);
     const p = z
       .object({ approvalToken: text, confirmation: text })
       .strict()

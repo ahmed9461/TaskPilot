@@ -42,3 +42,5 @@
 - D-027 — IMPLEMENTATION CHOICE: UNKNOWN_DELIVERY reconciliation requires owner reauth and manual/provider evidence; transitions terminal SENT/FAILED without automatic resend, with separate timestamp/audit. A subsequent deliberate new preview/approval is required for another send.
 
 - D-028 — SECURITY IMPLEMENTATION CHOICE: separate taskpilot_runtime NOSUPERUSER/NOCREATEDB/NOCREATEROLE for API DML, with no schema creation or migration writes. Migration credentials root-only in /etc/taskpilot/migration.env; grants confined to own pilot DB. Alternative running API as initial PostgreSQL bootstrap owner rejected.
+
+- D-029 � IMPLEMENTATION CHOICE (2026-11-11 continuation): Windows uses existing SSH host alias/key trust to obtain an owner session lasting30 minutes. Only token hash is stored server-side; permanent API keys stay server-local. Sensitive actions request a fresh60-second single-use reauth grant via authenticated SSH; HTTP cannot mint grants. Explicit revoke/logout supported. This is a closed pilot convenience, not MFA or permission to use real WhatsApp/AI. Alternatives: manual permanent token entry retained; production OIDC/MFA remains open.

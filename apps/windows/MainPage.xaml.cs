@@ -7,6 +7,14 @@ namespace TaskPilot_Windows;
 public sealed partial class MainPage : Page
 {
     private readonly ApiClient api = new();
+    private SshConnection? sshConnection;
+    public void Shutdown()
+    {
+        timer.Stop();
+        sshConnection?.StopTunnel();
+        api.Dispose();
+    }
+    private async Task<string?> Reauth(string value) => sshConnection is null ? value : await sshConnection.Reauthorize();
     private string page = "dashboard", cursor = "0";
     private bool busy, polling, renderPending;
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(10) };
@@ -29,6 +37,7 @@ public sealed partial class MainPage : Page
     private static TextBlock Text(string s, int size = 14) => new() { Text = s, FontSize = size, TextWrapping = TextWrapping.Wrap };
     private static TextBox Field(string label, string s = "") => new() { Header = label, Text = s, MinWidth = 300, MaxLength = 200 };
     private static PasswordBox Secret(string label) => new() { Header = label, PasswordRevealMode = PasswordRevealMode.Hidden };
+    private PasswordBox ReauthField() => new() { Header = sshConnection is null ? "�� ����� ������" : "���� ����� �������� ��� SSH ��� ��������", IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
     private static StackPanel Stack(params UIElement[] items)
     {
         var p = new StackPanel { Spacing = 12 };
@@ -86,10 +95,13 @@ public sealed partial class MainPage : Page
                 api.Configure(Environment.GetEnvironmentVariable("TASKPILOT_CLIENT_ADDRESS") ?? api.Address, injectedToken);
                 Environment.SetEnvironmentVariable("TASKPILOT_CLIENT_API_TOKEN", null);
             }
+            var sshAlias = Environment.GetEnvironmentVariable("TASKPILOT_SSH_ALIAS");
+            if (sshAlias is not null)
+                await ConnectSsh(sshAlias);
             await Render();
             timer.Start();
         });
-        Unloaded += (_, _) => { timer.Stop(); api.Dispose(); };
+        Unloaded += async (_, _) => { timer.Stop(); if (sshConnection is not null) await sshConnection.DisposeAsync(); api.Dispose(); };
         timer.Tick += async (_, _) =>
         {
             if (polling || busy || !api.Connected)
@@ -166,12 +178,24 @@ public sealed partial class MainPage : Page
     }
     private void Settings()
     {
+        var alias = Field("اسم اتصال SSH المحفوظ", "New-VPS");
+        Body.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); page = "dashboard"; cursor = "0"; await Render(); })));
+        if (sshConnection is not null)
+            Body.Children.Add(Button("تسجيل الخروج", async () => { await sshConnection.DisposeAsync(); sshConnection = null; api.Disconnect(); await Render(); }));
         var address = Field("عنوان الخدمة الآمن", api.Address);
         address.FlowDirection = FlowDirection.LeftToRight;
         var token = Secret("رمز وصول المالك");
         var theme = new ComboBox { Header = "المظهر", ItemsSource = new[] { "النظام", "داكن", "فاتح" }, SelectedIndex = 0 };
         theme.SelectionChanged += (_, _) => RequestedTheme = theme.SelectedIndex switch { 1 => ElementTheme.Dark, 2 => ElementTheme.Light, _ => ElementTheme.Default };
         Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); token.Password = ""; cursor = "0"; page = "dashboard"; await Render(); })));
+    }
+    private async Task ConnectSsh(string alias)
+    {
+        var next = await SshConnection.Connect(alias);
+        if (sshConnection is not null)
+            await sshConnection.DisposeAsync();
+        sshConnection = next;
+        api.Configure(next.Address, next.Token);
     }
     private async Task Dashboard()
     {
@@ -205,7 +229,7 @@ public sealed partial class MainPage : Page
         ns.IsEnabled = user.IsEnabled = n is null;
         var name = Field("الاسم", V(n, "display_name"));
         var pass = Secret("كلمة المرور (اختياري)");
-        var reauth = Secret("سر إعادة التحقق لتحديث الاعتماد");
+        var reauth = ReauthField();
         if (!await Dialog(n is null ? "حساب جديد" : "تعديل الحساب", Stack(ns, user, name, pass, reauth)))
             return;
         var payload = new JsonObject { ["displayName"] = name.Text };
@@ -220,19 +244,19 @@ public sealed partial class MainPage : Page
         else
         {
             payload["version"] = Ver(n);
-            await api.Send("PATCH", "/v1/accounts/" + V(n, "id"), payload, reauth.Password);
+            await api.Send("PATCH", "/v1/accounts/" + V(n, "id"), payload, await Reauth(reauth.Password));
         }
         pass.Password = reauth.Password = "";
         await Render();
     }
     private async Task Reveal(JsonNode n)
     {
-        var reauth = Secret("سر إعادة التحقق");
+        var reauth = ReauthField();
         if (!await Dialog("عرض مؤقت لمدة 30 ثانية", reauth, "تحقق"))
             return;
         var result = await api.Send("POST", "/v1/accounts/" + V(n, "id") + "/reveal", new
         {
-        }, reauth.Password);
+        }, await Reauth(reauth.Password));
         reauth.Password = "";
         var secret = new PasswordBox { Header = "الاعتماد", Password = V(result, "password"), PasswordRevealMode = PasswordRevealMode.Peek };
         var expiry = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
@@ -253,7 +277,7 @@ public sealed partial class MainPage : Page
             ids = targets
         });
         var phrase = Field("اكتب " + V(p, "confirmation"));
-        var reauth = Secret("سر إعادة التحقق");
+        var reauth = ReauthField();
         var names = string.Join("، ", p["accounts"]!.AsArray().Select(a => V(a, "display_name")));
         if (!await Dialog("حذف نهائي", Stack(Text(names), Text($"المهام: {V(p, "assignments")} • الردود: {V(p, "replies")}\nتُحذف البيانات المرتبطة في TaskPilot؛ النسخ الاحتياطية لها احتفاظ منفصل. لا تُحذف رسائل واتساب من أجهزة الآخرين."), phrase, reauth), "حذف نهائي"))
             return;
@@ -261,7 +285,7 @@ public sealed partial class MainPage : Page
         {
             approvalToken = V(p, "approvalToken"),
             confirmation = phrase.Text
-        }, reauth.Password);
+        }, await Reauth(reauth.Password));
         reauth.Password = "";
         await Render();
     }
@@ -278,7 +302,7 @@ public sealed partial class MainPage : Page
     {
         var kind = new ComboBox { Header = "النوع", ItemsSource = new[] { "UNVERIFIED_CREDENTIALS", "INVALID_ACCOUNT_PASSWORD", "INVALID_ACCOUNT_CODE" }, SelectedIndex = 0 };
         var evidence = new ComboBox { Header = "الدليل", ItemsSource = new[] { "UNVERIFIED", "MANUAL", "AUTHORIZED_CHECK" }, SelectedIndex = 0 };
-        var reauth = Secret("سر إعادة التحقق للخطأ المؤكد");
+        var reauth = ReauthField();
         if (await Dialog("مشكلة بيانات الدخول", Stack(Text("MANUAL إقرار منك بأن الخطأ مثبت؛ لا تختَره بناءً على التخمين."), kind, evidence, reauth)))
         {
             await api.Send("POST", "/v1/issue-flags", new
@@ -286,7 +310,7 @@ public sealed partial class MainPage : Page
                 accountId = V(a, "account_id"),
                 kind = kind.SelectedItem.ToString(),
                 evidenceKind = evidence.SelectedItem.ToString()
-            }, reauth.Password);
+            }, await Reauth(reauth.Password));
             reauth.Password = "";
             await Render();
         }
@@ -307,14 +331,14 @@ public sealed partial class MainPage : Page
             sourceMessageId = V(sources[s.SelectedIndex], "id"),
             templateId = V(templates[t.SelectedIndex], "id")
         });
-        var reauth = Secret("سر إعادة التحقق");
+        var reauth = ReauthField();
         if (!await Dialog("إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text($"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionId")}\nالرسالة: {V(p, "externalMessageId")}\nموصل mock؛ لا إرسال واتساب حقيقي."), reauth), "إقرار المحاكاة"))
             return;
         await api.Send("POST", "/v1/reply-jobs/approve", new
         {
             approvalToken = V(p, "approvalToken"),
             idempotencyKey = Guid.NewGuid().ToString()
-        }, reauth.Password);
+        }, await Reauth(reauth.Password));
         reauth.Password = "";
         await Render();
     }
@@ -346,12 +370,12 @@ public sealed partial class MainPage : Page
             var n = r!;
             Card("بيانات تحتاج مراجعة", $"{V(n, "group_title")} • {V(n, "external_message_id")}", Button("مراجعة", async () =>
             {
-                var reauth = Secret("سر إعادة التحقق لفتح المحتوى المحمي");
+                var reauth = ReauthField();
                 if (!await Dialog("مراجعة الوارد", reauth, "فتح"))
                     return;
                 var raw = await api.Send("POST", "/v1/inbox/" + V(n, "id") + "/reveal", new
                 {
-                }, reauth.Password);
+                }, await Reauth(reauth.Password));
                 var name = Field("الاسم");
                 var user = Field("المستخدم");
                 var ns = Field("النظام");
@@ -372,7 +396,7 @@ public sealed partial class MainPage : Page
                     {
                         version = Ver(n),
                         account
-                    }, reauth.Password);
+                    }, await Reauth(reauth.Password));
                 }
                 reauth.Password = pass.Password = "";
                 await Render();
@@ -442,7 +466,7 @@ public sealed partial class MainPage : Page
     {
         var outcome = new ComboBox { Header = "نتيجة تحققك الفعلي", ItemsSource = new[] { "تأكدت أن الرد وصل", "تأكدت أن الرد لم يُرسل" }, SelectedIndex = 0 };
         var confirmed = new CheckBox { Content = "تحققت من النتيجة بنفسي؛ ليست تخمينًا" };
-        var reauth = Secret("سر إعادة التحقق");
+        var reauth = ReauthField();
         if (!await Dialog("حسم حالة تسليم مجهولة", Stack(Text("لن يُعاد إرسال الرد تلقائيًا بعد الحسم."), outcome, confirmed, reauth), "تسجيل التحقق"))
             return;
         if (confirmed.IsChecked != true)
@@ -451,7 +475,7 @@ public sealed partial class MainPage : Page
         {
             outcome = outcome.SelectedIndex == 0 ? "CONFIRMED_SENT" : "CONFIRMED_NOT_SENT",
             evidenceKind = "MANUAL"
-        }, reauth.Password);
+        }, await Reauth(reauth.Password));
         reauth.Password = "";
         await Render();
     }

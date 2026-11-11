@@ -29,6 +29,11 @@ public sealed class ApiClient : IDisposable
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         Connected = true;
     }
+    public void Disconnect()
+    {
+        http.DefaultRequestHeaders.Authorization = null;
+        Connected = false;
+    }
     public async Task<JsonNode> Send(string method, string path, object? payload = null, string? reauth = null)
     {
         if (!Connected)

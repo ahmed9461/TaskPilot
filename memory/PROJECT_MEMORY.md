@@ -39,3 +39,6 @@ Security deployment follow-up: runtime DB role separated from root-only migratio
 
 ## Final verified pointer â€” 2026-11-11
 Deployed source eb0f66bbc35ff008767501526612bdf0e9a94999 on New-VPS; CI43061180349 both jobs PASS. API runtime least privilege and actual restart/data/other-service preservation verified. Final backup/restore3 migrations and tamper rejection PASS. Portable Windows built/observed on fixture path; direct VPS auth/manual production gates remain open. Temporary local UI/API/tunnels stopped; server pilot remains active.
+
+## Continuation stage1 — SSH sessions
+Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.

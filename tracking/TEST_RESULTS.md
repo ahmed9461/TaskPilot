@@ -46,3 +46,8 @@ Reproduce: dedicated DB named `*_test`, set TASKPILOT_TEST_DATABASE_URL securely
 - Final encrypted backup32635 bytes; fresh restore DB1 account/1 assignment/3 migrations/0 SENDING. Tampered ciphertext rejected with no target database created.
 - Self-contained Windows publish PASS and6 client checks PASS. ZIP96852413 bytes/527 entries: testzip PASS, executable present, no runtime key/backup/log files. SHA2564FEE0763349A0A0258302CDD1F9526FA14FF4BBEFA1618AA02B38EED88708C04.
 - Temporary Windows fixture client/API/SSH forwards stopped; VPS pilot intentionally remains active. Full live acceptance not claimed.
+
+## Continuation stage1 — SSH sessions
+Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.
+
+Stage1 predeployment evidence:8 Node tests/build PASS, dedicated New-VPS PostgreSQL suite15/15 PASS including session lifecycle, WinUI Release0 warnings/errors and6 offline C# checks PASS. Direct server acceptance is next, not yet claimed.

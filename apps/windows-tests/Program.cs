@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using TaskPilot_Windows;
+if(args.Length>0&&args[0]=="--server-acceptance"){await ServerAcceptance.Run(args.Length>1?args[1]:"New-VPS");return;}
 static void ExpectRejected(Action action) { try { action(); } catch (InvalidOperationException) { return; } throw new Exception("Expected rejection"); }
 using var client=new ApiClient(new FixtureHandler());
 ExpectRejected(()=>client.Configure("http://example.invalid","synthetic-test-token-00000000000000"));
