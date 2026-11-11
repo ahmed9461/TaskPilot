@@ -10,3 +10,5 @@
 | I-006 | Rebuild hit file lock from own running Windows test app | RESOLVED | Closed app, self-contained publish passed |
 
 | I-007 | f659d9b rollout migration checksum mismatch: deployed CRLF hashes versus LF archive; original62fddfe active | VERIFIED | LF/CRLF regression + final eb0f66b rollout PASS, no DB reset |
+
+| I-008 | Windows locale-default Python edits plus formatter exposed mixed encoding/Arabic corruption while building new features | FIXED / VERIFYING | Explicit UTF-8 edits; repository scan now rejects invalid UTF-8, replacement glyphs and known Arabic mojibake; rebuild and real window check required |

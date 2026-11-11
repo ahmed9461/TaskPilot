@@ -13,7 +13,18 @@ for (const file of files) {
   if (/\.(pem|key|pfx|p12|dump|backup|sqlite|db|log)$/.test(file))
     blocked.push(file);
   if (/\.(png|ico)$/.test(file)) continue;
-  const data = readFileSync(file, "utf8");
+  let data;
+  try {
+    data = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(file));
+  } catch {
+    blocked.push(file + " (invalid UTF-8)");
+    continue;
+  }
+  if (
+    data.includes("\ufffd") ||
+    (data.match(/\u0637\u00a7|\u0638\u201e|\u0638\u2026/g) ?? []).length > 1
+  )
+    blocked.push(file + " (text encoding corruption)");
   if (
     /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(data) ||
     /sk-(?:proj|or-v1)-[A-Za-z0-9_-]{24,}/.test(data)

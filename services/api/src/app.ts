@@ -3,6 +3,8 @@ import rateLimit from "@fastify/rate-limit";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
+import { querySchema, queryResource, exportCsv } from "./queries.js";
+import { normalize } from "./parser.js";
 import { Service, Fault } from "./service.js";
 import { Vault, equal, hash } from "./security.js";
 import { transaction, event } from "./db.js";
@@ -33,11 +35,7 @@ const cursorQuery = z.object({
     .max(Number.MAX_SAFE_INTEGER)
     .default(0),
 });
-const listQuery = z.object({
-  search: z.string().max(200).default(""),
-  limit: z.coerce.number().int().min(1).max(500).default(100),
-  offset: z.coerce.number().int().min(0).max(1000000).default(0),
-});
+const listQuery = querySchema;
 export async function createApp(pool: pg.Pool, config: AppConfig) {
   if (
     config.apiToken.length < 32 ||
@@ -218,7 +216,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
             p.externalGroupId,
             p.title,
             p.taskTypeId,
-            p.namespace,
+            normalize(p.namespace),
             p.periodKey,
           ],
         )
@@ -245,18 +243,87 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       return row;
     });
   });
+
+  app.get("/v1/group-rules", async (req) => {
+    const p = z.object({ groupId: id }).parse(req.query);
+    return (
+      await pool.query(
+        "SELECT r.*,t.name task_name FROM group_rules r JOIN task_types t ON t.id=r.task_type_id WHERE r.group_id=$1 ORDER BY priority DESC,r.id",
+        [p.groupId],
+      )
+    ).rows;
+  });
+  app.post("/v1/group-rules", async (req) => {
+    const p = z
+      .object({
+        groupId: id,
+        taskTypeId: id,
+        keywords: z.array(z.string().trim().min(1).max(100)).min(1).max(20),
+        priority: z.number().int().min(0).max(100),
+      })
+      .strict()
+      .parse(req.body);
+    return transaction(pool, async (c) => {
+      const row = (
+        await c.query(
+          "INSERT INTO group_rules(id,group_id,task_type_id,keywords,priority) VALUES($1,$2,$3,$4,$5) RETURNING *",
+          [randomUUID(), p.groupId, p.taskTypeId, p.keywords, p.priority],
+        )
+      ).rows[0];
+      await c.query("UPDATE groups SET version=version+1 WHERE id=$1", [
+        p.groupId,
+      ]);
+      await event(c, "GROUP_RULE_CREATED", row.id);
+      return row;
+    });
+  });
+  app.patch("/v1/group-rules/:id", async (req) => {
+    const { id: ruleId } = uuidParam.parse(req.params);
+    const p = z
+      .object({ version: z.number().int().positive(), enabled: z.boolean() })
+      .strict()
+      .parse(req.body);
+    return transaction(pool, async (c) => {
+      const row = (
+        await c.query(
+          "UPDATE group_rules SET enabled=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
+          [ruleId, p.enabled, p.version],
+        )
+      ).rows[0];
+      if (!row) throw new Fault("CONFLICT");
+      await c.query("UPDATE groups SET version=version+1 WHERE id=$1", [
+        row.group_id,
+      ]);
+      await event(c, "GROUP_RULE_UPDATED", row.id);
+      return row;
+    });
+  });
+  app.post("/v1/reports/export", async (req) => {
+    await reauth(req);
+    const p = z
+      .object({
+        resource: z.enum(["accounts", "assignments"]),
+        query: querySchema.optional(),
+      })
+      .strict()
+      .parse(req.body);
+    const result = await queryResource(pool, p.resource, p.query ?? {});
+    await transaction(pool, async (c) => event(c, "REPORT_EXPORTED"));
+    return {
+      filename: `TaskPilot-${p.resource}.csv`,
+      content: exportCsv(p.resource, result.items),
+      rowsCount: result.items.length,
+      total: result.total,
+    };
+  });
   app.post("/v1/mock/messages", async (req) => {
     if (!config.mockEnabled) throw new Fault("MOCK_DISABLED", 403);
     return service.ingest(messageInput.parse(req.body));
   });
   app.get("/v1/inbox", async (req) => {
-    const p = listQuery.parse(req.query);
-    return (
-      await pool.query(
-        "SELECT s.id,s.session_id,s.group_id,s.external_message_id,s.state,s.version,s.received_at,g.title group_title FROM source_messages s JOIN groups g ON g.id=s.group_id WHERE s.state='REVIEW' ORDER BY received_at LIMIT $1 OFFSET $2",
-        [p.limit, p.offset],
-      )
-    ).rows;
+    const q = listQuery.parse(req.query);
+    const result = await queryResource(pool, "inbox", q);
+    return q.page === "true" ? result : result.items;
   });
   app.post("/v1/inbox/:id/reveal", async (req) => {
     await reauth(req);
@@ -282,7 +349,11 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     await reauth(req);
     const { id: messageId } = uuidParam.parse(req.params);
     const p = z
-      .object({ version: z.number().int().positive(), account: accountInput })
+      .object({
+        version: z.number().int().positive(),
+        account: accountInput,
+        taskTypeId: id.optional(),
+      })
       .strict()
       .parse(req.body);
     return transaction(pool, async (c) => {
@@ -294,12 +365,22 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       ).rows[0];
       if (!row || row.state !== "REVIEW" || row.version !== p.version)
         throw new Fault("CONFLICT");
-      if (!row.enabled || p.account.namespace !== row.namespace)
+      if (
+        !row.enabled ||
+        normalize(p.account.namespace) !== normalize(row.namespace)
+      )
         throw new Fault("REVIEW_SCOPE_MISMATCH");
+      if (row.routing_ambiguous && !p.taskTypeId)
+        throw new Fault("TASK_TYPE_REVIEW_REQUIRED", 400);
       const assignment = await service.materialize(
         c,
         messageId,
-        row,
+        {
+          ...row,
+          task_type_id:
+            p.taskTypeId ?? row.routing_task_type_id ?? row.task_type_id,
+          priority: row.routing_priority,
+        },
         p.account,
       );
       await event(c, "REVIEW_RESOLVED", messageId);
@@ -307,14 +388,9 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     });
   });
   app.get("/v1/accounts", async (req) => {
-    const p = listQuery.parse(req.query);
-    return (
-      await pool.query(
-        `SELECT id,namespace,username_normalized,display_name,archived_at,version,created_at FROM accounts
-    WHERE display_name ILIKE $1 OR username_normalized ILIKE $1 ORDER BY created_at DESC,id LIMIT $2 OFFSET $3`,
-        [`%${p.search}%`, p.limit, p.offset],
-      )
-    ).rows;
+    const q = listQuery.parse(req.query);
+    const result = await queryResource(pool, "accounts", q);
+    return q.page === "true" ? result : result.items;
   });
   app.post("/v1/accounts", async (req) => {
     const p = accountInput.parse(req.body);
@@ -401,16 +477,9 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       });
     });
   app.get("/v1/assignments", async (req) => {
-    const p = listQuery.parse(req.query);
-    return (
-      await pool.query(
-        `SELECT a.*,ac.display_name,ac.username_normalized,t.name task_name,
-    COALESCE((SELECT json_agg(json_build_object('id',s.id,'sessionId',s.session_id,'groupId',s.group_id,'externalMessageId',s.external_message_id)) FROM assignment_sources x JOIN source_messages s ON s.id=x.source_message_id WHERE x.assignment_id=a.id),'[]') sources
-    FROM assignments a JOIN accounts ac ON ac.id=a.account_id JOIN task_types t ON t.id=a.task_type_id
-    WHERE ac.display_name ILIKE $1 OR ac.username_normalized ILIKE $1 ORDER BY a.created_at DESC,a.id LIMIT $2 OFFSET $3`,
-        [`%${p.search}%`, p.limit, p.offset],
-      )
-    ).rows;
+    const q = listQuery.parse(req.query);
+    const result = await queryResource(pool, "assignments", q);
+    return q.page === "true" ? result : result.items;
   });
   app.patch("/v1/assignments/:id/status", async (req) => {
     const { id: assignmentId } = uuidParam.parse(req.params);
@@ -439,6 +508,21 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       await event(c, "ASSIGNMENT_STATUS_CHANGED", assignmentId);
       return row;
     });
+  });
+  app.post("/v1/assignments/:id/deletion-preview", async (req) =>
+    service.assignmentDeletionPreview(uuidParam.parse(req.params).id),
+  );
+  app.post("/v1/assignments/:id/delete", async (req) => {
+    await reauth(req);
+    const p = z
+      .object({ approvalToken: text, confirmation: text })
+      .strict()
+      .parse(req.body);
+    return service.deleteAssignment(
+      uuidParam.parse(req.params).id,
+      p.approvalToken,
+      p.confirmation,
+    );
   });
   app.get(
     "/v1/reply-templates",

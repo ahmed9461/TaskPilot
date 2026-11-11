@@ -29,3 +29,5 @@
 
 ## Actual pilot implementation
 WinUI3/.NET10 self-contained x64 source under apps/windows. Main navigation/forms, timed protected reveal, preview, selected/all purge, unknown reconciliation, theme and polling implemented. Actual fixture account/task/reply preview/cancel observed; sensitive confirmations and broad accessibility/paging/rules acceptance remain open. No installer/signature/update channel. See TEST_RESULTS for boundaries.
+
+Continuation: integrated SSH session/tunnel,50-row pages preserving active filters, task state/session/group/type/period/priority filters, Arabic task statuses, keyword rule editor, filtered-page CSV save picker and assignment-only purge preview. Direct C# client/server acceptance is separate from visual WinUI acceptance; final evidence is in TEST_RESULTS.

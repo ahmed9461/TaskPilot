@@ -21,6 +21,10 @@ namespace TaskPilot_Windows;
 /// </summary>
 public partial class App : Application
 {
+    public static Window? CurrentWindow
+    {
+        get; private set;
+    }
     private Window? _window;
 
     /// <summary>
@@ -39,6 +43,7 @@ public partial class App : Application
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         _window = new MainWindow();
+        CurrentWindow = _window;
         _window.Activate();
     }
 }

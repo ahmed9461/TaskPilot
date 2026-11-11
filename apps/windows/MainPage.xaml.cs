@@ -37,7 +37,7 @@ public sealed partial class MainPage : Page
     private static TextBlock Text(string s, int size = 14) => new() { Text = s, FontSize = size, TextWrapping = TextWrapping.Wrap };
     private static TextBox Field(string label, string s = "") => new() { Header = label, Text = s, MinWidth = 300, MaxLength = 200 };
     private static PasswordBox Secret(string label) => new() { Header = label, PasswordRevealMode = PasswordRevealMode.Hidden };
-    private PasswordBox ReauthField() => new() { Header = sshConnection is null ? "�� ����� ������" : "���� ����� �������� ��� SSH ��� ��������", IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
+    private PasswordBox ReauthField() => new() { Header = sshConnection is null ? "سر إعادة التحقق" : "ستتم إعادة المصادقة عبر SSH عند الموافقة", IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
     private static StackPanel Stack(params UIElement[] items)
     {
         var p = new StackPanel { Spacing = 12 };
@@ -204,13 +204,13 @@ public sealed partial class MainPage : Page
         foreach (var (key, title) in new[] { ("accounts", "الحسابات"), ("open", "المهام المفتوحة"), ("completed", "المكتملة"), ("review", "بحاجة مراجعة"), ("unknown_delivery", "ردود تحتاج تحققًا") })
             Card(V(n, key), title);
     }
-    private async Task Accounts(string search = "")
+    private async Task Accounts()
     {
-        var q = Field("ابحث بالاسم أو المستخدم", search);
+        AccountFilters();
         var selectedIds = new HashSet<string>();
-        Body.Children.Add(Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }));
-        Body.Children.Add(Stack(q, Button("بحث", async () => { Body.Children.Clear(); await Accounts(q.Text); }), Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف الكل", () => Purge(null))));
-        var rows = (await api.Send("GET", "/v1/accounts?limit=500&search=" + Uri.EscapeDataString(search))).AsArray();
+        Body.Children.Add(Stack(Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }), Button("معاينة حذف الكل", () => Purge(null))));
+        var result = await PageData("accounts");
+        var rows = result["items"]!.AsArray();
         foreach (var r in rows)
         {
             var n = r!;
@@ -221,6 +221,7 @@ public sealed partial class MainPage : Page
         }
         if (rows.Count == 0)
             Body.Children.Add(Text("لا توجد حسابات مطابقة."));
+        Pager("accounts", result);
     }
     private async Task AccountForm(JsonNode? n)
     {
@@ -291,12 +292,16 @@ public sealed partial class MainPage : Page
     }
     private async Task Assignments()
     {
-        foreach (var r in (await api.Send("GET", "/v1/assignments?limit=500")).AsArray())
+        await AssignmentFilters();
+        var result = await PageData("assignments");
+        foreach (var r in result["items"]!.AsArray())
         {
             var n = r!;
-            var status = new ComboBox { ItemsSource = new[] { "NEW", "NEEDS_REVIEW", "IN_PROGRESS", "COMPLETED", "CANCELED" }, SelectedItem = V(n, "status") };
-            Card(V(n, "display_name"), $"{V(n, "task_name")} • {V(n, "period_key")} • {V(n, "status")}", status, Button("حفظ الحالة", async () => { await api.Send("PATCH", "/v1/assignments/" + V(n, "id") + "/status", new { status = status.SelectedItem?.ToString(), version = Ver(n) }); await Render(); }), Button("معاينة رد", () => Reply(n)), Button("مشكلة اعتماد", () => Flag(n)));
+            var status = Choice("الحالة", StatusCodes.Select(c => (c, StateLabel(c))), V(n, "status"));
+            Card(V(n, "display_name"), $"{V(n, "task_name")} • {V(n, "period_key")} • {StateLabel(V(n, "status"))} • أولوية {V(n, "priority")}", status,
+            Button("حفظ الحالة", async () => { await api.Send("PATCH", "/v1/assignments/" + V(n, "id") + "/status", new { status = Selected(status), version = Ver(n) }); await Render(); }), Button("معاينة رد", () => Reply(n)), Button("مشكلة اعتماد", () => Flag(n)), Button("حذف التكليف", () => PurgeAssignment(n)));
         }
+        Pager("assignments", result);
     }
     private async Task Flag(JsonNode a)
     {
@@ -348,12 +353,12 @@ public sealed partial class MainPage : Page
         {
             var groups = (await api.Send("GET", "/v1/groups")).AsArray();
             if (groups.Count == 0)
-                throw new InvalidOperationException("أضف مجموعة محاكاة من قسم المجموعات أولًا.");
-            var group = new ComboBox { Header = "المجموعة", ItemsSource = groups.Select(g => V(g, "title")).ToArray(), SelectedIndex = 0 };
+                throw new InvalidOperationException("أضف مجموعة محاكاة أولًا.");
+            var group = Choice("المجموعة", groups.Select(g => (V(g, "id"), V(g, "title"))));
             var content = new TextBox { Header = "بيانات وهمية فقط", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinWidth = 320, Height = 150, MaxLength = 16000, Text = "الاسم: حساب اختبار\nاليوزر: demo-new\nكلمة المرور: synthetic-only" };
-            if (!await Dialog("محاكاة استلام رسالة", Stack(Text("تُحفظ الرسالة في بيئة الاختبار؛ لا تُرسل إلى واتساب."), group, content), "استقبال محاكى"))
+            if (!await Dialog("محاكاة استلام رسالة", Stack(Text("تُحفظ الرسالة في الخادم؛ لا تُرسل إلى واتساب."), group, content), "استقبال محاكى"))
                 return;
-            var selected = groups[group.SelectedIndex]!;
+            var selected = groups.Single(g => V(g, "id") == Selected(group))!;
             await api.Send("POST", "/v1/mock/messages", new
             {
                 sessionId = V(selected, "session_id"),
@@ -364,11 +369,12 @@ public sealed partial class MainPage : Page
             content.Text = "";
             await Render();
         }));
-        var rows = (await api.Send("GET", "/v1/inbox?limit=500")).AsArray();
-        foreach (var r in rows)
+        var result = await PageData("inbox");
+        var rows = result["items"]!.AsArray();
+        foreach (var row in rows)
         {
-            var n = r!;
-            Card("بيانات تحتاج مراجعة", $"{V(n, "group_title")} • {V(n, "external_message_id")}", Button("مراجعة", async () =>
+            var n = row!;
+            Card("بيانات تحتاج مراجعة", V(n, "group_title") + " • " + V(n, "external_message_id"), Button("مراجعة", async () =>
             {
                 var reauth = ReauthField();
                 if (!await Dialog("مراجعة الوارد", reauth, "فتح"))
@@ -378,13 +384,14 @@ public sealed partial class MainPage : Page
                 }, await Reauth(reauth.Password));
                 var name = Field("الاسم");
                 var user = Field("المستخدم");
-                var ns = Field("النظام");
+                var ns = Field("النظام", V(n, "namespace"));
                 var pass = Secret("كلمة المرور (اختياري)");
+                var task = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), V(n, "routing_task_type_id"));
                 var view = new TextBox { Header = "محتوى محمي — يُخفى بعد 30 ثانية", Text = V(raw, "text"), IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MaxHeight = 120 };
                 var hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
                 hide.Tick += (_, _) => { view.Text = ""; hide.Stop(); };
                 hide.Start();
-                var ok = await Dialog("تصحيح البيانات", Stack(view, ns, name, user, pass));
+                var ok = await Dialog("تصحيح البيانات", Stack(view, ns, name, user, pass, task));
                 hide.Stop();
                 view.Text = "";
                 if (ok)
@@ -392,11 +399,10 @@ public sealed partial class MainPage : Page
                     var account = new JsonObject { ["namespace"] = ns.Text, ["username"] = user.Text, ["displayName"] = name.Text };
                     if (pass.Password != "")
                         account["password"] = pass.Password;
-                    await api.Send("POST", "/v1/inbox/" + V(n, "id") + "/resolve", new
-                    {
-                        version = Ver(n),
-                        account
-                    }, await Reauth(reauth.Password));
+                    var payload = new JsonObject { ["version"] = Ver(n), ["account"] = account };
+                    if (Selected(task) != "")
+                        payload["taskTypeId"] = Selected(task);
+                    await api.Send("POST", "/v1/inbox/" + V(n, "id") + "/resolve", payload, await Reauth(reauth.Password));
                 }
                 reauth.Password = pass.Password = "";
                 await Render();
@@ -404,6 +410,7 @@ public sealed partial class MainPage : Page
         }
         if (rows.Count == 0)
             Body.Children.Add(Text("صندوق المراجعة فارغ."));
+        Pager("inbox", result);
     }
     private async Task Sessions()
     {
@@ -445,7 +452,7 @@ public sealed partial class MainPage : Page
         {
             var n = r!;
             var enabled = n["enabled"]!.GetValue<bool>();
-            Card(V(n, "title"), $"{V(n, "namespace")} • {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button(enabled ? "إيقاف" : "تفعيل", async () => { await api.Send("PATCH", "/v1/groups/" + V(n, "id"), new { version = Ver(n), enabled = !enabled }); await Render(); }));
+            Card(V(n, "title"), $"{V(n, "namespace")} • {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button("القواعد", () => Rules(n)), Button(enabled ? "إيقاف" : "تفعيل", async () => { await api.Send("PATCH", "/v1/groups/" + V(n, "id"), new { version = Ver(n), enabled = !enabled }); await Render(); }));
         }
     }
     private async Task Replies()
@@ -459,7 +466,7 @@ public sealed partial class MainPage : Page
             if (V(n, "status") == "UNKNOWN_DELIVERY")
                 Card("تسليم يحتاج تحققًا", V(n, "body"), Button("حسم حالة التسليم", () => Reconcile(n!)));
             else
-                Card(V(n, "status"), V(n, "body") + "\n" + V(n, "provider_message_id"));
+                Card(StateLabel(V(n, "status")), V(n, "body") + "\n" + V(n, "provider_message_id"));
         }
     }
     private async Task Reconcile(JsonNode job)

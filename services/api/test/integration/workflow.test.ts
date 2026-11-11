@@ -757,4 +757,257 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
       assert.equal((await api("GET", "/v1/dashboard")).accounts, 0);
     },
   );
+  await t.test(
+    "custom routing/review, paged filters, safe CSV and assignment-only purge preserve identities",
+    async () => {
+      const feature = await createApp(pool, config);
+      try {
+        async function f(
+          method: any,
+          path: string,
+          body?: any,
+          sensitiveAction = false,
+        ) {
+          const r = await feature.inject({
+            method,
+            url: path,
+            headers: sensitiveAction ? sensitive : headers,
+            ...(body ? { payload: body } : {}),
+          });
+          assert.ok(r.statusCode < 300, `${path}: ${r.statusCode} ${r.body}`);
+          return r.json();
+        }
+        const a = await f("POST", "/v1/task-types", {
+            code: "route-a",
+            name: "Routing A",
+          }),
+          b = await f("POST", "/v1/task-types", {
+            code: "route-b",
+            name: "Routing B",
+          });
+        const g = await f("POST", "/v1/groups", {
+          sessionId: session.id,
+          externalGroupId: "routing-test",
+          title: "Routing fixture",
+          taskTypeId: a.id,
+          namespace: "ROUTING_TEST",
+          periodKey: "p1",
+        });
+        assert.equal(g.namespace, "routing_test");
+        const rule = await f("POST", "/v1/group-rules", {
+          groupId: g.id,
+          taskTypeId: b.id,
+          keywords: ["دوري"],
+          priority: 60,
+        });
+        const ingest = (externalMessageId: string, username: string) =>
+          f("POST", "/v1/mock/messages", {
+            sessionId: session.id,
+            groupId: g.id,
+            externalMessageId,
+            text: `name: Routing fixture\nuser: ${username}\npassword: synthetic-feature-secret\nالمهمة: دوري`,
+          });
+        const ignored = await f("POST", "/v1/mock/messages", {
+          sessionId: session.id,
+          groupId: g.id,
+          externalMessageId: "unrelated",
+          text: "hello, unrelated chat",
+        });
+        assert.equal(ignored.state, "IGNORED");
+        assert.equal(
+          (
+            await pool.query(
+              "SELECT encrypted_payload FROM source_messages WHERE id=$1",
+              [ignored.id],
+            )
+          ).rows[0].encrypted_payload,
+          null,
+        );
+        await ingest("route1", "routing_fixture_a");
+        let found = await f(
+          "GET",
+          `/v1/assignments?page=true&sessionId=${session.id}&groupId=${g.id}&taskTypeId=${b.id}&periodKey=p1&minPriority=50`,
+        );
+        assert.equal(found.total, 1);
+        const routed = found.items[0];
+        assert.equal(routed.priority, 60);
+        await f("POST", "/v1/group-rules", {
+          groupId: g.id,
+          taskTypeId: a.id,
+          keywords: ["دوري"],
+          priority: 60,
+        });
+        const review = await ingest("route2", "routing_fixture_b");
+        assert.equal(review.state, "REVIEW");
+        const inbox = await f("GET", `/v1/inbox?page=true&groupId=${g.id}`);
+        assert.equal(inbox.total, 1);
+        assert.equal(inbox.items[0].routing_ambiguous, true);
+        const resolve = {
+          version: inbox.items[0].version,
+          account: {
+            namespace: g.namespace,
+            username: "routing_fixture_b",
+            displayName: "Reviewed route",
+          },
+        };
+        assert.equal(
+          (
+            await feature.inject({
+              method: "POST",
+              url: `/v1/inbox/${review.id}/resolve`,
+              headers: sensitive,
+              payload: resolve,
+            })
+          ).statusCode,
+          400,
+        );
+        await f(
+          "POST",
+          `/v1/inbox/${review.id}/resolve`,
+          { ...resolve, taskTypeId: a.id },
+          true,
+        );
+        await f("PATCH", `/v1/group-rules/${rule.id}`, {
+          version: rule.version,
+          enabled: false,
+        });
+        assert.equal(
+          (await f("GET", `/v1/group-rules?groupId=${g.id}`)).filter(
+            (r: any) => r.enabled,
+          ).length,
+          1,
+        );
+        const first = await f(
+            "GET",
+            "/v1/accounts?page=true&namespace=routing_test&limit=1",
+          ),
+          second = await f(
+            "GET",
+            "/v1/accounts?page=true&namespace=routing_test&limit=1&offset=1",
+          );
+        assert.equal(first.total, 2);
+        assert.equal(second.total, 2);
+        assert.notEqual(first.items[0].id, second.items[0].id);
+        assert.equal(
+          (
+            await f(
+              "GET",
+              "/v1/accounts?page=true&search=" +
+                encodeURIComponent("%' OR 1=1 --"),
+            )
+          ).total,
+          0,
+        );
+        await f("POST", "/v1/accounts", {
+          namespace: g.namespace,
+          username: "routing_fixture_formula",
+          displayName: "=SUM(1,2)",
+        });
+        assert.equal(
+          (
+            await feature.inject({
+              method: "POST",
+              url: "/v1/reports/export",
+              headers,
+              payload: { resource: "accounts" },
+            })
+          ).statusCode,
+          403,
+        );
+        const report = await f(
+          "POST",
+          "/v1/reports/export",
+          {
+            resource: "accounts",
+            query: { namespace: g.namespace, limit: 100 },
+          },
+          true,
+        );
+        assert.equal(report.rowsCount, 3);
+        assert.equal(
+          report.content.includes("synthetic-feature-secret"),
+          false,
+        );
+        assert.ok(report.content.includes("'=SUM(1,2)"));
+        const g2 = await f("POST", "/v1/groups", {
+          sessionId: session.id,
+          externalGroupId: "routing-period2",
+          title: "Other task fixture",
+          taskTypeId: a.id,
+          namespace: g.namespace,
+          periodKey: "p2",
+        });
+        await f("POST", "/v1/mock/messages", {
+          sessionId: session.id,
+          groupId: g2.id,
+          externalMessageId: "other-task",
+          text: "name: Routing fixture\nuser: routing_fixture_a\npassword: synthetic-feature-secret",
+        });
+        const account = (
+          await f("GET", "/v1/accounts?search=routing_fixture_a")
+        )[0];
+        assert.equal(
+          (await f("GET", `/v1/assignments?accountId=${account.id}`)).length,
+          2,
+        );
+        const preview = await f(
+          "POST",
+          `/v1/assignments/${routed.id}/deletion-preview`,
+          {},
+        );
+        assert.equal(
+          (
+            await feature.inject({
+              method: "POST",
+              url: `/v1/assignments/${routed.id}/delete`,
+              headers,
+              payload: {
+                approvalToken: preview.approvalToken,
+                confirmation: "DELETE TASK",
+              },
+            })
+          ).statusCode,
+          403,
+        );
+        assert.equal(
+          (
+            await f(
+              "POST",
+              `/v1/assignments/${routed.id}/delete`,
+              {
+                approvalToken: preview.approvalToken,
+                confirmation: "DELETE TASK",
+              },
+              true,
+            )
+          ).accountPreserved,
+          true,
+        );
+        assert.equal(
+          (await f("GET", `/v1/assignments?accountId=${account.id}`)).length,
+          1,
+        );
+        assert.equal(
+          (await f("POST", `/v1/accounts/${account.id}/reveal`, {}, true))
+            .password,
+          "synthetic-feature-secret",
+        );
+        const ids = (await f("GET", "/v1/accounts?namespace=routing_test")).map(
+          (x: any) => x.id,
+        );
+        const deletion = await f("POST", "/v1/deletions/preview", { ids });
+        await f(
+          "POST",
+          "/v1/deletions/confirm",
+          {
+            approvalToken: deletion.approvalToken,
+            confirmation: deletion.confirmation,
+          },
+          true,
+        );
+      } finally {
+        await feature.close();
+      }
+    },
+  );
 });

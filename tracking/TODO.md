@@ -37,5 +37,8 @@ Checked means verified only within the stated synthetic pilot scope; production 
 ## الأدلة
 Implementation:62fddfe, f659d9b,60bd2b6,eb0f66b. TEST_RESULTS and PROJECT_STATE describe exact environments; do not equate synthetic tests with live WhatsApp/provider/human production acceptance.
 
-## Continuation stage1 � SSH sessions
+## Continuation stage1 — SSH sessions
 Implemented30-minute SSH-issued client sessions,60-second single-use reauth grants, expiry/revocation checks, and Windows-owned secure tunnel/login/logout. No permanent server key export. Windows C# server acceptance runner added for scoped synthetic create/review/status/reveal/mock-reply/archive/purge/revocation. Local WinUI build PASS; dedicated PostgreSQL regression/actual server acceptance are being verified in this stage; do not infer direct-server acceptance from code existence.
+
+## Continuation stage2
+Implemented deterministic keyword routing/priority and ambiguity review, IGNORE/minimization for unrelated chat, backward-compatible page envelopes and scoped filters, safe filtered-page CSV export, task-only purge preserving accounts/other tasks, and Windows editor/filter/pager/export/purge controls.10 Node tests and16 PostgreSQL suite tests PASS (including parent), Release build PASS. Direct previous auth-stage C# server acceptance15 checks PASS. Final expanded acceptance/visual/CI/deployment still to verify.

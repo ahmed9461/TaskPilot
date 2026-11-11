@@ -3,6 +3,7 @@ import type pg from "pg";
 import type { PoolClient } from "pg";
 import { transaction, event } from "./db.js";
 import { Vault, token, hash } from "./security.js";
+import { routeTask } from "./rules.js";
 import { normalize, parseMessage } from "./parser.js";
 import type { MessageInput } from "../../../packages/contracts/src/index.js";
 export class Fault extends Error {
@@ -89,7 +90,33 @@ export class Service {
       );
       if (!inserted.rowCount) return { duplicate: true };
       const parsed = parseMessage(input.text);
+      const rules = (
+        await c.query(
+          "SELECT * FROM group_rules WHERE group_id=$1 AND enabled=true ORDER BY priority DESC,id",
+          [group.id],
+        )
+      ).rows;
+      const route = routeTask(input.text, rules, group.task_type_id);
+      await c.query(
+        "UPDATE source_messages SET routing_task_type_id=$2,routing_priority=$3,routing_ambiguous=$4 WHERE id=$1",
+        [
+          messageId,
+          route.ambiguous ? null : route.taskTypeId,
+          route.priority,
+          route.ambiguous,
+        ],
+      );
+      if (!parsed.username && !parsed.displayName && !parsed.password) {
+        await c.query(
+          "UPDATE source_messages SET state='IGNORED',encrypted_payload=NULL WHERE id=$1",
+          [messageId],
+        );
+        return { id: messageId, state: "IGNORED" };
+      }
+      group.task_type_id = route.taskTypeId;
+      group.priority = route.priority;
       if (
+        route.ambiguous ||
         parsed.needsReview ||
         parsed.username!.length > 200 ||
         parsed.displayName!.length > 200 ||
@@ -144,9 +171,15 @@ export class Service {
     if (account.archived_at) throw new Fault("ACCOUNT_ARCHIVED");
     const assignment = (
       await c.query(
-        `INSERT INTO assignments(id,account_id,task_type_id,period_key) VALUES($1,$2,$3,$4)
-      ON CONFLICT(account_id,task_type_id,period_key) DO UPDATE SET account_id=EXCLUDED.account_id RETURNING *`,
-        [randomUUID(), account.id, group.task_type_id, group.period_key],
+        `INSERT INTO assignments(id,account_id,task_type_id,period_key,priority) VALUES($1,$2,$3,$4,$5)
+      ON CONFLICT(account_id,task_type_id,period_key) DO UPDATE SET priority=GREATEST(assignments.priority,EXCLUDED.priority),version=assignments.version+CASE WHEN EXCLUDED.priority>assignments.priority THEN 1 ELSE 0 END RETURNING *`,
+        [
+          randomUUID(),
+          account.id,
+          group.task_type_id,
+          group.period_key,
+          group.priority ?? 0,
+        ],
       )
     ).rows[0];
     await c.query(
@@ -170,6 +203,91 @@ export class Service {
       [hash(value), purpose, JSON.stringify(payload)],
     );
     return value;
+  }
+  async assignmentDeletionPreview(assignmentId: string) {
+    return transaction(this.pool, async (c) => {
+      const row = (
+        await c.query(
+          "SELECT a.*,ac.version account_version,ac.display_name,t.name task_name FROM assignments a JOIN accounts ac ON ac.id=a.account_id JOIN task_types t ON t.id=a.task_type_id WHERE a.id=$1 FOR SHARE OF a,ac",
+          [assignmentId],
+        )
+      ).rows[0];
+      if (!row) throw new Fault("NOT_FOUND", 404);
+      const replies = Number(
+        (
+          await c.query(
+            "SELECT count(*) FROM reply_jobs WHERE assignment_id=$1",
+            [assignmentId],
+          )
+        ).rows[0].count,
+      );
+      return {
+        assignmentId,
+        displayName: row.display_name,
+        taskName: row.task_name,
+        replies,
+        confirmation: "DELETE TASK",
+        approvalToken: await this.approval(c, "delete-assignment", {
+          assignmentId,
+          version: row.version,
+          accountId: row.account_id,
+          accountVersion: row.account_version,
+        }),
+      };
+    });
+  }
+  async deleteAssignment(
+    assignmentId: string,
+    value: string,
+    confirmation: string,
+  ) {
+    return transaction(this.pool, async (c) => {
+      const p = await this.consume(c, value, "delete-assignment");
+      if (p.assignmentId !== assignmentId || confirmation !== "DELETE TASK")
+        throw new Fault("DELETION_REQUIRES_CONFIRMATION");
+      const account = (
+        await c.query("SELECT version FROM accounts WHERE id=$1 FOR UPDATE", [
+          p.accountId,
+        ])
+      ).rows[0];
+      const assignment = (
+        await c.query(
+          "SELECT version FROM assignments WHERE id=$1 FOR UPDATE",
+          [assignmentId],
+        )
+      ).rows[0];
+      if (
+        !account ||
+        !assignment ||
+        account.version !== p.accountVersion ||
+        assignment.version !== p.version
+      )
+        throw new Fault("STALE_PREVIEW");
+      const jobs = (
+        await c.query(
+          "SELECT id,status FROM reply_jobs WHERE assignment_id=$1 FOR UPDATE",
+          [assignmentId],
+        )
+      ).rows;
+      if (jobs.some((j) => ["SENDING", "UNKNOWN_DELIVERY"].includes(j.status)))
+        throw new Fault("DELIVERY_REQUIRES_RECONCILIATION");
+      const sources = (
+        await c.query(
+          "SELECT source_message_id FROM assignment_sources WHERE assignment_id=$1",
+          [assignmentId],
+        )
+      ).rows.map((r) => r.source_message_id);
+      await c.query("DELETE FROM assignments WHERE id=$1", [assignmentId]);
+      await c.query(
+        "DELETE FROM source_messages s WHERE id=ANY($1::uuid[]) AND NOT EXISTS(SELECT 1 FROM assignment_sources x WHERE x.source_message_id=s.id)",
+        [sources],
+      );
+      await c.query("UPDATE accounts SET version=version+1 WHERE id=$1", [
+        p.accountId,
+      ]);
+      await event(c, "ASSIGNMENT_PURGED", assignmentId);
+      return { deleted: 1, accountPreserved: true };
+    });
   }
   async consume(c: PoolClient, value: string, purpose: string) {
     const result = await c.query(
