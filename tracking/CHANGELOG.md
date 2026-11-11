@@ -14,3 +14,15 @@
 - Updated zod/tsx/esbuild until npm audit reported zero vulnerabilities.
 ### Pending
 - Windows app, running API pilot, encrypted restore and production identity/retention/live connector acceptance.
+
+## Native pilot phase — 2026-11-11
+### Added
+- WinUI3 native Arabic RTL navigation/dashboard/accounts/tasks/inbox/session/group/templates/notification forms, secure connection, theme, timed credential view and confirmation previews. Synthetic message entry for testing.
+- Self-contained portable x64 publication; client contract checks, locked NuGet graph and pinned GitHub Actions CI.
+- Hardened independent pilot API deployment, SSH-only access, encrypted dump/isolated restore tooling and actual HTTP smoke.
+### Fixed / Security
+- New task/source/reply invalidates account deletion preview via aggregate version; account lock ordering before status/approval writes.
+- Disabled HTTP redirects for sensitive headers; bounded lists/body/rate, independent reauth, repository pattern scan.
+- Deferred navigation refresh during active actions and serialized poll refresh.
+### Pending
+- Live WhatsApp/AI, production identity/retention/escrow, selected bulk UI, advanced rules/paging/toasts, unknown reconciliation, signed installer and update channel.

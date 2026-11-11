@@ -17,10 +17,10 @@
 - [x] P1-007 تنفيذ reply templates وoutbox وإرسال الاقتباس بعد التأكيد.
 - [x] P1-008 تنفيذ حالات الرمز/كلمة المرور الخاطئة مع الدليل والتأكيد.
 - [x] P1-009 تنفيذ الأرشفة والحذف الفردي/المتعدد/الكلي مع اختبار التبعات.
-- [ ] P1-010 ضبط تسجيل audit منقح ونسخ احتياطي مشفر قابل للاستعادة.
+- [x] P1-010 ضبط تسجيل audit منقح ونسخ احتياطي مشفر قابل للاستعادة.
 
 ## P2 — Windows MVP
-- [ ] P2-001 لوحة تحكم عربية RTL.
+- [x] P2-001 لوحة تحكم عربية RTL.
 - [ ] P2-002 الجلسات والمجموعات والقواعد.
 - [ ] P2-003 الحسابات والمهام والبحث/الفلاتر.
 - [ ] P2-004 صندوق مراجعة الوارد والبيانات الناقصة.
@@ -28,7 +28,7 @@
 
 ## P3 — التشغيل والتحسين
 - [ ] P3-001 اختبار E2E على بيانات وهمية قبل ربط فعلي.
-- [ ] P3-002 خطة نشر اختبارية على New-VPS مع حماية الخدمات القائمة.
+- [x] P3-002 خطة نشر اختبارية على New-VPS مع حماية الخدمات القائمة.
 - [ ] P3-003 تعدد جلسات نشطة بعد اعتماد اختبار العزل.
 - [ ] P3-004 تكامل DeepSeek/OpenRouter بعد فحص إرسال بيانات منقحة.
 - [ ] P3-005 تقارير وإحصاءات ومستوى إنذار ومراقبة ونسخ احتياطي.
@@ -36,3 +36,9 @@
 كل مهمة تغلق فقط مع رابط commit/PR ونتيجة اختبار منشورة في tracking/TEST_RESULTS.md. لا تحولها إلى Done عند كتابة وثيقة تصميم فحسب.
 
 هذه البنود مثبتة فقط في النطاق الوهمي عبر اختبارات Phase 1؛ P1-010 وWindows والنشر والاستعادة ما زالت مفتوحة. production auth وlive WhatsApp لا تُغلق ضمن الإنجاز الوهمي.
+
+## Native pilot acceptance notes
+- P1-010: redacted audit + manual encrypted backup/restore VERIFIED on synthetic data. Automated retention/off-host escrow remain separate open work.
+- P2-001: actual Arabic RTL native window VERIFIED. P2-002..005 IMPLEMENTED main forms; comprehensive UI acceptance, selected bulk purge and advanced rules remain open.
+- P3-002: closed synthetic pilot actually DEPLOYED; no public port or change to shared services. Final restart/CI evidence to follow.
+- P3-001: API workflow E2E and fixture UI PASS; direct Windows-to-pilot and full UI actions remain partial.

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TaskPilot.Windows (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "TaskPilot.Windows (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

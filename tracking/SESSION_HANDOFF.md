@@ -1,15 +1,17 @@
-# تسليم الجلسة — 2026-11-11
-## تم
-Read every repository document; implemented backend and migrations. Unit 3/3 and integration 13/13 PASS on own New-VPS PostgreSQL. npm audit zero. Initial SSH-tunnel test hit 5s pool acquisition timeout; changed to 20s; server-local rerun passed.
+# التسليم — 2026-11-11
+## المنفذ
+Backend foundation commit62fddfe. Subsequent working release adds native WinUI3/.NET10 self-contained client, protected forms/preview/polling, backup/deploy tools, CI, aggregate deletion-staleness hardening. Every repo document read at start.
 
-## التالي
-1. Finish apps/windows WinUI 3 Arabic client, build and observe actual window.
-2. Deploy built backend under isolated taskpilot systemd unit on loopback 8240; smoke and restart checks.
-3. Encrypted PostgreSQL backup and isolated restore test, CI and release evidence.
+## الأدلة
+3 Node unit tests;14 PostgreSQL integration tests including parent (server-local, own dedicated *_test DB);6 C# client checks; zero npm audit findings; WinUI Release build/publish pass. Actual Windows fixture/account/task/reply preview/cancel observed. Initial tunnel pool-timeout fixed5s→20s; incidental rebuild failed because running test EXE locked output, then app closed and publish passed.
+New-VPS taskpilot.service on loopback8240 + own PostgreSQL container15488. Auth/replay smoke and encrypted backup/isolated restore pass. No live external messages or AI calls.
 
-## حدود
-Only synthetic data. Owner explicitly authorized gradual pilot deployment in current request (D-018); no live WhatsApp or sending. No changes to Nginx/firewall/SSH or other services. Keys exist only in /etc/taskpilot, never Git. Test database ends `_test`; integration runner refuses other names.
-No live connector chosen, real-data retention approved, production auth/MFA, or AI requests. Local SDK downloaded under ../dotnet; no system SDK initially installed.
+## الإكمال الجاري
+Commit/push native pilot, deploy exact immutable release, restart only taskpilot and compare other running services; wait CI and fix failures. Package portable Windows output with instructions/checksum.
 
-## مكان العمل
-Branch feat/mvp-foundation. Backend staging source /opt/taskpilot/stage (not a running API deployment yet). Local generated app remains under development. Do not infer readiness from scaffolding.
+## المعلّق
+Do not fetch server bearer token into client automatically: auto-review rejected launch carrying that key with generic blocked-by-policy; no detailed reason. Windows direct pilot connection remains manual acceptance; synthetic fixture path works safely.
+No live WhatsApp/AI outbound until authorized and scoped; real-data retention/production MFA/key escrow not approved. No other services or shared config changes.
+
+## الاستئناف
+Current checkout work/TaskPilot, feat/mvp-foundation. Own runtime /opt/taskpilot/current → releases/FULL_SHA. `/etc/taskpilot` owns secret files; never print/copy to Git/outputs. `ops/deploy-pilot.sh` prepared release; `scripts/pilot-smoke.mjs` on VPS. Integration tests only *_test; restores only *_restore_test. Local SDK ../dotnet. Project state always wins over old planning language.

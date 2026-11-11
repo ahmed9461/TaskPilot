@@ -1,19 +1,19 @@
 # الحالة الحالية — المصدر المرجعي
-As of: 2026-11-11. Phase 1 backend: VERIFIED on isolated synthetic PostgreSQL; API not yet running as a service. Windows: IN_PROGRESS.
+As of 2026-11-11. Phase 1: Backend + Windows pilot implemented; closed synthetic deployment on New-VPS. Live production acceptance NOT COMPLETE.
 
-## مثبت
-- TypeScript/Fastify authenticated API, versioned PostgreSQL migrations with checksums/advisory locking.
-- Session/group mock adapter only; durable encrypted review inbox, namespace identity, task/period/source deduplication.
-- Account/assignment management, notifications and reconnect cursor, AEAD credential storage and reauthentication for reveal.
-- Reply preview/one-use approval/outbox, source/session checks; uncertain sends and crash recovery become UNKNOWN_DELIVERY.
-- Evidence-based flags, archive/restore and snapshot/reauth protected purge.
-- `npm run check`: build + 3 unit tests PASS. `npm run test:integration` on New-VPS dedicated synthetic database: 13/13 PASS (including parent suite), 2026-11-11. `npm audit`: zero known vulnerabilities.
+## VERIFIED
+- API, PostgreSQL migrations, encrypted credentials/review, mock sessions/groups and deduplicated account/task/period/all sources.
+- Separate task/outbox status, five-minute one-use preview approvals, reauth, unknown-delivery recovery, archive/restore/purge and aggregate-version stale protection.
+- Local/server build + 3 unit tests PASS; isolated PostgreSQL integration 14/14 PASS (including parent). C# client checks 6/6 PASS; npm audit zero.
+- WinUI 3 Arabic RTL client builds/publishes self-contained x64. Actual window observed: connected synthetic fixture, account list (no password), task list, quote source/template and final preview, cancellation. No UI send/reveal/delete confirmation performed.
+- API running as taskpilot.service, independent user, loopback8240; own PostgreSQL17 taskpilot-db/volume, loopback15488; CPU/memory bounded. Initial source62fddfe. Next release exact SHA recorded after deployment.
+- HTTP auth/readiness/replay smoke PASS. AES-GCM pg_dump backup + isolated pg_restore PASS:1 synthetic account,1 assignment,2 migrations,0 SENDING. Same-host restore only.
 
-## البيئة
-- Own PostgreSQL 17 container taskpilot-db, loopback port 15488, independent Docker volume; limits 384 MiB/0.5 CPU.
-- Own service user taskpilot, separate /etc/taskpilot secret files. Existing services/configuration not modified.
-- SSH transport; no public API binding, WhatsApp dependency, real pairing, real messages, or AI requests.
+## DELIVERABLE
+`apps/windows` source + lockfile; portable app published under task outputs. No installer/signature/update channel yet. CI added (Node/Postgres/Windows); remote result still pending.
 
-## لم يثبت/متبقٍ
-Windows UI/build, persistent API deployment/restart/backup recovery, live WhatsApp, production identity/MFA, real-data retention policy, AI integration. No production readiness claim.
-See TEST_RESULTS.md and SESSION_HANDOFF.md for reproducible commands and next steps.
+## NOT VERIFIED / OPEN
+- Direct Windows-to-pilot-server connection: automatic server-token-to-client launch rejected by auto-review (generic blocked by policy); safer Windows test used separate local API + dedicated remote synthetic UI DB via SSH. Owner token was not exported to the client.
+- Live WhatsApp pairing/messages, provider selection, live AI, production identity/MFA, real-data retention/key rotation, off-host key escrow/backups, host reboot/rollback drill.
+- UI bulk-selected purge, advanced rules, large-list paging, native toast/push, UNKNOWN_DELIVERY reconciliation and per-assignment purge remain TODO.
+All data synthetic. Existing services/configs untouched; no public API, firewall/Nginx/SSH changes.

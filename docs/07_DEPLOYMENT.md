@@ -1,6 +1,6 @@
 # خطة نشر TaskPilot على New-VPS
 
-**حالة التنفيذ:** NOT STARTED. هذه خطة ولا تعني وجود خدمة على السيرفر.
+**حالة التنفيذ:** DEPLOYED — synthetic pilot only on New-VPS, loopback 8240, PostgreSQL loopback 15488. Initial deployed source 62fddfe; later exact release in tracking/PROJECT_STATE.md. Remaining sections describe the target rollout.
 
 ## الشروط المسبقة
 1. فحص نظام New-VPS والمساحة والذاكرة واستهلاك الخدمات القائمة ومنافذها ووجود PostgreSQL أو إمكانية تثبيته.
@@ -33,3 +33,10 @@
 
 ## قيود مهمة
 لا تشارك إعدادات أو قواعد بيانات المشاريع الأخرى الموجودة على New-VPS، ولا تغيّر Nginx أو Firewall أو SSH العام قبل مراجعة أثر التغيير والموافقة.
+
+## التنفيذ الفعلي
+`ops/provision-pilot.sh` first-deployment preflight refuses existing TaskPilot env/container/occupied ports. Own PostgreSQL 17 image pinned to installed digest, own volume, 384MiB/0.5CPU; no other DB reuse. `ops/deploy-pilot.sh FULL_SHA` installs a prepared immutable release, runs checksum migrations, prunes dev dependencies, changes only taskpilot.service and its symlink. Existing Nginx/firewall/SSH untouched. Service user taskpilot, ProtectSystem/ProtectHome, no capabilities, memory/CPU limits, startup enabled.
+
+Access: `ssh -N -L 18240:127.0.0.1:8240 New-VPS`; Windows address `http://127.0.0.1:18240`. The owner must enter the API token locally. Do not copy keys into documentation, output ZIPs, shell history or logs. Auto-review blocked automatic server-token-to-client launch during this session; direct Windows-to-pilot acceptance remains open. UI was instead observed against a separate synthetic test API/DB.
+
+Rollback: inspect/readlink current and retain previous release. Stop only taskpilot, point current to a schema-compatible prior release, start taskpilot and run authenticated smoke. Never roll back DB by deleting the volume or run an older binary against incompatible migrations. Full rollback execution has not been tested yet.

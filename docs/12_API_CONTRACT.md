@@ -1,27 +1,43 @@
-# عقود API مقترحة — Draft
+# API v1 — implementation reference (synthetic pilot)
 
-**النسخة:** v1 غير منفذة. تخضع للتصميم والاختبارات. المصادقة مطلوبة على جميع المسارات عدا health المقيد.
+Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts and PostgreSQL constraints. No live WhatsApp or AI endpoints. Unlisted target features remain TODO.
 
-## Resources
-- GET /v1/me — هوية المالك والصلاحيات.
-- GET /v1/dashboard — أرقام عامة دون أسرار.
-- GET /v1/sessions ؛ POST /v1/sessions/pairing-request ؛ POST /v1/sessions/{id}/disconnect.
-- GET /v1/groups ؛ PATCH /v1/groups/{id} — إعدادات المراقبة والقواعد.
-- GET /v1/accounts ؛ POST /v1/accounts ؛ GET /v1/accounts/{id} ؛ PATCH /v1/accounts/{id}.
-- POST /v1/accounts/{id}/archive ؛ POST /v1/accounts/{id}/restore.
-- POST /v1/deletions/preview ؛ POST /v1/deletions/confirm — حذف فردي/محدد/كلي وفق تأكيد وخطوة تحقق.
-- GET /v1/assignments ؛ PATCH /v1/assignments/{id}/status.
-- GET /v1/reply-templates ؛ POST /v1/reply-jobs/preview ؛ POST /v1/reply-jobs/approve ؛ GET /v1/reply-jobs.
-- POST /v1/issue-flags — رمز خاطئ/مراجعة؛ مصدر دليل مطلوب.
-- GET /v1/notifications ؛ POST /v1/notifications/{id}/read.
-- GET /v1/audit — سجل أحداث منقح.
-- GET /v1/changes?cursor=... — مزامنة الأحداث أثناء انقطاع Windows.
+## Access
+- `GET /health` is minimal/unauthenticated; every other endpoint including `/ready` requires `Authorization: Bearer <owner token>`.
+- Sensitive operations additionally require `X-Reauth-Secret`. Both independent random secrets are loaded from external files, >=32 characters. This is a closed SSH pilot identity, not production MFA/short sessions.
+- Loopback binding only. Maximum body 32 KiB, 120 requests/minute/IP, no-store responses; no request payload logging. Errors return `{code}` without input/SQL/provider details.
+- Lists: accounts/assignments/inbox accept `limit` (1..500), `offset`, optional `search`; other resource lists are capped. Incremental notifications use `cursor`.
+- JSON resource rows use SQL snake_case. Requests use camelCase; IDs are UUIDs, versions positive integers. POST normally returns 200. Validation 400; auth 401; reauth/scope 403; absent 404; conflicts 409; unavailable 503.
 
-## ضوابط
-- كل تعديل يحتاج validation وpermission checks وaudit trail.
-- optimistic concurrency / version مطلوب في تحديث حساب أو تكليف.
-- endpoint الإرسال/الحذف يدعم idempotency key.
-- تحدد عمليات التغيير target session/group/message بشكل صريح؛ لا default session مستتر.
-- reveal credential يتطلب إعادة تحقق وصلاحية ووقت وصول محدود، ولا يعاد ضمن GET العادي.
-- أخطاء API تنتمي إلى أكواد مستقرة: VALIDATION_ERROR، CONFLICT، UNVERIFIED_CREDENTIALS، PAIRING_CODE_INVALID، REPLY_DELIVERY_UNKNOWN، PERMISSION_DENIED، DELETION_REQUIRES_CONFIRMATION.
-- تفعيل وتوفير API خارجي لا يتم قبل اعتماد سياسة الوصول وTLS.
+## Implemented routes
+| Routes | Request / behavior |
+|---|---|
+| GET /ready, /v1/me, /v1/dashboard | readiness, owner/capabilities, counts |
+| GET/POST /v1/sessions | POST `{label}` creates mock only |
+| POST /v1/sessions/pairing-request | always 403 LIVE_WHATSAPP_NOT_AUTHORIZED |
+| GET/POST /v1/task-types | POST `{code,name}` |
+| GET/POST /v1/groups | POST `{sessionId,externalGroupId,title,taskTypeId,namespace,periodKey}` |
+| PATCH /v1/groups/:id | `{version,enabled}` |
+| POST /v1/mock/messages | `{sessionId,groupId,externalMessageId,text}`; explicit enabled group/session; replay `{duplicate:true}`; otherwise REVIEW/PROCESSED |
+| GET /v1/inbox | safe review metadata; encrypted body excluded |
+| POST /v1/inbox/:id/reveal | reauth, `{text,expiresInSeconds:30}`; client hides after 30s |
+| POST /v1/inbox/:id/resolve | reauth, `{version,account:{namespace,username,displayName,password?}}`; group namespace must match; conflicting passwords require explicit account update first |
+| GET/POST /v1/accounts | POST `{namespace,username,displayName,password?}`; namespace+NFKC/lowercase username unique; no fuzzy name merge |
+| PATCH /v1/accounts/:id | `{version,displayName,password?}`; password change requires reauth |
+| POST /v1/accounts/:id/reveal | reauth; credential only here, never ordinary list; 30s client presentation |
+| POST /v1/accounts/:id/archive or /restore | `{version}`; archive cancels APPROVED jobs; historical tasks retained |
+| GET /v1/assignments | independent account/task/period and all source references |
+| PATCH /v1/assignments/:id/status | `{version,status}`; NEW/NEEDS_REVIEW/IN_PROGRESS/COMPLETED/CANCELED; recorded reopen, no automatic send |
+| GET/POST /v1/reply-templates | `{code,body}`; only `{displayName}`/`{taskName}` placeholders |
+| POST /v1/reply-jobs/preview | `{assignmentId,sourceMessageId,templateId}`; body/target/provider and five-minute one-use approvalToken |
+| POST /v1/reply-jobs/approve | reauth; `{approvalToken,idempotencyKey}`; stale assignment/group rejected; key conflict rejected; repeated logical key reuses job with fresh preview |
+| GET /v1/reply-jobs | status distinct from task; mock dispatch only; SENDING crash/ambiguous exception becomes UNKNOWN_DELIVERY, no automatic retry |
+| POST /v1/issue-flags | `{accountId,kind,evidenceKind}`; INVALID_ACCOUNT_PASSWORD/INVALID_ACCOUNT_CODE require reauth and MANUAL/AUTHORIZED_CHECK; UNVERIFIED_CREDENTIALS cannot prove error |
+| POST /v1/deletions/preview | `{ids:[...]}` or `{all:true}`; fixed IDs/aggregate versions/counts; max1000 |
+| POST /v1/deletions/confirm | reauth; `{approvalToken,confirmation:'DELETE N'}`; atomic purge of scoped records, blocks SENDING/UNKNOWN_DELIVERY; changed task/source/reply invalidates snapshot; all also purges unassigned review |
+| GET /v1/notifications, /v1/changes?cursor=N | durable safe events; changes `{items,cursor}`; monotonic commit ordering |
+| POST /v1/notifications/:id/read | durable read timestamp |
+| GET /v1/audit | redacted action/UUID/time, no raw message/password |
+
+## Pilot limits / pending contracts
+Live pairing/disconnect/session health, editable advanced rules, production JWT/MFA, rate limiting across multiple API hosts, paged Windows lists beyond 500, true push/toast notifications, user-approved UNKNOWN_DELIVERY reconciliation, single assignment purge, bulk selected Windows purge, production retention/key rotation and live AI are not implemented. UI uses safe polling and server persistence. Backup/restore uses isolated operator tooling (not public API).

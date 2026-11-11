@@ -29,3 +29,6 @@ D-018: صاحب المشروع طلب التنفيذ الفعلي والنشر �
 
 ## التحديث
 غيّر هذا الملف عند حدوث اعتماد جوهري جديد فقط، مع إدخال مرجع قرار في tracking/DECISION_LOG.md؛ التفاصيل اليومية مكانها SESSION_HANDOFF وCHANGELOG.
+
+## D-018..D-024 التنفيذ التجريبي
+Native WinUI3 client built/published and observed with synthetic local API + isolated remote test PostgreSQL. New-VPS API is actually deployed independently on loopback8240/database15488; mock only. Manual encrypted backup/restore verified on same host; no production retention/escrow approval. Do not merge fixture UI evidence with direct Windows-to-pilot auth acceptance (automatic token launch blocked). Exact commits/results always in tracking files.

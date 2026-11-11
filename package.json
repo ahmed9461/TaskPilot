@@ -12,7 +12,9 @@
     "migrate": "tsx services/api/src/migrate.ts",
     "test": "tsx --test services/api/test/*.test.ts",
     "test:integration": "tsx --test services/api/test/integration/*.test.ts",
-    "check": "npm run build && npm test"
+    "check": "npm run build && npm test",
+    "secrets": "node scripts/check-repository.mjs",
+    "format:check": "prettier --check \"services/**/*.ts\" \"packages/**/*.ts\" \"scripts/*.mjs\" \"ops/*.mjs\""
   },
   "dependencies": {
     "@fastify/rate-limit": "10.3.0",
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@types/node": "24.10.1",
     "@types/pg": "8.15.6",
+    "prettier": "3.10.0",
     "tsx": "4.23.15",
     "typescript": "6.0.2"
   }

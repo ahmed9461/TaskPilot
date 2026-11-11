@@ -1,6 +1,6 @@
 # دليل التشغيل والمراقبة — Target Runbook
 
-**غير مفعل حاليًا:** لا توجد خدمة أو مفاتيح أو اتصال مثبت بـ New-VPS.
+**تشغيل تجريبي مثبت:** taskpilot.service + own taskpilot-db container; all data synthetic. See tracking/PROJECT_STATE.md for exact deployed commit.
 
 ## مراقبة يومية مستهدفة
 - حالة API وPostgreSQL وWhatsApp connector لكل جلسة.
@@ -25,3 +25,10 @@
 
 ## تغيير الإصدار
 اكتب رقم الإصدار، commit، مهاجرات DB، وخطة الرجوع، ونفذ smoke tests على بيئة اختبار قبل الإنتاج. كل نشر فعلي يثبت في tracking/PROJECT_STATE.md.
+
+## أدوات مجربة
+- `systemctl status taskpilot.service`, `/health`, authenticated `/ready`, `scripts/pilot-smoke.mjs` (run on VPS; reads external key without printing it).
+- `node ops/backup.mjs backup /var/lib/taskpilot/backups/UNIQUE.tpg` uses pg_dump from own container and AES-256-GCM with a separate external backup key. Dump exists in memory only (64MiB pilot limit); file creation refuses overwrite.
+- `node ops/backup.mjs restore-test /var/lib/taskpilot/backups/UNIQUE.tpg UNIQUE_restore_test` verifies authentication tag, creates a fresh isolated database and uses single-transaction pg_restore. Existing target/production restore refused. Tested snapshot: 1 synthetic account,1 assignment,2 migrations,0 SENDING jobs.
+- Key recovery/escrow and off-host backups are not established. A same-host restore drill is not proof of VPS-loss recovery. Production retention/deletion cycle and scheduled backups remain pending approval.
+- No data/secret dumps or raw service logs are public deliverables. UNKNOWN_DELIVERY remains blocked for purge/retry until an operator reconciliation workflow is added.
