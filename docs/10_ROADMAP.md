@@ -38,3 +38,6 @@
 
 ## Current execution pointer
 Phase1 synthetic backend/native client/pilot deployment achieved with explicit acceptance limits. Several Phase2 adapter/stability foundations also implemented. Original checklist is target scope; per-item actual status/tests in tracking/TODO.md and PROJECT_STATE.md override planning checkboxes. Live provider/production gates remain open.
+
+## Scope correction —D-037 /2026-11-13
+Personal single-owner app. Digital signing is not a release/completion requirement; portable unsigned Windows package is accepted. Installer/automatic update and enterprise multi-user identity are optional future scope, not blockers to personal usability. Existing authentication/privacy/confirmation requirements and no-live-WhatsApp-without-approval gate remain.

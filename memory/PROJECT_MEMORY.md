@@ -49,3 +49,6 @@ D-036: templates can be scoped to group/task, version-edited and disabled for fu
 
 ## Current verified pointer —2026-11-12
 API+Windows0.4 source87f986b8bd7ce18717f112611e3937642d1b69b1 deployed; CI43100482889 both jobs SUCCESS.11 Node/19 PG/20 offline C#/28 direct-server checks PASS; actual native template create/edit/group-task scopes/disable/reload verified, plus0.3 native recovery/draft/page2/status/activity. Seven-migration same-host encrypted restore and ZIP verified. Own verifier checks PASS but external-service drift remains nonzero/untouched, never a full host stability claim. All data and transport remain synthetic/mock; production/live/provider/identity/retention/signing gates and wider GUI acceptance remain open. Next useful implementation is account details/history and code-disambiguated UI choices.
+
+## D-037 — قرار المالك2026-11-13
+TaskPilot للاستخدام الشخصي ولمالك واحد، ولا يحتاج توقيعًا رقميًا. النسخة المحمولة غير الموقعة هي مسار التسليم المعتمد؛ التوقيع ليس شرط اكتمال. المثبت والتحديث الآلي تحسينات اختيارية، ونظام صلاحيات متعدد المستخدمين خارج النطاق الشخصي. يتقدم هذا القرار على إشارات التوقيع القديمة كعائق في الذاكرة والخطة. لا يخفف حماية SSH/الجلسات/الأسرار/الحذف، ولا يجيز ربط واتساب أو الإرسال الفعلي دون الموافقة المنفصلة.

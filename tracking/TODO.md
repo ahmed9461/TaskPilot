@@ -1,12 +1,12 @@
-# خطة التنفيذ والتتبع —2026-11-12
-Checked means verified within synthetic pilot scope only. Exact source/CI/evidence in PROJECT_STATE and TEST_RESULTS.
+# خطة التنفيذ والتتبع —2026-11-13
+Checked means verified within synthetic pilot scope only. Exact source/CI/evidence in PROJECT_STATE and TEST_RESULTS. D-037: personal single-owner use; signing not required, portable ZIP accepted. Installer/automatic updates optional.
 
 ## P0 — القرارات
 - [x] P0-001 المتطلبات والذاكرة والقرارات والتتبع.
 - [x] P0-004 namespace/account/task/period/source contracts in pilot.
 - [ ] P0-002 live WhatsApp choice/risk/dedicated number authorization.
 - [ ] P0-003 production retention/purge/rotation/off-host escrow and real-data authorization.
-- [ ] P0-005 production MFA/RBAC identity; temporary SSH sessions/reauth/recovery already VERIFIED.
+- [ ] P0-005 single-owner access/security review for real use; temporary SSH sessions/reauth/recovery already VERIFIED. Multi-user RBAC/enterprise identity are not personal-release requirements.
 
 ## P1 — Backend
 - [x] P1-001 executable API/checksum migrations/CI.
@@ -25,7 +25,7 @@ Checked means verified within synthetic pilot scope only. Exact source/CI/eviden
 - [ ] P2-002 session/group/task/rule forms implemented; full config/live pairing acceptance open.
 - [ ] P2-003 accounts/task/paged filters/status verified partly; account details/flags/history and broad acceptance open.
 - [ ] P2-004 review reveal/resolve implemented and direct C# verified; full GUI review acceptance open.
-- [ ] P2-005 preview/cancel verified; sensitive GUI confirmations/reconciliation/export/signing/installer acceptance open.
+- [ ] P2-005 preview/cancel verified; sensitive GUI confirmations/reconciliation/export acceptance open. Signing is not required; installer is optional (D-037).
 - [x] P2-006 template create/edit/scope/disable/filter/reload observed on deployed0.4; server stale/snapshot tests PASS. Source-switch visual race acceptance open.
 - [x] P2-007 paged notifications/unread badge/redacted audit/monitoring observed; generic silent OS receipt/storage PASS. Popup/click/closed-app delivery not claimed.
 - [x] P2-008 explicit SSH recovery/no write replay/read backoff; actual own-tunnel interruption/reconnect preserved draft. Local/server expiry/revocation tests PASS.
@@ -41,5 +41,5 @@ Checked means verified within synthetic pilot scope only. Exact source/CI/eviden
 ## Next
 1. Account details/flags/tasks/source history and duplicate-name selectors with codes (I-016).
 2. Synthetic native review/reconciliation/CSV/source-switch/accessibility and bounded load/recovery checks.
-3. Production identity/retention/key recovery and signing/off-host/live provider decisions before real data.
+3. Single-owner access review, retention/key recovery/off-host backup and live-provider decisions before real data. Signing is excluded; installer/update channel optional.
 No real WhatsApp or outbound messages without explicit separate permission. Completed code87f986b; latest hosted CI43100482889 backend+Windows SUCCESS.

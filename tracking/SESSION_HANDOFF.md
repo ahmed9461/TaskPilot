@@ -18,4 +18,7 @@ Backup only encrypted unique files and fresh *_restore_test DB,64MiB cap. No off
 1. Account details with flags/task/source history; UI choices should show stable codes for duplicate display names (I-016).
 2. Continue native review/reconciliation/export and template source-switch/accessibility/reconnect acceptance with synthetic data; keep UI sensitive confirmations separate from API tests.
 3. Broader load/recovery/reporting, retained monitoring; current operations view is a snapshot, not proof of scheduled backup success.
-4. Production identity/MFA, retention/key rotation/off-host escrow, signing/update materials and live connector/provider setup require owner decisions. Do not reuse another project's secrets or sessions, and do not bypass any OS trust prompt.
+4. Single-owner access review, retention/key rotation/off-host escrow and live connector/provider setup remain open. D-037: personal app, signing not required, portable ZIP accepted; installer/auto-updates optional and multi-user RBAC out of scope. Do not reuse another project's secrets or sessions, and do not bypass any OS trust prompt.
+
+## Owner scope update —2026-11-13
+TaskPilot is personal and does not require signing. Do not return signing or enterprise multi-user identity to the completion gates. Keep existing auth/encryption/confirmations and WhatsApp restrictions. No code/deploy change or new runtime test was performed for this docs-only update. Prior runtime remains0.4 source87f986b with the evidence dated above.
