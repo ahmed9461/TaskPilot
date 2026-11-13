@@ -1,3 +1,4 @@
+import { accountDetails } from "./account-details.js";
 import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { z } from "zod";
@@ -542,6 +543,9 @@ export async function createApp(
       return row;
     });
   });
+  app.get("/v1/accounts/:id/details", async (req) =>
+    accountDetails(pool, uuidParam.parse(req.params).id, req.query),
+  );
   app.patch("/v1/accounts/:id", async (req) => {
     const { id: accountId } = uuidParam.parse(req.params);
     const p = z

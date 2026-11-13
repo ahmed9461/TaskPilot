@@ -55,6 +55,10 @@ static class ServerAcceptance
             Check(S(await Call("GET", "/ready"), "status") == "ready");
             Check((await Call("GET", "/v1/me"))["liveSendingEnabled"]!.GetValue<bool>() == false);
             checks += 2;
+            var capabilities = await Call("GET","/v1/whatsapp/capabilities");
+            Check(capabilities["implemented"]!.GetValue<bool>() && capabilities["connectionEnabled"]!.GetValue<bool>() == false && capabilities["sendingEnabled"]!.GetValue<bool>() == false);
+            Check((await Call("GET","/v1/whatsapp/ingress-errors")).AsArray().Count == 0);
+            checks += 2;
             var syncState = await Call("GET", "/v1/notifications/state");
             var feed = new ChangeFeed();
             feed.Seed(S(syncState, "newestId"));
@@ -111,6 +115,13 @@ static class ServerAcceptance
             var page = await Call("GET", "/v1/accounts?page=true&namespace=" + ns + "&limit=1");
             Check(page["total"]!.GetValue<int>() == 1);
             checks++;
+            stage = "account-details";
+            foreach (var section in new[] { "tasks", "sources", "flags", "history" })
+            {
+                var details = await Call("GET", "/v1/accounts/" + S(account,"id") + "/details?section=" + section + "&limit=1");
+                Check(S(details["account"],"id") == S(account,"id") && S(details,"section") == section && !details.ToJsonString().Contains("synthetic-canary"));
+                checks++;
+            }
             stage = "reveal-update";
             Check(S(await Call("POST", "/v1/accounts/" + S(account, "id") + "/reveal", new
             {

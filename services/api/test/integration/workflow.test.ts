@@ -1453,4 +1453,148 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
       }
     },
   );
+  await t.test(
+    "account details page isolates tasks/sources/flags/current-record history and never reveals secrets",
+    async () => {
+      const body = {
+        ...message,
+        externalMessageId: "details-one",
+        text: "name: Synthetic details\nuser: synthetic-details\npassword: synthetic-details-secret",
+      };
+      await api("POST", "/v1/mock/messages", body);
+      await api("POST", "/v1/mock/messages", {
+        ...body,
+        sessionId: session2.id,
+        groupId: group2.id,
+        externalMessageId: "details-two",
+      });
+      await api("POST", "/v1/mock/messages", {
+        ...body,
+        externalMessageId: "details-conflict",
+        text: body.text.replace(
+          "synthetic-details-secret",
+          "synthetic-conflict-secret",
+        ),
+      });
+      const account = (
+        await pool.query(
+          "SELECT id FROM accounts WHERE username_normalized='synthetic-details'",
+        )
+      ).rows[0];
+      const other = await api("POST", "/v1/accounts", {
+        namespace: "synthetic-other-details",
+        username: "synthetic-details",
+        displayName: "Synthetic unrelated",
+        password: "synthetic-unrelated-secret",
+      });
+      await api(
+        "POST",
+        "/v1/issue-flags",
+        {
+          accountId: account.id,
+          kind: "INVALID_ACCOUNT_PASSWORD",
+          evidenceKind: "MANUAL",
+        },
+        true,
+      );
+      await pool.query(
+        "INSERT INTO issue_flags(id,account_id,kind,verified,evidence_kind) SELECT gen_random_uuid(),$1,'UNVERIFIED_CREDENTIALS',false,'UNVERIFIED' FROM generate_series(1,54)",
+        [account.id],
+      );
+      const tasks = await api(
+        "GET",
+        `/v1/accounts/${account.id}/details?section=tasks`,
+      );
+      assert.equal(tasks.total, 2);
+      assert.equal(
+        tasks.items.every((r: any) => r.source_count === 1),
+        true,
+      );
+      const sources = await api(
+        "GET",
+        `/v1/accounts/${account.id}/details?section=sources`,
+      );
+      assert.equal(sources.total, 3);
+      assert.equal(
+        sources.items.filter((r: any) => r.state === "REVIEW").length,
+        1,
+      );
+      const first = await api(
+        "GET",
+        `/v1/accounts/${account.id}/details?section=flags&limit=50`,
+      );
+      const second = await api(
+        "GET",
+        `/v1/accounts/${account.id}/details?section=flags&limit=50&offset=50`,
+      );
+      assert.equal(first.total, 55);
+      assert.equal(second.total, 55);
+      assert.equal(second.items.length, 5);
+      assert.equal(
+        new Set([...first.items, ...second.items].map((r) => r.id)).size,
+        55,
+      );
+      const history = await api(
+        "GET",
+        `/v1/accounts/${account.id}/details?section=history&limit=100`,
+      );
+      assert.ok(
+        history.items.some(
+          (r: any) => r.action === "CREDENTIAL_ERROR_VERIFIED",
+        ),
+      );
+      assert.ok(
+        history.items.some((r: any) => r.action === "MESSAGE_PROCESSED"),
+      );
+      assert.equal(
+        history.items.some((r: any) => r.target_id === other.id),
+        false,
+      );
+      const serialized = JSON.stringify([
+        tasks,
+        sources,
+        first,
+        second,
+        history,
+      ]);
+      for (const secret of [
+        "synthetic-details-secret",
+        "synthetic-conflict-secret",
+        "synthetic-unrelated-secret",
+        "encrypted_payload",
+        "encrypted_transport_key",
+        "ciphertext",
+      ])
+        assert.equal(serialized.includes(secret), false);
+      assert.equal(
+        (await app.inject({ url: `/v1/accounts/${account.id}/details` }))
+          .statusCode,
+        401,
+      );
+      for (const q of [
+        "section=bad",
+        "section=flags&limit=101",
+        "section=flags&offset=-1",
+        "section=tasks&raw=true",
+      ])
+        assert.equal(
+          (
+            await app.inject({
+              url: `/v1/accounts/${account.id}/details?${q}`,
+              headers,
+            })
+          ).statusCode,
+          400,
+        );
+      assert.equal(
+        (
+          await app.inject({
+            url: `/v1/accounts/${randomUUID()}/details`,
+            headers,
+          })
+        ).statusCode,
+        404,
+      );
+    },
+  );
 });

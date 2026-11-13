@@ -270,6 +270,9 @@ public sealed partial class MainPage : Page
             case "dashboard":
                 await Dashboard();
                 break;
+            case "account-details":
+                await AccountDetails();
+                break;
             case "accounts":
                 await Accounts();
                 break;
@@ -352,7 +355,7 @@ public sealed partial class MainPage : Page
             var select = new CheckBox { Content = "تحديد" };
             select.Checked += (_, _) => { selectedIds.Add(V(n, "id")); hasDraft = true; };
             select.Unchecked += (_, _) => { selectedIds.Remove(V(n, "id")); hasDraft = true; };
-            Card(V(n, "display_name"), $"{V(n, "namespace")} / {V(n, "username_normalized")} • {(V(n, "archived_at") == "" ? "نشط" : "مؤرشف")}", select, Button("تعديل", () => AccountForm(n)), Button("عرض الاعتماد", () => Reveal(n)), Button(V(n, "archived_at") == "" ? "أرشفة" : "استرجاع", async () => { await api.Send("POST", $"/v1/accounts/{V(n, "id")}/{(V(n, "archived_at") == "" ? "archive" : "restore")}", new { version = Ver(n) }); await Render(); }), Button("حذف", () => Purge(V(n, "id"))));
+            Card(V(n, "display_name"), $"{V(n, "namespace")} / {V(n, "username_normalized")} • {(V(n, "archived_at") == "" ? "نشط" : "مؤرشف")}", select, Button("التفاصيل والسجل", async () => { detailAccountId = V(n,"id"); detailSection = "tasks"; detailOffset = 0; page = "account-details"; await Render(); }), Button("تعديل", () => AccountForm(n)), Button("عرض الاعتماد", () => Reveal(n)), Button(V(n, "archived_at") == "" ? "أرشفة" : "استرجاع", async () => { await api.Send("POST", $"/v1/accounts/{V(n, "id")}/{(V(n, "archived_at") == "" ? "archive" : "restore")}", new { version = Ver(n) }); await Render(); }), Button("حذف", () => Purge(V(n, "id"))));
         }
         if (rows.Count == 0)
             Body.Children.Add(Text("لا توجد حسابات مطابقة."));

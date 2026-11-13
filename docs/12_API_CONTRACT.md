@@ -77,3 +77,6 @@ POST `/v1/sessions/:id/connect` مع reauth و`{confirmation:"CONNECT WHATSAPP",
 GET `/v1/whatsapp/ingress-errors`: أول100ERROR، id/session_id/group_id/attempts/last_error_code/received_at فقط. POST `/v1/whatsapp/ingress-errors/:id/retry` مع reauth و`{confirmation:"RETRY INGRESS"}` يعيد معالجة داخلية، لا إرسال. Purge previews تضيف pendingIngress وتشمل PENDING/ERROR stamp؛ تغيره يرفض STALE_PREVIEW.
 
 Reply preview يحدد provider؛ approve يرفضLIVE_SENDING_NOT_AUTHORIZED إذاالجلسةحقيقية والإرسال غيرمصرح. لا automatic send/retry من preview أو template edit. Existing old pairing-request remains403.
+
+## Account detail projection0.5
+GET `/v1/accounts/:id/details?section=tasks|sources|flags|history&limit=50&offset=0`: authenticated، repeatable-read snapshot، account/section/items/total/limit/offset؛ max100/offset1e6، unknown params rejected، missing account404. Tasks show code/name/state/period/priority/source/reply counts. Sources include distinct task sources and review_account_id credential conflicts، group/session labels/state/time/external ID only. Flags are recorded kind/verified/evidence/time، not a fresh login verification. History is redacted audit of the account and currently linked task/source/reply/flag IDs؛ purged identities cannot be reconstructed from it. No raw/encrypted payload/credentials/auth selected.
