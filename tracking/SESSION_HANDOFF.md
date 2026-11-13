@@ -16,3 +16,6 @@ Real encrypted snapshots and escrow stay outside Git/outputs. Final portable/rep
 
 ## Continue
 Longer provider/network/late-delivery/reboot soak; native source-switch/flags/accessibility/toast-click/destructive matrix; reviewed retention/auth forgetting/key rotation and profile/laptop-loss recovery; multi-live beyond1 if deliberately scoped. OpenRouter adapter isolated-tested, no live key/request. Do not expand to other groups or real credentials; keep sendingfalse after any bounded send test. Installer/updater optional, signing not required for personal use.
+
+##2026-11-14 endurance/security continuation — IN_PROGRESS
+Owner authorized long endurance/native Windows tests, then project key rotation and Windows-profile-loss recovery. Initial live check:1 CONNECTED identity/833 valid auth rows/5 live sources/1 SENT/sendingfalse. Added read-only1-hour observer with private aggregate checkpoints; no restart during observation. Native synthetic fixture tests and isolated crypto/rotation/recovery preparation follow. No new completion claimed.

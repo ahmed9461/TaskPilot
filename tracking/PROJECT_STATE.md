@@ -29,3 +29,6 @@ Native-tested unsigned Windows0.6.1 portable package in task outputs. Exact ZIP/
 
 ## Remaining
 Longer provider/network/late delivery soak and real host reboot; wider native source-switch/flags/accessibility/toast-click/destructive-dialog matrix; multi-live beyond initial1. Retention/auth forgetting/identity replacement/key rotation and independent recovery after Windows profile/laptop loss remain open. AI unrestricted extraction is intentionally absent under D-025; OpenRouter live acceptance needs its own key if requested. Do not retry UNKNOWN_DELIVERY or reset/re-pair a CONNECTED identity.
+
+##2026-11-14 endurance/security continuation — IN_PROGRESS
+Owner authorized long endurance/native Windows tests, then project key rotation and Windows-profile-loss recovery. Initial live check:1 CONNECTED identity/833 valid auth rows/5 live sources/1 SENT/sendingfalse. Added read-only1-hour observer with private aggregate checkpoints; no restart during observation. Native synthetic fixture tests and isolated crypto/rotation/recovery preparation follow. No new completion claimed.

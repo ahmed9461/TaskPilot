@@ -233,3 +233,6 @@ Post-cleanup independent Windows restore PASS307228 bytes SHA25615822b247e247f90
 Unsigned native-tested portable ZIP94784750 bytes/532 files, CRC/resources/runtime-data guard PASS, SHA256018680fee33c7efa39be43e0c79fad986359a47050499d46b786563c5ee2ae44. Includes Arabic usage guide and exact-source metadata, no keys/backups/runtime data. API remains0.6.0 ecf75ce. Hosted CI43519791816 onbb67c71 backend/windows SUCCESS.
 
 600-second API0.6.0 observer PASS/transport exit0:40 samples,0 failed,0 disconnected,0 pending peak/final,0 errors,peak memory69402624 bytes,acceptedReceiptDelta0. Bounded quiet observation includes concurrent synthetic API/native tests but no new live WhatsApp submission; not24-hour production/network/ban/reboot acceptance.
+
+##2026-11-14 endurance/security continuation — IN_PROGRESS
+Owner authorized long endurance/native Windows tests, then project key rotation and Windows-profile-loss recovery. Initial live check:1 CONNECTED identity/833 valid auth rows/5 live sources/1 SENT/sendingfalse. Added read-only1-hour observer with private aggregate checkpoints; no restart during observation. Native synthetic fixture tests and isolated crypto/rotation/recovery preparation follow. No new completion claimed.

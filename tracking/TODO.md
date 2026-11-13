@@ -50,3 +50,6 @@ Current deployed API ecf75ce, native Windows/recovery runner bb67c71. One select
 Current continuation:0.5.3 outage/300s observation VERIFIED.0.6.0 AI runtime/API/UI and encrypted off-host tools IMPLEMENTED,16 Node/45 PG/C# build PASS; deploy/live AI/native/off-host verification pending.
 
 Verified current continuation:45s outage recovered real selected append,300s observation PASS;600s/40samples0.6.0 observation PASS/exit0,0errors/disconnect/pending. Native0.6.1 AI abstention/manual-review handoff/cancel and same-key replay verified. DeepSeek fixture cleaned, live test rows retained. Independent Windows encrypted restore, local-only restore and manual scheduled snapshot invocation verified. Long soak/natural daily trigger/profile-loss recovery remain open.
+
+##2026-11-14 endurance/security continuation — IN_PROGRESS
+Owner authorized long endurance/native Windows tests, then project key rotation and Windows-profile-loss recovery. Initial live check:1 CONNECTED identity/833 valid auth rows/5 live sources/1 SENT/sendingfalse. Added read-only1-hour observer with private aggregate checkpoints; no restart during observation. Native synthetic fixture tests and isolated crypto/rotation/recovery preparation follow. No new completion claimed.
