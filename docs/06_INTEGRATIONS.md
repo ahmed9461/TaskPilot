@@ -45,3 +45,5 @@ Outbox مستقل لكل provider؛ mock لا يسحب live، ولا يُعتم�
 Transient reconnect:2/4/8/16/32 ثانية ثم ERROR، restart-required515 بعد500ms؛ logout/replacement/bad-session تتطلب تدخلًا ولا تمحو auth تلقائيًا. إعادة تشغيل الخدمة تستعيد requested sessions ذات registered auth فقط. لا forget/reset auth تلقائي؛ إعادة ربط حساب مختلف تستخدم إعداد جلسة جديدًا، وإزالة auth القديمة ما زالت تحتاج مسار محو مُراجع. max active1 مبدئيًا.
 
 المراجع المقروءة: https://baileys.wiki/authentication/session-management ، https://baileys.wiki/concepts/socket-config ، https://baileys.wiki/migration/v7 ، https://github.com/WhiskeySockets/Baileys/releases/tag/v7.0.0-rc14 . الاتصال الحقيقي والإرسال والقبول مع مزود واتساب لم تحدث في هذه المرحلة.
+
+0.5.1 QR compatibility: paired identity is `creds.me.id`, as used by the pinned SDK login path. Its `registered` flag remains false after QR and is set in the phone-code flow; it is not a valid QR restart predicate. Store.paired() checks saved identity without mutating flags/auth. This was observed after owner QR connection; selected groups and send remain off.

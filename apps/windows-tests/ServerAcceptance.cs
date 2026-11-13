@@ -38,7 +38,7 @@ static class ServerAcceptance
             deleted = ids.Length
         }));
     }
-    public static async Task Run(string alias)
+    public static async Task Run(string alias, bool expectedConnectionEnabled = false)
     {
         var stage = "ssh";
         var checks = 0;
@@ -56,7 +56,7 @@ static class ServerAcceptance
             Check((await Call("GET", "/v1/me"))["liveSendingEnabled"]!.GetValue<bool>() == false);
             checks += 2;
             var capabilities = await Call("GET","/v1/whatsapp/capabilities");
-            Check(capabilities["implemented"]!.GetValue<bool>() && capabilities["connectionEnabled"]!.GetValue<bool>() == false && capabilities["sendingEnabled"]!.GetValue<bool>() == false);
+            Check(capabilities["implemented"]!.GetValue<bool>() && capabilities["connectionEnabled"]!.GetValue<bool>() == expectedConnectionEnabled && capabilities["sendingEnabled"]!.GetValue<bool>() == false);
             Check((await Call("GET","/v1/whatsapp/ingress-errors")).AsArray().Count == 0);
             checks += 2;
             var syncState = await Call("GET", "/v1/notifications/state");

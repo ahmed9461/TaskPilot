@@ -360,7 +360,7 @@ export class WhatsAppConnector implements WhatsAppTransport {
           this.vault,
           row.id,
           this.factory.codec,
-        ).registered()
+        ).paired()
       )
         await this.connect(row.id);
       else {

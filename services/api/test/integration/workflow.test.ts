@@ -6,6 +6,8 @@ import { migrate } from "../../src/migrate.js";
 import { createApp } from "../../src/app.js";
 import { dispatchOne, startMockWorker } from "../../src/outbox.js";
 import { MockTransport } from "../../src/transport.js";
+import { Service } from "../../src/service.js";
+import { Vault } from "../../src/security.js";
 import { hash, token } from "../../src/security.js";
 import { randomUUID } from "node:crypto";
 const url = process.env.TASKPILOT_TEST_DATABASE_URL;
@@ -1594,6 +1596,90 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
           })
         ).statusCode,
         404,
+      );
+    },
+  );
+  await t.test(
+    "bounded eight-worker replay burst preserves identity, both tasks and every source",
+    { timeout: 60000 },
+    async () => {
+      const sessionId = randomUUID(),
+        tasks = [randomUUID(), randomUUID()],
+        groups = [randomUUID(), randomUUID()];
+      await pool.query(
+        "INSERT INTO whatsapp_sessions(id,label,provider) VALUES($1,'Synthetic bounded load','mock')",
+        [sessionId],
+      );
+      for (let i = 0; i < 2; i++) {
+        await pool.query(
+          "INSERT INTO task_types(id,code,name) VALUES($1,$2,'Synthetic load task')",
+          [tasks[i], `synthetic-load-task-${i}`],
+        );
+        await pool.query(
+          "INSERT INTO groups(id,session_id,external_group_id,title,task_type_id,namespace,period_key) VALUES($1,$2,$3,'Synthetic load group',$4,'synthetic-bounded-load','test')",
+          [groups[i], sessionId, `synthetic-load-group-${i}`, tasks[i]],
+        );
+      }
+      const service = new Service(pool, new Vault(config.encryptionKey));
+      let next = 0,
+        created = 0,
+        duplicates = 0;
+      const started = performance.now();
+      await Promise.all(
+        Array.from({ length: 8 }, async () => {
+          while (next < 192) {
+            const n = next++,
+              message = n % 96,
+              groupIndex = Math.floor(message / 24) % 2;
+            const r = await service.ingest({
+              sessionId,
+              groupId: groups[groupIndex]!,
+              externalMessageId: `synthetic-load-${message}`,
+              text: `name: Synthetic load\nuser: synthetic-load-${message % 24}`,
+            });
+            if (r.duplicate) duplicates++;
+            else created++;
+          }
+        }),
+      );
+      assert.equal(created, 96);
+      assert.equal(duplicates, 96);
+      assert.equal(
+        (
+          await pool.query(
+            "SELECT count(*)::int n FROM accounts WHERE namespace='synthetic-bounded-load'",
+          )
+        ).rows[0].n,
+        24,
+      );
+      assert.equal(
+        (
+          await pool.query(
+            "SELECT count(*)::int n FROM assignments a JOIN accounts ac ON ac.id=a.account_id WHERE ac.namespace='synthetic-bounded-load'",
+          )
+        ).rows[0].n,
+        48,
+      );
+      assert.equal(
+        (
+          await pool.query(
+            "SELECT count(*)::int n FROM source_messages WHERE session_id=$1 AND state='PROCESSED' AND encrypted_payload IS NULL",
+            [sessionId],
+          )
+        ).rows[0].n,
+        96,
+      );
+      assert.equal(
+        (
+          await pool.query(
+            "SELECT count(*)::int n FROM assignment_sources x JOIN source_messages s ON s.id=x.source_message_id WHERE s.session_id=$1",
+            [sessionId],
+          )
+        ).rows[0].n,
+        96,
+      );
+      t.diagnostic(
+        `Bounded synthetic burst:192 ingests/8 workers/96 sources/24 accounts/48 tasks; elapsedMs=${Math.round(performance.now() - started)}. Not production capacity proof.`,
       );
     },
   );

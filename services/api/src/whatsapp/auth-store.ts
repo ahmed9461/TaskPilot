@@ -84,9 +84,11 @@ export class PgAuthStore {
       }
     });
   }
-  async registered() {
+  async paired() {
     const value = (await this.read("creds", ["main"])).main;
-    return value?.registered === true;
+    // Baileys QR pairing saves me.id; `registered` is set by phone-code pairing only.
+    // Match the SDK's login/registration decision, not that unrelated flag.
+    return typeof value?.me?.id === "string" && value.me.id.length > 0;
   }
   async load(): Promise<{
     state: AuthenticationState;

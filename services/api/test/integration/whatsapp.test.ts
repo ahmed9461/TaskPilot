@@ -341,7 +341,7 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
         loaded.saveCreds({ registered: true }),
         loaded.saveCreds({ registered: false }),
       ]);
-      assert.equal(await store.registered(), false);
+      assert.equal(await store.paired(), false);
       await loaded.state.keys.set({
         "app-state-sync-key": { "synthetic-key": null },
       });
@@ -696,7 +696,7 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
     },
   );
   await t.test(
-    "registered auth restarts without QR; unpaired auth and retry exhaustion require owner action",
+    "QR-paired identity restarts despite registered=false; unpaired auth and retry exhaustion require owner action",
     async () => {
       const store = await new PgAuthStore(
         pool,
@@ -704,7 +704,10 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
         session.id,
         codec,
       ).load();
-      await store.saveCreds({ registered: true });
+      await store.saveCreds({
+        registered: false,
+        me: { id: "123:1@s.whatsapp.net", name: "Synthetic paired identity" },
+      });
       await pool.query(
         "UPDATE whatsapp_sessions SET connect_requested=true WHERE id=$1",
         [session.id],
@@ -721,7 +724,7 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
       await recovery.close();
       await (
         await new PgAuthStore(pool, vault, session.id, codec).load()
-      ).saveCreds({ registered: false });
+      ).saveCreds({ registered: false, me: undefined });
       const unpaired = new WhatsAppConnector(
         pool,
         vault,

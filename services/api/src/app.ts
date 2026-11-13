@@ -125,7 +125,7 @@ export async function createApp(
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.5.0",
+    version: "0.5.1",
     provider: "mock",
   }));
   app.get("/ready", async () => {

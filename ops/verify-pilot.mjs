@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import pg from "pg";
+import { Vault } from "../dist/services/api/src/security.js";
 const env = Object.fromEntries(
   (await readFile("/etc/taskpilot/pilot.env", "utf8"))
     .split("\n")
@@ -16,6 +17,25 @@ const pool = new pg.Pool({
   connectionTimeoutMillis: 5000,
   query_timeout: 5000,
 });
+const vault = new Vault(
+  (await readFile(env.TASKPILOT_ENCRYPTION_KEY_FILE, "utf8")).trim(),
+);
+async function pairedIdentities() {
+  const rows = (
+    await pool.query(
+      "SELECT s.id,a.id_hash,a.encrypted_payload FROM whatsapp_sessions s JOIN whatsapp_auth a ON a.session_id=s.id WHERE s.provider='baileys' AND s.connect_requested AND a.category='creds'",
+    )
+  ).rows;
+  const identities = new Map();
+  for (const r of rows) {
+    const creds = JSON.parse(
+      vault.open(r.encrypted_payload, `wa-auth:${r.id}:creds:${r.id_hash}`),
+    );
+    if (typeof creds.me?.id === "string" && creds.me.id.length > 0)
+      identities.set(r.id, creds.me.id);
+  }
+  return identities;
+}
 let stage = "runtime-role";
 try {
   const role = (
@@ -55,6 +75,7 @@ try {
       .sort();
   stage = "snapshot";
   const before = services();
+  const pairedBefore = await pairedIdentities();
   const counts = await pool.query(
     "SELECT (SELECT count(*) FROM accounts) accounts,(SELECT count(*) FROM assignments) assignments,(SELECT count(*) FROM source_messages) messages",
   );
@@ -79,6 +100,35 @@ try {
     await new Promise((r) => setTimeout(r, 250));
   }
   assert.equal(ready, true);
+  stage = "provider-output-privacy";
+  for (const stream of ["StandardOutput", "StandardError"])
+    assert.equal(
+      execFileSync(
+        "systemctl",
+        ["show", "taskpilot.service", "-p", stream, "--value"],
+        { encoding: "utf8" },
+      ).trim(),
+      "null",
+    );
+  stage = "whatsapp-recovery";
+  if (pairedBefore.size) {
+    let recovered = false;
+    for (let n = 0; n < 120; n++) {
+      const r = await pool.query(
+        "SELECT count(*)::int n FROM whatsapp_sessions WHERE id=ANY($1::uuid[]) AND status='CONNECTED' AND connect_requested",
+        [[...pairedBefore.keys()]],
+      );
+      if (r.rows[0].n === pairedBefore.size) {
+        recovered = true;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    assert.equal(recovered, true);
+    const afterIdentities = await pairedIdentities();
+    for (const [session, identity] of pairedBefore)
+      assert.equal(afterIdentities.get(session), identity);
+  }
   stage = "pid-change";
   const pidAfter = execFileSync(
     "systemctl",
@@ -119,6 +169,11 @@ try {
         .length,
       overall: otherServicesUnchanged ? "PASS" : "EXTERNAL_SERVICE_DRIFT",
       startupEnabled: true,
+      providerOutputDiscarded: true,
+      whatsappContinuity: pairedBefore.size
+        ? "same paired identity restored CONNECTED without QR"
+        : "NOT_EXERCISED",
+      recoveredPairedSessions: pairedBefore.size,
       release: execFileSync("readlink", ["/opt/taskpilot/current"], {
         encoding: "utf8",
       })
