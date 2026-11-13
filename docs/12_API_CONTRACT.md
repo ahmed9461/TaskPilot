@@ -68,3 +68,12 @@ Migration004 stores only hashes of30-minute owner sessions. Root-only issue-clie
 - GET list remains an array by default, accepts page=true envelope with limit/offset, search(code), enabled=all|true|false and candidate groupId/taskTypeId filters. Candidate filters include global/null templates. Joined group_title/task_name are safe UI labels. Admin pages50 rows; client reply choice uses enabled/matching templates and rechecks on the server.
 - Preview rejects disabled or scope-mismatched templates. Approval locks source/account/group/template and requires unchanged templateVersion as well as existing assignment/group snapshots. Old pre-migration unapproved tokens without templateVersion fail STALE_PREVIEW and need a new preview.
 - Edits/disabling affect future previews/approvals. Already-approved jobs keep the exact approved body/target; no edit rewrites/requeues/resends them. This is explicit in the Windows edit dialog. TEMPLATE_UPDATED audit contains only event/UUID/time, not body.
+
+## WhatsApp connector0.5
+كل المسارات authenticated/no-store. POST `/v1/sessions` يقبل provider=mock|baileys (default mock)؛ baileys ينشئ STOPPED metadata فقط. GET `/v1/whatsapp/capabilities`: implemented/provider/version/unofficial/connectionEnabled/sendingEnabled/pairingMethod/maxActiveSessions. `/v1/me` وoperations يعكسان مفتاحي الاتصال والإرسال. Session list لا يعرض auth/QR/epoch.
+
+POST `/v1/sessions/:id/connect` مع reauth و`{confirmation:"CONNECT WHATSAPP",acknowledgeUnofficial:true}`؛ server connection gate إلزامي. POST `disconnect` مع reauth يوقف الاستقبال/الإرسال دون محو auth. POST `pairing` مع reauth يرجع image=data PNG وexpiresInSeconds<=45 أوPAIRING_QR_EXPIRED؛ لا حفظ. POST `available-groups` مع reauth وCONNECTED يرجع externalGroupId/title فقط. POST groups للجلسة الحقيقية يحتاج reauth ومعرفًا من آخر discovery؛ PATCH enabled يحتاج reauth للجلسة الحقيقية. `/v1/mock/messages` يرفض provider آخر.
+
+GET `/v1/whatsapp/ingress-errors`: أول100ERROR، id/session_id/group_id/attempts/last_error_code/received_at فقط. POST `/v1/whatsapp/ingress-errors/:id/retry` مع reauth و`{confirmation:"RETRY INGRESS"}` يعيد معالجة داخلية، لا إرسال. Purge previews تضيف pendingIngress وتشمل PENDING/ERROR stamp؛ تغيره يرفض STALE_PREVIEW.
+
+Reply preview يحدد provider؛ approve يرفضLIVE_SENDING_NOT_AUTHORIZED إذاالجلسةحقيقية والإرسال غيرمصرح. لا automatic send/retry من preview أو template edit. Existing old pairing-request remains403.

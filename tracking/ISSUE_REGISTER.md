@@ -28,3 +28,8 @@
 
 I-014 follow-up2026-11-12: exact-source0.4 run43100482889 backend+windows SUCCESS. Earlier queued0.3 runs are not current acceptance evidence; queue cause remains unconfirmed, no workflow/runner/billing settings changed.
 | I-016 | Native scope dropdowns contain repeated display names among retained synthetic task/group fixtures | OPEN / usability | Show stable codes/identities in choices before broad human acceptance. Backend UUID scope/version checks and quoted target preview remain authoritative; no wrong send observed |
+
+I-016 update2026-11-13: code/identity labels added to Windows task/group/session choices; build/native acceptance follows.
+| I-017 | Durable live ingress could recreate a purged account/task if pending records remained | VERIFIED isolated FIX | Shared ingress/purge lock, bound queue snapshot, matched encrypted pending/quarantined rows cleared; task/account/stale/replay regressions PASS. Future new messages are not blocked by purge |
+| I-018 | One poison ingress row could block all later work | VERIFIED isolated FIX | Three attempts then encrypted ERROR quarantine, sanitized monitoring and reauthed internal retry; regression PASS |
+| I-019 | Real SDK/live WhatsApp compatibility unverified; Baileys is prerelease/unofficial | OPEN live gate | Dedicated owner-approved pairing/selected test group/receipt/quoted send/restart acceptance required; no real session used |

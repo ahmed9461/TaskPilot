@@ -42,3 +42,6 @@ Migration004: hashed short-lived client sessions and one-use SSH reauth grants. 
 Migration006 adds notification unread-ID and audit action/target/time indexes. No additional account fields, raw logs or retention policy introduced.
 
 Migration007: reply_templates version/enabled plus optional group_id/task_type_id FKs and enabled-scope index. Global rows remain compatible. Approval payload stores templateVersion; approved job body stays an immutable independent snapshot.
+
+## Migration008 — WhatsApp connector
+Append-only new schema: session provider baileys/status/version/requested/consent timestamp/connected/error/auth_epoch؛ unique requested-live-session index(max1). `whatsapp_auth` يخزن session/category/hashed key ID/ciphertext/key version فقط. `source_messages.encrypted_transport_key` سياقه source UUID؛ لا يظهر في public lists. `whatsapp_ingress` يحفظ unique session/group/external ID، ciphertext مؤقتًا، PENDING/DONE/DROPPED/ERROR ومحاولات/error code. DONE/DROPPED يحتفظان tombstone دونraw. ERROR مشفر إلى المعالجة أو الحذف المقصود. Auth لا تمحى بمجرد قطع الاتصال.

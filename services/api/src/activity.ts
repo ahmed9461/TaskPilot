@@ -92,7 +92,10 @@ export async function operationsSnapshot(pool: pg.Pool) {
       'sendingReplies',(SELECT count(*)::int FROM reply_jobs WHERE status='SENDING'),
       'unknownReplies',(SELECT count(*)::int FROM reply_jobs WHERE status='UNKNOWN_DELIVERY'),
       'failedReplies',(SELECT count(*)::int FROM reply_jobs WHERE status='FAILED'),
-      'enabledGroups',(SELECT count(*)::int FROM groups WHERE enabled=true)
+      'enabledGroups',(SELECT count(*)::int FROM groups WHERE enabled=true),
+      'pendingIngress',(SELECT count(*)::int FROM whatsapp_ingress WHERE state='PENDING'),
+      'failedIngress',(SELECT count(*)::int FROM whatsapp_ingress WHERE state='ERROR'),
+      'connectedSessions',(SELECT count(*)::int FROM whatsapp_sessions WHERE provider='baileys' AND status='CONNECTED')
     ) counts,
     COALESCE((SELECT greatest(0,floor(extract(epoch FROM now()-min(received_at))))::int FROM source_messages WHERE state='REVIEW'),0) "oldestReviewSeconds",
     COALESCE((SELECT greatest(0,floor(extract(epoch FROM now()-min(approved_at))))::int FROM reply_jobs WHERE status='APPROVED'),0) "oldestApprovedSeconds"`)

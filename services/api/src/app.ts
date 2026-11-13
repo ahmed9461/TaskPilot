@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { querySchema, queryResource, exportCsv } from "./queries.js";
 import { normalize } from "./parser.js";
+import type { WhatsAppConnector } from "./whatsapp/connector.js";
 import {
   queryTemplates,
   templateCreate,
@@ -47,7 +48,11 @@ const cursorQuery = z.object({
     .default(0),
 });
 const listQuery = querySchema;
-export async function createApp(pool: pg.Pool, config: AppConfig) {
+export async function createApp(
+  pool: pg.Pool,
+  config: AppConfig,
+  whatsapp?: WhatsAppConnector,
+) {
   if (
     config.apiToken.length < 32 ||
     config.reauthSecret.length < 32 ||
@@ -119,7 +124,7 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.4.0",
+    version: "0.5.0",
     provider: "mock",
   }));
   app.get("/ready", async () => {
@@ -130,7 +135,8 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     id: "owner",
     role: "owner",
     provider: "mock",
-    liveSendingEnabled: false,
+    liveSendingEnabled: whatsapp?.sendingEnabled ?? false,
+    liveConnectionEnabled: whatsapp?.connectionEnabled ?? false,
   }));
   app.post("/v1/client-session/revoke", async (req) => {
     if (!req.clientSessionId) throw new Fault("CLIENT_SESSION_REQUIRED", 400);
@@ -160,27 +166,123 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     async () =>
       (
         await pool.query(
-          "SELECT * FROM whatsapp_sessions ORDER BY created_at LIMIT 100",
+          "SELECT id,label,provider,status,version,connect_requested,receiving_since,connected_at,last_error_code,created_at FROM whatsapp_sessions ORDER BY created_at LIMIT 100",
         )
       ).rows,
   );
   app.post("/v1/sessions", async (req) => {
-    if (!config.mockEnabled) throw new Fault("MOCK_DISABLED", 403);
-    const input = z.object({ label: text }).strict().parse(req.body);
+    const input = z
+      .object({
+        label: text,
+        provider: z.enum(["mock", "baileys"]).default("mock"),
+      })
+      .strict()
+      .parse(req.body);
+    if (input.provider === "mock" && !config.mockEnabled)
+      throw new Fault("MOCK_DISABLED", 403);
     return transaction(pool, async (c) => {
       const row = (
         await c.query(
-          "INSERT INTO whatsapp_sessions(id,label,provider) VALUES($1,$2,'mock') RETURNING *",
-          [randomUUID(), input.label],
+          "INSERT INTO whatsapp_sessions(id,label,provider,status) VALUES($1,$2,$3,$4) RETURNING id,label,provider,status,version,created_at",
+          [
+            randomUUID(),
+            input.label,
+            input.provider,
+            input.provider === "mock" ? "MOCK" : "STOPPED",
+          ],
         )
       ).rows[0];
-      await event(c, "MOCK_SESSION_CREATED", row.id);
+      await event(
+        c,
+        input.provider === "mock"
+          ? "MOCK_SESSION_CREATED"
+          : "WHATSAPP_SESSION_CREATED",
+        row.id,
+      );
       return row;
     });
   });
   app.post("/v1/sessions/pairing-request", async () => {
     throw new Fault("LIVE_WHATSAPP_NOT_AUTHORIZED", 403);
   });
+  const connector = () => {
+    if (!whatsapp) throw new Fault("LIVE_WHATSAPP_NOT_AUTHORIZED", 403);
+    return whatsapp;
+  };
+  app.get(
+    "/v1/whatsapp/capabilities",
+    async () =>
+      whatsapp?.capabilities() ?? {
+        implemented: false,
+        connectionEnabled: false,
+        sendingEnabled: false,
+        provider: "baileys",
+      },
+  );
+  app.post("/v1/sessions/:id/connect", async (req) => {
+    await reauth(req);
+    const sessionId = uuidParam.parse(req.params).id;
+    z.object({
+      confirmation: z.literal("CONNECT WHATSAPP"),
+      acknowledgeUnofficial: z.literal(true),
+    })
+      .strict()
+      .parse(req.body);
+    await connector().connect(sessionId);
+    return { ok: true };
+  });
+  app.post("/v1/sessions/:id/disconnect", async (req) => {
+    await reauth(req);
+    const sessionId = uuidParam.parse(req.params).id;
+    const row = (
+      await pool.query(
+        "SELECT id FROM whatsapp_sessions WHERE id=$1 AND provider='baileys'",
+        [sessionId],
+      )
+    ).rows[0];
+    if (!row) throw new Fault("LIVE_SESSION_REQUIRED", 400);
+    await connector().disconnect(sessionId);
+    return { ok: true };
+  });
+  app.post("/v1/sessions/:id/pairing", async (req) => {
+    await reauth(req);
+    return connector().pairing(uuidParam.parse(req.params).id);
+  });
+  app.post("/v1/sessions/:id/available-groups", async (req) => {
+    await reauth(req);
+    return connector().listGroups(uuidParam.parse(req.params).id);
+  });
+  app.get(
+    "/v1/whatsapp/ingress-errors",
+    async () =>
+      (
+        await pool.query(
+          "SELECT id,session_id,group_id,attempts,last_error_code,received_at FROM whatsapp_ingress WHERE state='ERROR' ORDER BY id LIMIT 100",
+        )
+      ).rows,
+  );
+  app.post("/v1/whatsapp/ingress-errors/:id/retry", async (req) => {
+    await reauth(req);
+    const rowId = z
+      .object({ id: z.string().regex(/^[1-9]\d{0,15}$/) })
+      .parse(req.params).id;
+    z.object({ confirmation: z.literal("RETRY INGRESS") })
+      .strict()
+      .parse(req.body);
+    return transaction(pool, async (c) => {
+      await c.query("SELECT pg_advisory_xact_lock(8240005)");
+      const row = (
+        await c.query(
+          "UPDATE whatsapp_ingress SET state='PENDING',attempts=0,last_error_code=NULL WHERE id=$1 AND state='ERROR' RETURNING session_id",
+          [rowId],
+        )
+      ).rows[0];
+      if (!row) throw new Fault("NOT_FOUND", 404);
+      await event(c, "WHATSAPP_INGRESS_RETRY_REQUESTED", row.session_id);
+      return { ok: true };
+    });
+  });
+
   app.get(
     "/v1/task-types",
     async () =>
@@ -217,6 +319,17 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       })
       .strict()
       .parse(req.body);
+    const session = (
+      await pool.query("SELECT provider FROM whatsapp_sessions WHERE id=$1", [
+        p.sessionId,
+      ])
+    ).rows[0];
+    if (!session) throw new Fault("NOT_FOUND", 404);
+    if (session.provider === "baileys") {
+      await reauth(req);
+      if (!connector().knownGroup(p.sessionId, p.externalGroupId))
+        throw new Fault("WHATSAPP_GROUP_NOT_DISCOVERED", 409);
+    }
     return transaction(pool, async (c) => {
       const row = (
         await c.query(
@@ -242,6 +355,13 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       .object({ version: z.number().int().positive(), enabled: z.boolean() })
       .strict()
       .parse(req.body);
+    const provider = (
+      await pool.query(
+        "SELECT s.provider FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.id=$1",
+        [groupId],
+      )
+    ).rows[0]?.provider;
+    if (provider === "baileys") await reauth(req);
     return transaction(pool, async (c) => {
       const row = (
         await c.query(
@@ -329,8 +449,19 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
   });
   app.post("/v1/mock/messages", async (req) => {
     if (!config.mockEnabled) throw new Fault("MOCK_DISABLED", 403);
-    return service.ingest(messageInput.parse(req.body));
+    const p = messageInput.parse(req.body);
+    if (
+      !(
+        await pool.query(
+          "SELECT id FROM whatsapp_sessions WHERE id=$1 AND provider='mock'",
+          [p.sessionId],
+        )
+      ).rowCount
+    )
+      throw new Fault("MOCK_SESSION_REQUIRED", 403);
+    return service.ingest(p);
   });
+
   app.get("/v1/inbox", async (req) => {
     const q = listQuery.parse(req.query);
     const result = await queryResource(pool, "inbox", q);
@@ -633,7 +764,11 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
       .object({ approvalToken: text, idempotencyKey: text })
       .strict()
       .parse(req.body);
-    return service.approveReply(p.approvalToken, p.idempotencyKey);
+    return service.approveReply(
+      p.approvalToken,
+      p.idempotencyKey,
+      whatsapp?.sendingEnabled === true,
+    );
   });
   app.post("/v1/reply-jobs/:id/reconcile", async (req) => {
     await reauth(req);
@@ -779,7 +914,11 @@ export async function createApp(pool: pg.Pool, config: AppConfig) {
     );
     return { updated: result.rowCount };
   });
-  app.get("/v1/operations", async () => operationsSnapshot(pool));
+  app.get("/v1/operations", async () => ({
+    ...(await operationsSnapshot(pool)),
+    liveConnectionEnabled: whatsapp?.connectionEnabled ?? false,
+    liveSendingEnabled: whatsapp?.sendingEnabled ?? false,
+  }));
   app.post("/v1/notifications/:id/read", async (req) => {
     const p = z
       .object({

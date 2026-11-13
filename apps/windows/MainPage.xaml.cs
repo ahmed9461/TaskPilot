@@ -29,6 +29,12 @@ public sealed partial class MainPage : Page
     private static string FriendlyError(string code) => code switch
     {
         "CONFLICT" or "STALE_PREVIEW" => "تغيرت البيانات. حدّث القائمة وأنشئ معاينة جديدة.",
+        "LIVE_WHATSAPP_NOT_AUTHORIZED" => "الاتصال الحقيقي معطّل على الخادم بانتظار موافقتك المنفصلة.",
+        "LIVE_SENDING_NOT_AUTHORIZED" => "الإرسال الحقيقي معطّل. لم يُعتمد الرد.",
+        "PAIRING_QR_EXPIRED" => "انتهى رمز الربط. حدّث الجلسات واطلب الرمز الحالي.",
+        "WHATSAPP_NOT_CONNECTED" or "WHATSAPP_CONNECT_FAILED" => "جلسة واتساب غير متصلة. راجع حالتها قبل المحاولة.",
+        "WHATSAPP_SESSION_IN_USE" => "الجلسة قيد الاستخدام في عملية أخرى.",
+        "WHATSAPP_GROUP_NOT_DISCOVERED" => "اقرأ المجموعات المتاحة من الجلسة ثم اختر المجموعة المطلوبة.",
         "REAUTH_REQUIRED" => "انتهى التحقق أو استُخدم. أعد فتح معاينة العملية للتحقق من جديد.",
         "PERMISSION_DENIED" or "SESSION_EXPIRED" => "انتهت جلسة الاتصال أو أُلغيت. أعد الاتصال للمتابعة.",
         "RATE_LIMITED" => "وصلت إلى حد الطلبات المؤقت. انتظر قليلًا قبل المحاولة.",
@@ -211,7 +217,7 @@ public sealed partial class MainPage : Page
             ReconnectButton.Visibility = Visibility.Collapsed;
             Connection.Severity = InfoBarSeverity.Success;
             Connection.Title = "متصل بالخادم";
-            Connection.Message = "المزامنة تعمل • الإرسال الحقيقي غير مفعّل";
+            Connection.Message = TransportSummary;
             pendingChanges |= batch.NewItems > 0;
             if (pendingChanges && page != "settings" && !Editing())
                 await Run(Render);
@@ -248,14 +254,16 @@ public sealed partial class MainPage : Page
             Settings();
             return;
         }
-        await api.Send("GET", "/v1/me");
+        var identity = await api.Send("GET", "/v1/me");
+        liveSendingEnabled = identity["liveSendingEnabled"]?.GetValue<bool>() == true;
+        liveConnectionEnabled = identity["liveConnectionEnabled"]?.GetValue<bool>() == true;
         var notificationState = await api.Send("GET", "/v1/notifications/state");
         if (shuttingDown)
             return;
         UpdateUnread(notificationState);
         Connection.Severity = InfoBarSeverity.Success;
         Connection.Title = "متصل بالخادم";
-        Connection.Message = "المزامنة تعمل • موصل وهمي فقط";
+        Connection.Message = TransportSummary;
         Body.Children.Add(Button("تحديث", Render));
         switch (page)
         {
@@ -407,7 +415,7 @@ public sealed partial class MainPage : Page
         var phrase = Field("اكتب " + V(p, "confirmation"));
         var reauth = ReauthField();
         var names = string.Join("، ", p["accounts"]!.AsArray().Select(a => V(a, "display_name")));
-        if (!await Dialog("حذف نهائي", Stack(Text(names), Text($"المهام: {V(p, "assignments")} • الردود: {V(p, "replies")}\nتُحذف البيانات المرتبطة في TaskPilot؛ النسخ الاحتياطية لها احتفاظ منفصل. لا تُحذف رسائل واتساب من أجهزة الآخرين."), phrase, reauth), "حذف نهائي"))
+        if (!await Dialog("حذف نهائي", Stack(Text(names), Text($"المهام: {V(p, "assignments")} • الردود: {V(p, "replies")} • الرسائل المعلّقة: {V(p,"pendingIngress")}\nتُحذف البيانات المرتبطة في TaskPilot؛ النسخ الاحتياطية لها احتفاظ منفصل. لا تُحذف رسائل واتساب من أجهزة الآخرين."), phrase, reauth), "حذف نهائي"))
             return;
         await api.Send("POST", "/v1/deletions/confirm", new
         {
@@ -460,7 +468,9 @@ public sealed partial class MainPage : Page
             templateId = V(selection.Value.Template, "id")
         });
         var reauth = ReauthField();
-        if (!await Dialog("إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text($"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionId")}\nالرسالة: {V(p, "externalMessageId")}\nموصل mock؛ لا إرسال واتساب حقيقي."), reauth), "إقرار المحاكاة"))
+        var real = V(p,"provider") == "baileys";
+        if (real && !liveSendingEnabled) throw new InvalidOperationException("الإرسال الحقيقي معطّل على الخادم. لم يُعتمد أي رد.");
+        if (!await Dialog(real ? "إقرار إرسال رد واتساب حقيقي" : "إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text($"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionId")}\nالرسالة: {V(p, "externalMessageId")}\n" + (real ? "سيُرسل النص إلى رسالة المصدر في واتساب بعد الإقرار." : "موصل mock؛ لا إرسال واتساب حقيقي.")), reauth), real ? "إرسال الرد الحقيقي" : "إقرار المحاكاة"))
             return;
         await api.Send("POST", "/v1/reply-jobs/approve", new
         {
@@ -474,10 +484,11 @@ public sealed partial class MainPage : Page
     {
         Body.Children.Add(Button("إدخال رسالة اختبار وهمية", async () =>
         {
-            var groups = (await api.Send("GET", "/v1/groups")).AsArray();
+            var mockIds = (await api.Send("GET", "/v1/sessions")).AsArray().Where(n=>V(n,"provider")=="mock").Select(n=>V(n,"id")).ToHashSet();
+            var groups = new JsonArray((await api.Send("GET", "/v1/groups")).AsArray().Where(n=>mockIds.Contains(V(n,"session_id"))).Select(n=>n!.DeepClone()).ToArray());
             if (groups.Count == 0)
                 throw new InvalidOperationException("أضف مجموعة محاكاة أولًا.");
-            var group = Choice("المجموعة", groups.Select(g => (V(g, "id"), V(g, "title"))));
+            var group = Choice("المجموعة", groups.Select(g => (V(g, "id"), ChoiceLabel(g!, "title"))));
             var content = new TextBox { Header = "بيانات وهمية فقط", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinWidth = 320, Height = 150, MaxLength = 16000, Text = "الاسم: حساب اختبار\nاليوزر: demo-new\nكلمة المرور: synthetic-only" };
             if (!await Dialog("محاكاة استلام رسالة", Stack(Text("تُحفظ الرسالة في الخادم؛ لا تُرسل إلى واتساب."), group, content), "استقبال محاكى"))
                 return;
@@ -535,24 +546,18 @@ public sealed partial class MainPage : Page
             Body.Children.Add(Text("صندوق المراجعة فارغ."));
         Pager("inbox", result);
     }
-    private async Task Sessions()
-    {
-        Body.Children.Add(Button("إضافة جلسة محاكاة", async () => { var label = Field("اسم الجلسة"); if (await Dialog("جلسة وهمية", label)) { await api.Send("POST", "/v1/sessions", new { label = label.Text }); await Render(); } }));
-        foreach (var n in (await api.Send("GET", "/v1/sessions")).AsArray())
-            Card(V(n, "label"), $"{V(n, "status")} • {V(n, "provider")}\n{V(n, "id")}");
-        Body.Children.Add(Text("ربط واتساب الحقيقي متوقف حتى موافقة المالك واعتماد الموصل."));
-    }
+    private async Task Sessions() => await WhatsAppSessions();
     private async Task Groups()
     {
         Body.Children.Add(Button("إضافة نوع مهمة", async () => { var code = Field("رمز النوع"); var name = Field("الاسم"); if (await Dialog("نوع مهمة", Stack(code, name))) { await api.Send("POST", "/v1/task-types", new { code = code.Text, name = name.Text }); await Render(); } }));
         Body.Children.Add(Button("ربط مجموعة محاكاة", async () =>
         {
-            var sessions = (await api.Send("GET", "/v1/sessions")).AsArray();
+            var sessions = new JsonArray((await api.Send("GET", "/v1/sessions")).AsArray().Where(n => V(n,"provider") == "mock").Select(n=>n!.DeepClone()).ToArray());
             var tasks = (await api.Send("GET", "/v1/task-types")).AsArray();
             if (sessions.Count == 0 || tasks.Count == 0)
                 throw new InvalidOperationException("أضف جلسة ونوع مهمة أولًا.");
-            var s = new ComboBox { Header = "الجلسة", ItemsSource = sessions.Select(n => V(n, "label")).ToArray(), SelectedIndex = 0 };
-            var t = new ComboBox { Header = "المهمة", ItemsSource = tasks.Select(n => V(n, "name")).ToArray(), SelectedIndex = 0 };
+            var s = new ComboBox { Header = "الجلسة", ItemsSource = sessions.Select(n => ChoiceLabel(n!, "label")).ToArray(), SelectedIndex = 0 };
+            var t = new ComboBox { Header = "المهمة", ItemsSource = tasks.Select(n => ChoiceLabel(n!, "name")).ToArray(), SelectedIndex = 0 };
             var title = Field("اسم المجموعة");
             var ext = Field("معرّف المجموعة الوهمي");
             var ns = Field("النظام", "synthetic");
@@ -575,7 +580,7 @@ public sealed partial class MainPage : Page
         {
             var n = r!;
             var enabled = n["enabled"]!.GetValue<bool>();
-            Card(V(n, "title"), $"{V(n, "namespace")} • {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button("القواعد", () => Rules(n)), Button(enabled ? "إيقاف" : "تفعيل", async () => { await api.Send("PATCH", "/v1/groups/" + V(n, "id"), new { version = Ver(n), enabled = !enabled }); await Render(); }));
+            Card(V(n, "title"), $"{V(n, "namespace")} • {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button("القواعد", () => Rules(n)), Button(enabled ? "إيقاف" : "تفعيل", () => ToggleGroup(n, !enabled)));
         }
     }
     private async Task Replies()

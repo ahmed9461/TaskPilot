@@ -54,7 +54,7 @@
 
 ## التشغيل والتطوير
 Node 24: `npm ci` ثم `npm run check`. PostgreSQL: `DATABASE_URL` ثم `npm run migrate`. اختبارات DB تتطلب `TASKPILOT_TEST_DATABASE_URL` بقاعدة مستقلة تنتهي `_test` ثم `npm run test:integration`.
-المفاتيح تقرأ من ملفات خارج Git. راجع `.env.example` و`docs/12_API_CONTRACT.md` و`tracking/PROJECT_STATE.md` للحالة المثبتة. موصل وهمي فقط، لا ربط أو إرسال حقيقي.
+المفاتيح تقرأ من ملفات خارج Git. راجع `.env.example` و`docs/12_API_CONTRACT.md` و`tracking/PROJECT_STATE.md` للحالة المثبتة. موصل mock افتراضي وموصل Baileys منفذ خلف بوابتين معطلتين؛ لا ربط أو إرسال حقيقي ضمن الاختبارات.
 
 ## Windows
 `dotnet restore apps/windows/TaskPilot.Windows.csproj --locked-mode` ثم `dotnet build apps/windows/TaskPilot.Windows.csproj -c Release -p:Platform=x64 --no-restore` (.NET10 SDK). التطبيق عربيRTL، x64 self-contained، لا يحتاج SDK عند تشغيل الحزمة المنشورة. افتح TaskPilot.Windows.exe ثم الإعدادات واختر «اتصال عبر SSH» مع اسم الاتصال المحفوظ والموثوق New-VPS. ينشئ التطبيق نفقًا محليًا وجلسة مؤقتة لمدة 30 دقيقة؛ إعادة التحقق للعمليات الحساسة عبر SSH صالحة 60 ثانية ولمرة واحدة. لا تنقل مفاتيح API الدائمة إلى التطبيق، ولا توجد مفاتيح داخل الحزمة. يتطلب ذلك إعداد SSH موثوقًا مسبقًا؛ ليس تسجيل دخول إنتاجيًا أو MFA. بعد انتهاء الجلسة اتصل مجددًا. أدخل رسالة وهمية من صندوق المراجعة بعد إنشاء جلسة ومهمة ومجموعة لمحاكاة العمل.
@@ -68,3 +68,5 @@ Node 24: `npm ci` ثم `npm run check`. PostgreSQL: `DATABASE_URL` ثم `npm run
 أحدث إصدار تجريبي مثبت:0.4.0، source87f986b، CI43100482889 لمساري Backend وWindows ناجح. راجع الحالة والتتبع للقيود؛ النسخ0.1–0.3 نتائج تاريخية.
 
 **قرار المالك2026-11-13:** التطبيق شخصي ولمالك واحد، والتوقيع الرقمي غير مطلوب. النسخة المحمولة الحالية هي مسار التسليم؛ المثبت والتحديث التلقائي اختياريان. تبقى حماية الاتصال والبيانات وتأكيد الردود والحذف ضمن المطلوب.
+
+0.5 قيد التحقق: موصل Baileys الحقيقي منفذ مع تخزين مصادقة وinbox مشفرين، وWindows لإعداد الجلسة وQR مؤقت واختيار المجموعات. الاتصال والإرسال معطّلان افتراضيًا؛ كل اختبارات socket وهمية. النشر/الـSHA والقبول الفعلي في tracking/PROJECT_STATE.md.

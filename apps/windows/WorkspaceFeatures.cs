@@ -34,7 +34,8 @@ public sealed partial class MainPage
     private static string Selected(ComboBox c) => (c.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
     private static readonly string[] StatusCodes = ["NEW", "NEEDS_REVIEW", "IN_PROGRESS", "COMPLETED", "CANCELED"];
     private static string StateLabel(string code) => code switch { "NEW" => "جديد", "NEEDS_REVIEW" => "بحاجة مراجعة", "IN_PROGRESS" => "قيد التنفيذ", "COMPLETED" => "مكتمل", "CANCELED" => "ملغى", "APPROVED" => "مُعتمد", "SENDING" => "قيد الإرسال", "SENT" => "تم الإرسال", "FAILED" => "فشل مؤكد", "UNKNOWN_DELIVERY" => "تسليم يحتاج تحققًا", _ => code };
-    private static IEnumerable<(string Code, string Label)> Options(JsonArray list, string label) => new[] { ("", "الكل") }.Concat(list.Select(n => (V(n, "id"), V(n, label))));
+    private static string ChoiceLabel(JsonNode n, string label) => V(n, label) + " • " + (V(n,"code") != "" ? V(n,"code") : V(n,"namespace") + "/" + V(n,"period_key") + " • " + V(n,"id"));
+    private static IEnumerable<(string Code, string Label)> Options(JsonArray list, string label) => new[] { ("", "الكل") }.Concat(list.Select(n => (V(n, "id"), ChoiceLabel(n!, label))));
     private void Pager(string resource, JsonNode result)
     {
         var total = result["total"]!.GetValue<int>();
@@ -102,7 +103,7 @@ public sealed partial class MainPage
         });
         var phrase = Field("اكتب DELETE TASK");
         var reauth = ReauthField();
-        if (!await Dialog("حذف التكليف فقط", Stack(Text(V(p, "displayName") + " • " + V(p, "taskName")), Text("سيبقى الحساب وبقية مهامه. الردود المرتبطة: " + V(p, "replies")), phrase, reauth), "حذف التكليف"))
+        if (!await Dialog("حذف التكليف فقط", Stack(Text(V(p, "displayName") + " • " + V(p, "taskName")), Text("سيبقى الحساب وبقية مهامه. الردود المرتبطة: " + V(p, "replies") + " • الرسائل المعلّقة: " + V(p,"pendingIngress")), phrase, reauth), "حذف التكليف"))
             return;
         await api.Send("POST", "/v1/assignments/" + id + "/delete", new
         {

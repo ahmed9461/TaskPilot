@@ -67,7 +67,7 @@ export class Service {
     }
     return row;
   }
-  async ingest(input: MessageInput) {
+  async ingest(input: MessageInput, transportKey?: unknown) {
     return transaction(this.pool, async (c) => {
       const group = (
         await c.query(
@@ -89,6 +89,17 @@ export class Service {
         ],
       );
       if (!inserted.rowCount) return { duplicate: true };
+      if (transportKey)
+        await c.query(
+          "UPDATE source_messages SET encrypted_transport_key=$2 WHERE id=$1",
+          [
+            messageId,
+            this.vault.seal(
+              JSON.stringify(transportKey),
+              `wa-source:${messageId}`,
+            ),
+          ],
+        );
       const parsed = parseMessage(input.text);
       const rules = (
         await c.query(
@@ -108,7 +119,7 @@ export class Service {
       );
       if (!parsed.username && !parsed.displayName && !parsed.password) {
         await c.query(
-          "UPDATE source_messages SET state='IGNORED',encrypted_payload=NULL WHERE id=$1",
+          "UPDATE source_messages SET state='IGNORED',encrypted_payload=NULL,encrypted_transport_key=NULL WHERE id=$1",
           [messageId],
         );
         return { id: messageId, state: "IGNORED" };
@@ -204,8 +215,79 @@ export class Service {
     );
     return value;
   }
+  private async ingressSnapshot(c: PoolClient) {
+    await c.query("SELECT pg_advisory_xact_lock(8240005)");
+    const r = (
+      await c.query(
+        "SELECT count(*)::int count,COALESCE(max(id),0)::text head FROM whatsapp_ingress WHERE state IN ('PENDING','ERROR')",
+      )
+    ).rows[0];
+    return { stamp: JSON.stringify(r), count: r.count };
+  }
+  private async purgeIngress(
+    c: PoolClient,
+    ids: string[],
+    all: boolean,
+    assignment?: { task_type_id: string; period_key: string },
+  ) {
+    if (all) {
+      await c.query(
+        "UPDATE whatsapp_ingress SET state='DROPPED',encrypted_payload=NULL WHERE state IN ('PENDING','ERROR')",
+      );
+      return;
+    }
+    const accounts = (
+      await c.query(
+        "SELECT namespace,username_normalized FROM accounts WHERE id=ANY($1::uuid[])",
+        [ids],
+      )
+    ).rows;
+    const pending = (
+      await c.query(
+        "SELECT q.*,g.namespace,g.task_type_id,g.period_key FROM whatsapp_ingress q JOIN groups g ON g.id=q.group_id WHERE q.state IN ('PENDING','ERROR') ORDER BY q.id LIMIT 1001 FOR UPDATE OF q",
+      )
+    ).rows;
+    if (pending.length > 1000)
+      throw new Fault("INGRESS_BACKLOG_REQUIRES_REVIEW");
+    for (const row of pending) {
+      const item = JSON.parse(
+        this.vault.open(
+          row.encrypted_payload,
+          `wa-ingress:${row.session_id}:${row.group_id}:${hash(row.external_message_id)}`,
+        ),
+      );
+      const parsed = parseMessage(item.text);
+      if (
+        !parsed.username ||
+        !accounts.some(
+          (a) =>
+            a.namespace === normalize(row.namespace) &&
+            a.username_normalized === normalize(parsed.username!),
+        )
+      )
+        continue;
+      if (assignment) {
+        if (assignment.period_key !== row.period_key) continue;
+        const rules = (
+          await c.query(
+            "SELECT * FROM group_rules WHERE group_id=$1 AND enabled=true",
+            [row.group_id],
+          )
+        ).rows;
+        const route = routeTask(item.text, rules, row.task_type_id);
+        // An ambiguous matching account could recreate the deleted task after review.
+        if (!route.ambiguous && route.taskTypeId !== assignment.task_type_id)
+          continue;
+      }
+      await c.query(
+        "UPDATE whatsapp_ingress SET state='DROPPED',encrypted_payload=NULL WHERE id=$1",
+        [row.id],
+      );
+    }
+  }
   async assignmentDeletionPreview(assignmentId: string) {
     return transaction(this.pool, async (c) => {
+      const ingress = await this.ingressSnapshot(c);
       const row = (
         await c.query(
           "SELECT a.*,ac.version account_version,ac.display_name,t.name task_name FROM assignments a JOIN accounts ac ON ac.id=a.account_id JOIN task_types t ON t.id=a.task_type_id WHERE a.id=$1 FOR SHARE OF a,ac",
@@ -227,11 +309,13 @@ export class Service {
         taskName: row.task_name,
         replies,
         confirmation: "DELETE TASK",
+        pendingIngress: ingress.count,
         approvalToken: await this.approval(c, "delete-assignment", {
           assignmentId,
           version: row.version,
           accountId: row.account_id,
           accountVersion: row.account_version,
+          ingressStamp: ingress.stamp,
         }),
       };
     });
@@ -242,7 +326,9 @@ export class Service {
     confirmation: string,
   ) {
     return transaction(this.pool, async (c) => {
+      const ingress = await this.ingressSnapshot(c);
       const p = await this.consume(c, value, "delete-assignment");
+      if (p.ingressStamp !== ingress.stamp) throw new Fault("STALE_PREVIEW");
       if (p.assignmentId !== assignmentId || confirmation !== "DELETE TASK")
         throw new Fault("DELETION_REQUIRES_CONFIRMATION");
       const account = (
@@ -252,7 +338,7 @@ export class Service {
       ).rows[0];
       const assignment = (
         await c.query(
-          "SELECT version FROM assignments WHERE id=$1 FOR UPDATE",
+          "SELECT version,task_type_id,period_key FROM assignments WHERE id=$1 FOR UPDATE",
           [assignmentId],
         )
       ).rows[0];
@@ -277,6 +363,7 @@ export class Service {
           [assignmentId],
         )
       ).rows.map((r) => r.source_message_id);
+      await this.purgeIngress(c, [p.accountId], false, assignment);
       await c.query("DELETE FROM assignments WHERE id=$1", [assignmentId]);
       await c.query(
         "DELETE FROM source_messages s WHERE id=ANY($1::uuid[]) AND NOT EXISTS(SELECT 1 FROM assignment_sources x WHERE x.source_message_id=s.id)",
@@ -347,9 +434,16 @@ export class Service {
       };
     });
   }
-  async approveReply(value: string, key: string) {
+  async approveReply(value: string, key: string, allowLive = false) {
     return transaction(this.pool, async (c) => {
       const p = await this.consume(c, value, "reply");
+      const session = (
+        await c.query("SELECT provider FROM whatsapp_sessions WHERE id=$1", [
+          p.sessionId,
+        ])
+      ).rows[0];
+      if (session?.provider !== "mock" && !allowLive)
+        throw new Fault("LIVE_SENDING_NOT_AUTHORIZED", 403);
       await c.query(
         "SELECT ac.id FROM accounts ac JOIN assignments a ON a.account_id=ac.id WHERE a.id=$1 FOR UPDATE OF ac",
         [p.assignmentId],
@@ -413,6 +507,7 @@ export class Service {
   }
   async deletionPreview(ids: string[] | undefined, all: boolean) {
     return transaction(this.pool, async (c) => {
+      const ingress = await this.ingressSnapshot(c);
       const accounts = (
         await c.query(
           "SELECT id,version,display_name FROM accounts WHERE $1::boolean OR id=ANY($2::uuid[]) ORDER BY id FOR SHARE",
@@ -431,17 +526,21 @@ export class Service {
       return {
         accounts,
         ...summary,
+        pendingIngress: ingress.count,
         confirmation: `DELETE ${accounts.length}`,
         approvalToken: await this.approval(c, "delete", {
           accounts: accounts.map((a) => ({ id: a.id, version: a.version })),
           all,
+          ingressStamp: ingress.stamp,
         }),
       };
     });
   }
   async deleteAccounts(value: string, confirmation: string) {
     return transaction(this.pool, async (c) => {
+      const ingress = await this.ingressSnapshot(c);
       const p = await this.consume(c, value, "delete");
+      if (p.ingressStamp !== ingress.stamp) throw new Fault("STALE_PREVIEW");
       const ids = p.accounts.map((a: any) => a.id);
       if (p.all)
         await c.query("LOCK TABLE accounts IN SHARE ROW EXCLUSIVE MODE");
@@ -483,6 +582,7 @@ export class Service {
         "UPDATE reply_jobs SET status='CANCELED' WHERE id=ANY($1::uuid[]) AND status='APPROVED'",
         [jobs.rows.map((r) => r.id)],
       );
+      await this.purgeIngress(c, ids, p.all);
       await c.query("DELETE FROM accounts WHERE id=ANY($1::uuid[])", [ids]);
       if (p.all) await c.query("DELETE FROM source_messages");
       await c.query(

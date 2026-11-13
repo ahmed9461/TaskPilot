@@ -39,3 +39,6 @@ Continuation: integrated SSH session/tunnel,50-row pages preserving active filte
 0.4: paged/searchable template administration, edit/enable/disable and optional task/group scopes. Reply dialog filters enabled templates as the selected source changes, prioritizing specific scope. Editing warning explains stale previews and preservation of already-approved reply bodies. Sensitive outgoing approval remains a separate step.
 
 D-037 (2026-11-13): personal single-owner Windows app; signing is not required. Existing portable self-contained ZIP is accepted; installer/automatic updates are optional. This changes release scope only, not UI or Windows security settings.
+
+## Connector0.5
+جلسات واتساب تعرض حالات مترجمة وبوابة الخادم؛ إنشاء إعداد مستقل عن الاتصال. Connect يتطلب تحذير الموصل غير الرسمي، checkbox، عبارة CONNECT WHATSAPP وreauth. QR نافذة مؤقتة من الذاكرة45 ثانية كحدأقصى دون نسخ/حفظ. Discovery/bind لمجموعة واحدة بعد إعادة تحقق؛ ربطها يشرح استمرار المعالجة على الخادم عند إغلاقWindows. Stop يبقي auth مشفرة. Reply يعرض provider وعبارة إرسال حقيقي مستقلة؛ مع الإرسال معطّل لايمكنالإقرار. بطاقات الطوابير تشمل الأخطاء المعزولة وإعادةالمعالجةالداخلية. خيارات المهام تعرض code، والمجموعات/الجلسات تعرض معرفًا ثابتًا لتمييز الأسماء المتكررة. قبول الربط الحقيقي غير منفذ.

@@ -4,9 +4,12 @@ export interface ReplyTarget {
   externalMessageId: string;
   body: string;
   jobId: string;
+  sourceMessageId?: string;
 }
+export class DefinitelyNotSent extends Error {}
 export interface WhatsAppTransport {
-  readonly provider: "mock";
+  readonly provider: "mock" | "baileys";
+  canSend?(sessionId: string): boolean;
   connect(sessionId: string): Promise<void>;
   disconnect(sessionId: string): Promise<void>;
   listGroups(sessionId: string): Promise<unknown[]>;

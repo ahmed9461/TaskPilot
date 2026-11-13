@@ -102,11 +102,23 @@ public sealed partial class MainPage
     {
         var n = await api.Send("GET", "/v1/operations");
         var counts = n["counts"]!;
-        Card("حالة التشغيل التجريبي", "الخادم متاح • موصل محاكاة • الإرسال الحقيقي متوقف");
-        foreach (var (key, title) in new[] { ("review", "رسائل تحتاج مراجعة"), ("unread", "إشعارات غير مقروءة"), ("approvedReplies", "ردود محاكاة معتمدة"), ("sendingReplies", "قيد الإرسال بالمحاكاة"), ("unknownReplies", "تسليم يحتاج تحققًا"), ("failedReplies", "ردود فشلت"), ("enabledGroups", "مجموعات مفعّلة") })
+        Card("حالة التشغيل التجريبي", TransportSummary);
+        foreach (var (key, title) in new[] { ("review", "رسائل تحتاج مراجعة"), ("unread", "إشعارات غير مقروءة"), ("approvedReplies", "ردود معتمدة"), ("sendingReplies", "قيد الإرسال"), ("unknownReplies", "تسليم يحتاج تحققًا"), ("failedReplies", "ردود فشلت"), ("enabledGroups", "مجموعات مفعّلة"), ("pendingIngress", "رسائل واتساب معلّقة"), ("failedIngress", "رسائل وارد معزولة بسبب فشل المعالجة"), ("connectedSessions", "جلسات واتساب متصلة") })
             Card(V(counts, key), title);
         Card("عمر قوائم الانتظار", $"أقدم مراجعة: {V(n, "oldestReviewSeconds")} ثانية • أقدم رد معتمد: {V(n, "oldestApprovedSeconds")} ثانية");
         Card("آخر قراءة من الخادم", V(n, "observedAt") + $"\nزمن عملية API: {V(n, "processUptimeSeconds")} ثانية • المهاجرات: {V(n, "migrations")}");
+        foreach (var row in (await api.Send("GET", "/v1/whatsapp/ingress-errors")).AsArray())
+        {
+            var error = row!;
+            Card("رسالة وارد معزولة", "المعرّف: " + V(error,"id") + " • محاولات: " + V(error,"attempts") + " • " + V(error,"last_error_code"), Button("إعادة المعالجة الداخلية", async () =>
+            {
+                var reauth = ReauthField();
+                if (!await Dialog("إعادة معالجة وارد معزول", Stack(Text("تعيد هذه العملية المعالجة الداخلية فقط. لا تُرسل رسالة إلى واتساب. عالج سبب الفشل أولًا."),reauth),"إعادة المعالجة")) return;
+                try { await api.Send("POST","/v1/whatsapp/ingress-errors/" + V(error,"id") + "/retry",new {confirmation="RETRY INGRESS"},await Reauth(reauth.Password)); }
+                finally { reauth.Password=""; }
+                await Render();
+            }));
+        }
         Body.Children.Add(Text("هذه قراءة للحالة الآن؛ لا تثبت اكتمال النسخ خارج الخادم أو الاستقبال الحقيقي. لا تغيّر هذه الشاشة إعدادات خدمات الخادم."));
     }
 }

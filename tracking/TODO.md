@@ -43,3 +43,10 @@ Checked means verified within synthetic pilot scope only. Exact source/CI/eviden
 2. Synthetic native review/reconciliation/CSV/source-switch/accessibility and bounded load/recovery checks.
 3. Single-owner access review, retention/key recovery/off-host backup and live-provider decisions before real data. Signing is excluded; installer/update channel optional.
 No real WhatsApp or outbound messages without explicit separate permission. Completed code87f986b; latest hosted CI43100482889 backend+Windows SUCCESS.
+
+## 0.5 progress override —2026-11-13
+- [x] Real connector implementation + encrypted auth/ingress/provider isolation and fake-socket PostgreSQL acceptance (32 total),14 Node checks. This is not live provider acceptance.
+- [x] Windows gated session/QR/discovery/bind/stop and disambiguated choices implemented; final/native acceptance pending.
+- [ ] Account details/flags/tasks/source history.
+- [ ] Exact-source CI, dormant0.5 rollout/Windows-server/native acceptance and8-migration restore/package.
+- [ ] Real pairing, receive and send acceptance: separate owner authorization remains required; both runtime flags false.
