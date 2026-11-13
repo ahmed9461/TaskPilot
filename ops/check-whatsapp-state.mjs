@@ -34,8 +34,26 @@ try {
   const vault = new Vault(
     (await readFile(env.TASKPILOT_ENCRYPTION_KEY_FILE, "utf8")).trim(),
   );
+  const restoreArg = process.argv.find((v) => v.startsWith("--restore-db="));
+  let connectionString = env.DATABASE_URL;
+  if (restoreArg) {
+    const name = restoreArg.slice("--restore-db=".length);
+    if (!/^taskpilot_[a-z0-9_]+_restore_test$/.test(name)) throw Error();
+    const migrationEnv = Object.fromEntries(
+      (await readFile("/etc/taskpilot/migration.env", "utf8"))
+        .split("\n")
+        .filter((l) => l.includes("="))
+        .map((l) => [
+          l.slice(0, l.indexOf("=")),
+          l.slice(l.indexOf("=") + 1).trim(),
+        ]),
+    );
+    const address = new URL(migrationEnv.DATABASE_URL);
+    address.pathname = "/" + name;
+    connectionString = address.toString();
+  }
   pool = new pg.Pool({
-    connectionString: env.DATABASE_URL,
+    connectionString,
     connectionTimeoutMillis: 5000,
     query_timeout: 5000,
   });
@@ -69,6 +87,7 @@ try {
   console.log(
     JSON.stringify({
       check: "PASS",
+      databaseScope: restoreArg ? "isolated restore drill" : "pilot",
       connectionEnabled: expected,
       sendingEnabled: false,
       providerOutputDiscarded: true,

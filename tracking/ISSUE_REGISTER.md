@@ -42,3 +42,9 @@ I-020 final: corrected0.5 actual portable startup from different cwd and native 
 
 I-021 deployed ffe68cf before real socket: actual unit streams /dev/null/core limit0 verified, redacted state proof confirms encrypted auth; no raw provider logs collected.
 | I-022 | First actual QR reached CONNECTED with me.id persisted but registered=false; old restore checked registered only | FIX VERIFIED isolated / live restart pending | Match SDK login decision by saved paired identity; QR registered=false/me.id regression PASS. Do not regenerate auth or alter its SDK flag |
+
+| I-023 | Actual native reply list returned to top as background synthetic acceptance events arrived | FIX IMPLEMENTED / native verification pending | Preserve automatic same-page scroll offset after layout; keep explicit navigation/filter refresh semantics and draft guard |
+
+| I-024 | Native review read-only TextBox showed only first line of the seeded two-line message | FIX IMPLEMENTED / native verification pending | Enable multiline/adequate height while retaining30-second hide and cleanup; native full-text/reveal/resolve test follows |
+
+I-022 final:6626697 deployed0.5.1; actual same paired identity restored CONNECTED after own-service restart without QR, no auth reset. I-023 native refresh preserved bottom position3090.67 after synthetic change. I-024 root cause was Text assignment before enabling AcceptsReturn, not missing DB content; reordered source/template initialization. Actual review two lines/hide/resolve/raw clearing PASS; full multiline template editor acceptance remains open.

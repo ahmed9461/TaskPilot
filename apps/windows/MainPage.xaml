@@ -16,9 +16,9 @@
    </NavigationView.MenuItems>
    <Grid Padding="32,24" RowSpacing="20">
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <StackPanel Spacing="6"><TextBlock x:Name="Heading" Text="لوحة التحكم" FontSize="32" FontWeight="SemiBold"/><TextBlock Text="نسخة تجريبية • بيانات وهمية • موصل محاكاة" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/></StackPanel>
+    <StackPanel Spacing="6"><TextBlock x:Name="Heading" Text="لوحة التحكم" FontSize="32" FontWeight="SemiBold"/><TextBlock Text="نسخة شخصية تجريبية" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/></StackPanel>
     <InfoBar Grid.Row="1" x:Name="Connection" IsOpen="True" IsClosable="False" Severity="Informational" Title="الاتصال" Message="أدخل بيانات الاتصال من الإعدادات للبدء."><InfoBar.ActionButton><Button x:Name="ReconnectButton" Content="إعادة الاتصال" Click="Reconnect_Click" Visibility="Collapsed"/></InfoBar.ActionButton></InfoBar>
-    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Body" Spacing="14" Padding="0,0,0,24"/></ScrollViewer>
+    <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Body" Spacing="14" Padding="0,0,0,24"/></ScrollViewer>
     <ProgressRing x:Name="BusyIndicator" Grid.Row="2" Width="26" Height="26" VerticalAlignment="Top" HorizontalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed"/>
    </Grid>
   </NavigationView>

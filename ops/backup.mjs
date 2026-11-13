@@ -114,7 +114,8 @@ try {
         assignments: Number(check[1]),
         migrations: Number(check[2]),
         sending: 0,
-        scope: "isolated synthetic database",
+        scope: "isolated restore database",
+        providerConnectionStarted: false,
       }),
     );
   } else throw Error();

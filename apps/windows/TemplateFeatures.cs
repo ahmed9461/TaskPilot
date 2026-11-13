@@ -18,11 +18,7 @@ public sealed partial class MainPage
         var tasks = (await api.Send("GET", "/v1/task-types")).AsArray();
         var code = Field("رمز القالب", V(template, "code"));
         code.IsReadOnly = template is not null;
-        var body = Field("نص الرد", V(template, "body"));
-        body.MaxLength = 2000;
-        body.AcceptsReturn = true;
-        body.TextWrapping = TextWrapping.Wrap;
-        body.Height = 120;
+        var body = new TextBox { Header = "نص الرد", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 2000, MinWidth = 300, Height = 120, Text = V(template, "body") };
         var group = ScopeChoice("المجموعة (الكل = قالب عام)", groups, "title", V(template, "group_id"), V(template, "group_title"));
         var task = ScopeChoice("نوع المهمة (الكل = قالب عام)", tasks, "name", V(template, "task_type_id"), V(template, "task_name"));
         var enabled = new CheckBox { Content = "متاح للمعاينات الجديدة", IsChecked = template?["enabled"]?.GetValue<bool>() ?? true };

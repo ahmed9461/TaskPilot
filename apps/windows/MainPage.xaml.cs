@@ -220,12 +220,24 @@ public sealed partial class MainPage : Page
             Connection.Message = TransportSummary;
             pendingChanges |= batch.NewItems > 0;
             if (pendingChanges && page != "settings" && !Editing())
-                await Run(Render);
+                await Run(RefreshFromChanges);
             else if (pendingChanges)
                 Connection.Message = "توجد تغييرات جديدة؛ اضغط تحديث بعد الانتهاء من التحرير.";
         }
         catch (Exception error) { connectionState.Failed(error); if (!shuttingDown) ShowConnectionProblem(); }
         finally { polling = false; }
+    }
+
+    private async Task RefreshFromChanges()
+    {
+        var offset = ContentScroll.VerticalOffset;
+        var currentPage = page;
+        await Render();
+        if (currentPage == page && !shuttingDown)
+        {
+            ContentScroll.UpdateLayout();
+            ContentScroll.ChangeView(null, offset, null, true);
+        }
     }
 
     private async void Navigate(NavigationView sender, NavigationViewSelectionChangedEventArgs e)
@@ -524,7 +536,7 @@ public sealed partial class MainPage : Page
                 var ns = Field("النظام", V(n, "namespace"));
                 var pass = Secret("كلمة المرور (اختياري)");
                 var task = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), V(n, "routing_task_type_id"));
-                var view = new TextBox { Header = "محتوى محمي — يُخفى بعد 30 ثانية", Text = V(raw, "text"), IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MaxHeight = 120 };
+                var view = new TextBox { Header = "محتوى محمي — يُخفى بعد 30 ثانية", IsReadOnly = true, AcceptsReturn = true, Text = V(raw, "text"), TextWrapping = TextWrapping.Wrap, MinHeight = 90, MaxHeight = 180 };
                 var hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
                 hide.Tick += (_, _) => { view.Text = ""; hide.Stop(); };
                 hide.Start();
