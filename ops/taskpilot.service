@@ -1,5 +1,5 @@
 [Unit]
-Description=TaskPilot isolated synthetic pilot API
+Description=TaskPilot isolated personal pilot API
 After=network.target docker.service
 Requires=docker.service
 [Service]
