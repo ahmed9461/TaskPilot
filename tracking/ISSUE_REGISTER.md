@@ -48,3 +48,5 @@ I-021 deployed ffe68cf before real socket: actual unit streams /dev/null/core li
 | I-024 | Native review read-only TextBox showed only first line of the seeded two-line message | FIX IMPLEMENTED / native verification pending | Enable multiline/adequate height while retaining30-second hide and cleanup; native full-text/reveal/resolve test follows |
 
 I-022 final:6626697 deployed0.5.1; actual same paired identity restored CONNECTED after own-service restart without QR, no auth reset. I-023 native refresh preserved bottom position3090.67 after synthetic change. I-024 root cause was Text assignment before enabling AcceptsReturn, not missing DB content; reordered source/template initialization. Actual review two lines/hide/resolve/raw clearing PASS; full multiline template editor acceptance remains open.
+
+I-019 current0.5.1: actual owner pairing and same-identity restart PASS. Receive/quoted send/provider receipt/long-running acceptance remain open; no monitored groups or live messages. I-020 corrected resources/native startup remain verified for0.5.1. I-022/023/024 final results above are authoritative; pending wording in earlier entries is historical.

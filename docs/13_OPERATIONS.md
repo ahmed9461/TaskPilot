@@ -1,6 +1,6 @@
 # دليل التشغيل والمراقبة — Target Runbook
 
-**تشغيل تجريبي مثبت:** taskpilot.service + own taskpilot-db container; all data synthetic. See tracking/PROJECT_STATE.md for exact deployed commit.
+**تشغيل تجريبي مثبت:** taskpilot.service + own taskpilot-db container; business test data synthetic; owner-paired WhatsApp auth is real and encrypted. No live groups/messages/sends. See tracking/PROJECT_STATE.md for exact deployed commit.
 
 ## مراقبة يومية مستهدفة
 - حالة API وPostgreSQL وWhatsApp connector لكل جلسة.
@@ -43,7 +43,7 @@ Server acceptance: on Windows with already-trusted SSH run `dotnet run --project
 0.4 operator notes: deployment waits for exact-version mock health; then run authenticated smoke. Verifier always emits own privilege/restart/data/startup results and returns nonzero on external service-set drift; never restart unrelated services to clear it. Template edits/disable affect unapproved previews only, not already-approved body snapshots; create a fresh preview after STALE_PREVIEW. Current restore tested7 migrations; source tracking remains authoritative. Latest direct Windows runner28 checks also tests template edit/disable and owned-tunnel recovery.
 
 ## Connector0.5 التشغيل المحكوم
-`WHATSAPP_CONNECTION_ENABLED=false` و`WHATSAPP_SENDING_ENABLED=false` في الإعداد الافتراضي. لا تغييرهما ضمن تفويض التطوير. بعد موافقة منفصلة للربط يمكن للمالك مراجعة سياسة الاحتفاظ ومخاطر الموصل غير الرسمي ثم تفعيل الاتصال فقط، بدء جلسة من Windows وقراءةQR بنفسه واختيار مجموعة اختبار. تفعيل الإرسال خطوة موافقة مستقلة؛ لا تستخدم حسابات/جلسات مشاريع أخرى. لا تسجيل للـQR أو raw auth أو group membership.
+`WHATSAPP_CONNECTION_ENABLED=false` و`WHATSAPP_SENDING_ENABLED=false` في الإعداد الافتراضي. لا تغييرهما دون تفويض مناسب؛ D-043 أجاز الاتصال فقط في pilot الحالي، مع بقاء الإرسال=false. بعد موافقة منفصلة للربط يمكن للمالك مراجعة سياسة الاحتفاظ ومخاطر الموصل غير الرسمي ثم تفعيل الاتصال فقط، بدء جلسة من Windows وقراءةQR بنفسه واختيار مجموعة اختبار. تفعيل الإرسال خطوة موافقة مستقلة؛ لا تستخدم حسابات/جلسات مشاريع أخرى. لا تسجيل للـQR أو raw auth أو group membership.
 
 راقب حالات الجلسة وpendingIngress/failedIngress/connectedSessions وأعمار الطوابير. ERROR الوارد يحتاج تشخيص السبب ثم retry داخلي محمي؛ لا يكشف payload في القائمة. لا تمحُ auth تلقائيًا عند logout أو key corruption؛ لا تخفِ فشل فك التشفير بإنشاء مفاتيح بديلة. خدمة API تبقى loopback ونفسهويةالخدمة؛ لا حاجة لمنافذ عامة إضافية. النسخ تشمل جداولauth المشفرة؛ فقد مفتاح التشفير لا يحله pg_dump وحده.
 
@@ -54,3 +54,5 @@ D-043 owner approved connection/QR pairing only. `--begin-whatsapp-pairing` and 
 `node ops/check-whatsapp-state.mjs --expect-connection` runs only on VPS, decrypts auth locally to verify AEAD/JSON and prints aggregate counts only; never QR/JID/group metadata. `node ops/verify-pilot.mjs` now retains paired identities privately across its own-service restart, waits bounded30 seconds for CONNECTED, compares identities in memory and prints continuity status without identifiers. `--server-acceptance New-VPS --connection-enabled` permits the expected connection flag in the synthetic C# runner; it never connects a new live session, discovers groups or sends real messages.
 
 Native fixtures: ClientChecks `--seed-native-ui-extended` creates only namespace synthetic-ui-acceptance/mock sources and an unverified flag; `--native-ui-change` emits a harmless synthetic account update for scroll testing. Stage-only `ops/seed-native-reconciliation.mjs --synthetic-ui-only` refuses sending=true or monitored live groups, injects UNKNOWN_DELIVERY for a strictly mock fixture and reports idempotent readback; it does not model a real provider timeout. Cleanup uses existing scoped C# mode. Restored auth check accepts only `--restore-db=taskpilot_*_restore_test`, reads own root-only migration connection locally and never connects the restored session to WhatsApp.
+
+Current0.5.1 checkpoint: owner QR pairing CONNECTED and same-identity restart verified; connection=true/sending=false, monitored live groups/source/reply jobs0. No need to rerun pairing. Owner must select/authorize a test group before discovery/binding/receive. Final same-host restore includes actual encrypted auth and runs no provider socket. Never start API/connector against a restored database as part of restore validation.

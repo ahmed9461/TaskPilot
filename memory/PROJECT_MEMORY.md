@@ -1,6 +1,6 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
-**آخر تحديث:** 2026-11-11. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
+**آخر تحديث:** 2026-11-13. الحالة التشغيلية الأحدث في tracking/PROJECT_STATE.md؛ نقاط التحقق القديمة أدناه تاريخية. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
 
 ## الهدف الدائم
 إدارة حسابات العمل والمهام الواردة من مجموعات واتساب مع سجل مستقل لكل حساب/مهمة ومصدر رسالة، وردود بعد الموافقة، وواجهة Windows، وخدمة مستمرة على New-VPS.
@@ -69,3 +69,7 @@ D-043 owner now explicitly permits real QR connection/pairing; sending stays fal
 First actual owner QR pairing reached CONNECTED on connection=true/sending=false, monitored groups/live sources/live reply jobs0. D-045/I-022: registered flag remains false after QR although me.id exists; pinned SDK uses me.id for login. Restore now uses saved paired identity, does not regenerate auth/force registered=true. Fake regression PASS; exact live restart result follows in tracking. Auth data stays encrypted server-side, provider stdout/stderr discarded; never snapshot QR or dump auth/private identifiers.
 
 0.5.1 live continuity verified on6626697: owner-scanned QR CONNECTED survives own-service restart with same private identity, without QR. Sending=false/groups0/source0/live jobs0. Real encrypted auth backup restored and AEAD verified offline, no duplicate provider session. Native0.5.1 mock reconciliation FAILED/no resend, full two-line review/30s hide/resolve/raw clear, scoped2-row CSV Save As/reauth verified. D-046 scroll preserved on automatic refresh; D-047 multiline must be enabled before Text assignment (WinUI coerces otherwise), including template body. Final package/cleanup/latest pointer in tracking.
+
+## Authoritative0.5.1 checkpoint —2026-11-13
+API/release aa8dabe deployed, Windows functional b9bb27e; both exact-source hosted Backend/Windows CIs SUCCESS. Owner QR pairing and same-private-identity restart actually verified. Connection=true/sending=false; groups/live messages/reply jobs0. No group discovery permission inferred. Actual encrypted auth included in final273956-byte backup/fresh8-migration restore,816 rows AEAD-valid, no second provider connection. Same-host only.
+15 Node/34 PG/20 offline C#/34 direct-server PASS; native synthetic review/hide/resolve/raw removal, mock reconciliation/no resend, filtered CSV Save As and automatic-scroll fix verified. Scoped UI fixture accounts0 after cleanup. Package0.5.1 is exact native-tested folder; metadata records precommit build informational hash boundary. Next: broader native matrix; owner-selected test group; retention/auth forgetting/off-host recovery and optional AI scope. Never overwrite auth/reset identity or enable provider logs to debug.
