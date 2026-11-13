@@ -53,3 +53,6 @@ Verified current continuation:45s outage recovered real selected append,300s obs
 
 ##2026-11-14 endurance/security continuation — IN_PROGRESS
 Owner authorized long endurance/native Windows tests, then project key rotation and Windows-profile-loss recovery. Initial live check:1 CONNECTED identity/833 valid auth rows/5 live sources/1 SENT/sendingfalse. Added read-only1-hour observer with private aggregate checkpoints; no restart during observation. Native synthetic fixture tests and isolated crypto/rotation/recovery preparation follow. No new completion claimed.
+
+##2026-11-14 native matrix checkpoint
+Native Windows0.6.1→API0.6.0: namespace filter,53-account pagination1–50/51–53 with correct disabled bounds, Alpha account two tasks and three distinct sources, switch A→B loads only scoped B template, preview body/group/original source B, explicit SSH-reauth mock approval and server-confirmed SENT matching B. One unverified flag saved and both Alpha tasks became NEEDS_REVIEW; no verified-error claim made. Live source5/reply1 unchanged/sendingfalse. Temporary fixture53 accounts/54 tasks/55 sources, mock only. Test app closed cleanly; no owner window existed in this inventory. Windows0.6.2 labels flag kind/evidence in Arabic and adds an explanatory rejection message; native acceptance pending. Hour observer remains running, no restart.

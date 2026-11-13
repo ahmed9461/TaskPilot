@@ -62,3 +62,5 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 
 - I-027 CLOSED WITH BOUNDED EVIDENCE2026-11-14: Windows private-backup ACL helper initially used NTAccount string overload for SID and inherited PS7 module path into Windows PowerShell. Fixed native SID grants/owner+SYSTEM-only validation and explicit built-in Windows PowerShell module path. Real encrypted export+restore, local-only restore and manually triggered daily snapshot job passed. No secret dump or raw master key file created. Profile-loss recovery remains a separate open limitation.
 - I-028 CLOSED2026-11-14: model may correctly return taskCode=null/confidence0. Windows0.6.0 displayed blank task code;0.6.1 labels safe abstention/manual selection explicitly. Actual same-key native replay and protected manual-review editor/cancel verified, no additional provider call or business mutation.
+
+- I-0292026-11-14: credential flag/evidence combos exposed English implementation enums and generic error for unproven error claims.0.6.2 preserves API enums behind Arabic labels, explains rejection; native verification pending.

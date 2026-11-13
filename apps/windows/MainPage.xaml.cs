@@ -50,6 +50,7 @@ public sealed partial class MainPage : Page
         "APPROVAL_EXPIRED_OR_CONSUMED" => "انتهت المعاينة أو استُخدمت. أنشئ معاينة جديدة.",
         "TEMPLATE_NOT_AVAILABLE" or "TEMPLATE_SCOPE_MISMATCH" => "القالب متوقف أو لا يطابق المهمة والمجموعة. اختر قالبًا مطابقًا وأنشئ معاينة جديدة.",
         "UNSAFE_TEMPLATE" => "القالب يتضمن متغيرًا غير مسموح. استخدم اسم الحساب واسم المهمة فقط.",
+        "UNVERIFIED_CREDENTIALS" => "لم يثبت خطأ الاعتماد. اختر بلاغًا غير متحقق، أو قدّم دليل تحقق مؤكدًا.",
         "CREDENTIAL_CONFLICT" => "الاعتماد يختلف عن المحفوظ. حدّثه صراحة من الحساب بعد التحقق.",
         "SECURE_CONNECTION_REQUIRED" => "استخدم HTTPS أو نفق SSH محليًا.",
         "INVALID_API_TOKEN" => "رمز الوصول غير مكتمل.",
@@ -464,16 +465,16 @@ public sealed partial class MainPage : Page
     }
     private async Task Flag(JsonNode a)
     {
-        var kind = new ComboBox { Header = "النوع", ItemsSource = new[] { "UNVERIFIED_CREDENTIALS", "INVALID_ACCOUNT_PASSWORD", "INVALID_ACCOUNT_CODE" }, SelectedIndex = 0 };
-        var evidence = new ComboBox { Header = "الدليل", ItemsSource = new[] { "UNVERIFIED", "MANUAL", "AUTHORIZED_CHECK" }, SelectedIndex = 0 };
+        var kind = Choice("النوع", [("UNVERIFIED_CREDENTIALS", "اعتماد يحتاج تحققًا"), ("INVALID_ACCOUNT_PASSWORD", "كلمة مرور خاطئة مثبتة"), ("INVALID_ACCOUNT_CODE", "رمز حساب خاطئ مثبت")], "UNVERIFIED_CREDENTIALS");
+        var evidence = Choice("الدليل", [("UNVERIFIED", "غير متحقق"), ("MANUAL", "تحقق يدوي مؤكد"), ("AUTHORIZED_CHECK", "فحص مأذون")], "UNVERIFIED");
         var reauth = ReauthField();
-        if (await Dialog("مشكلة بيانات الدخول", Stack(Text("MANUAL إقرار منك بأن الخطأ مثبت؛ لا تختَره بناءً على التخمين."), kind, evidence, reauth)))
+        if (await Dialog("مشكلة بيانات الدخول", Stack(Text("اختر تحققًا يدويًا مؤكدًا فقط بعد إثبات الخطأ؛ لا تستخدمه بناءً على التخمين."), kind, evidence, reauth)))
         {
             await api.Send("POST", "/v1/issue-flags", new
             {
                 accountId = V(a, "account_id"),
-                kind = kind.SelectedItem.ToString(),
-                evidenceKind = evidence.SelectedItem.ToString()
+                kind = Selected(kind),
+                evidenceKind = Selected(evidence)
             }, await Reauth(reauth.Password));
             reauth.Password = "";
             await Render();
