@@ -125,7 +125,7 @@ export async function createApp(
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.5.2",
+    version: "0.5.3",
     provider: "mock",
   }));
   app.get("/ready", async () => {
@@ -334,7 +334,7 @@ export async function createApp(
       if (!connector().knownGroup(p.sessionId, p.externalGroupId))
         throw new Fault("WHATSAPP_GROUP_NOT_DISCOVERED", 409);
     }
-    return transaction(pool, async (c) => {
+    const created = await transaction(pool, async (c) => {
       const row = (
         await c.query(
           "INSERT INTO groups(id,session_id,external_group_id,title,task_type_id,namespace,period_key) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *",
@@ -352,6 +352,9 @@ export async function createApp(
       await event(c, "GROUP_CREATED", row.id);
       return row;
     });
+    if (session.provider === "baileys")
+      await connector().refreshBindings(p.sessionId);
+    return created;
   });
   app.patch("/v1/groups/:id", async (req) => {
     const { id: groupId } = uuidParam.parse(req.params);
@@ -359,17 +362,17 @@ export async function createApp(
       .object({ version: z.number().int().positive(), enabled: z.boolean() })
       .strict()
       .parse(req.body);
-    const provider = (
+    const owner = (
       await pool.query(
-        "SELECT s.provider FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.id=$1",
+        "SELECT s.provider,s.id FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.id=$1",
         [groupId],
       )
-    ).rows[0]?.provider;
-    if (provider === "baileys") await reauth(req);
-    return transaction(pool, async (c) => {
+    ).rows[0];
+    if (owner?.provider === "baileys") await reauth(req);
+    const changed = await transaction(pool, async (c) => {
       const row = (
         await c.query(
-          "UPDATE groups SET enabled=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
+          "UPDATE groups SET receive_after=CASE WHEN $2 AND NOT enabled THEN now() ELSE receive_after END,enabled=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
           [groupId, p.enabled, p.version],
         )
       ).rows[0];
@@ -377,6 +380,9 @@ export async function createApp(
       await event(c, "GROUP_UPDATED", row.id);
       return row;
     });
+    if (owner?.provider === "baileys")
+      await connector().refreshBindings(owner.id);
+    return changed;
   });
 
   app.get("/v1/group-rules", async (req) => {

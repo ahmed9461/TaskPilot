@@ -5,6 +5,7 @@ import { PgAuthStore } from "./auth-store.js";
 import {
   baileysFactory,
   inspectTextEvent,
+  packetFlags,
   type LiveSocket,
   type SocketFactory,
   type SocketUpdate,
@@ -13,6 +14,7 @@ import {
 import { Vault, hash } from "../security.js";
 import { transaction, event } from "../db.js";
 import { Fault, Service } from "../service.js";
+import { recordReceipt, receiptSummary } from "./receipts.js";
 import {
   DefinitelyNotSent,
   type WhatsAppTransport,
@@ -41,6 +43,7 @@ interface Active {
   credentials: Promise<void>;
   queued: number;
   groups: Map<string, string>;
+  monitored: Map<string, { id: string; since: number }>;
   receiveCounts: Record<string, number>;
   lastObservedAt: string | null;
   observing: number;
@@ -167,11 +170,13 @@ export class WhatsAppConnector implements WhatsAppTransport {
         credentials: Promise.resolve(),
         queued: 0,
         groups: new Map(),
+        monitored: new Map(),
         receiveCounts: {},
         lastObservedAt: null,
         observing: 0,
       };
       this.active.set(id, a);
+      await this.refreshBindings(id);
       lease.on("error", () => {
         if (a && !a.closed) void this.fail(a, "WHATSAPP_LEASE_LOST");
       });
@@ -239,21 +244,24 @@ export class WhatsAppConnector implements WhatsAppTransport {
           ?.remoteJid;
         if (typeof remote !== "string" || !/^\d[\d-]*@g\.us$/.test(remote))
           continue;
-        const result = inspectTextEvent(raw, a.since);
+        const binding = a.monitored.get(remote);
+        if (!binding) continue;
+        const result = inspectTextEvent(raw, Math.max(a.since, binding.since));
         const reason =
-          type === "notify"
+          type === "notify" || type === "append"
             ? result.reason
             : type === "append"
               ? "HISTORY_EVENT"
               : "OTHER_EVENT";
-        const observe = () => {
-          a.receiveCounts[reason] = Math.min(
+        const observe = (code = reason) => {
+          a.receiveCounts[code] = Math.min(
             1000000,
-            (a.receiveCounts[reason] ?? 0) + 1,
+            (a.receiveCounts[code] ?? 0) + 1,
           );
           a.lastObservedAt = new Date(this.now()).toISOString();
         };
-        const item = type === "notify" ? result.item : null;
+        const item =
+          type === "notify" || type === "append" ? result.item : null;
         // Rejected/history traffic must never consume the durable queue or
         // disconnect a session. Diagnostic sampling is bounded and best effort.
         if (!item) {
@@ -265,8 +273,20 @@ export class WhatsAppConnector implements WhatsAppTransport {
                 "SELECT g.id FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.session_id=$1 AND g.external_group_id=$2 AND g.enabled=true AND s.connect_requested=true",
                 [a.id, remote],
               );
-              if (!a.closed && a.generation === generation && group.rowCount)
+              if (!a.closed && a.generation === generation && group.rowCount) {
                 observe();
+                await transaction(this.pool, (c) =>
+                  recordReceipt(
+                    c,
+                    a.id,
+                    group.rows[0].id,
+                    (raw as { key?: { id?: unknown } }).key?.id,
+                    reason,
+                    packetFlags(raw),
+                    type,
+                  ),
+                );
+              }
             } catch {
               // Diagnostics never turn a rejected event into a connector failure.
             } finally {
@@ -285,16 +305,43 @@ export class WhatsAppConnector implements WhatsAppTransport {
             if (a.closed || a.generation !== generation) return;
             const group = (
               await this.pool.query(
-                "SELECT g.id FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.session_id=$1 AND g.external_group_id=$2 AND g.enabled=true AND s.provider='baileys' AND s.connect_requested=true",
+                "SELECT g.id,g.receive_after FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.session_id=$1 AND g.external_group_id=$2 AND g.enabled=true AND s.provider='baileys' AND s.connect_requested=true",
                 [a.id, remote],
               )
             ).rows[0];
             if (!group) return;
+            if (
+              item.timestamp <
+              Math.floor(new Date(group.receive_after).getTime() / 1000)
+            ) {
+              observe("STALE_TIMESTAMP");
+              await transaction(this.pool, (c) =>
+                recordReceipt(
+                  c,
+                  a.id,
+                  group.id,
+                  item.key.id,
+                  "STALE_TIMESTAMP",
+                  packetFlags(raw),
+                  type,
+                ),
+              ).catch(() => {});
+              return;
+            }
             observe();
             const context = `wa-ingress:${a.id}:${group.id}:${hash(item.key.id)}`;
             const sealed = this.vault.seal(JSON.stringify(item), context);
             await transaction(this.pool, async (c) => {
               await c.query("SELECT pg_advisory_xact_lock(8240005)");
+              await recordReceipt(
+                c,
+                a.id,
+                group.id,
+                item.key.id,
+                reason,
+                packetFlags(raw),
+                type,
+              );
               await c.query(
                 "INSERT INTO whatsapp_ingress(session_id,group_id,external_message_id,encrypted_payload) VALUES($1,$2,$3,$4) ON CONFLICT(session_id,group_id,external_message_id) DO NOTHING",
                 [a.id, group.id, item.key.id, sealed],
@@ -447,6 +494,25 @@ export class WhatsAppConnector implements WhatsAppTransport {
   knownGroup(id: string, external: string) {
     return this.active.get(id)?.groups.has(external) === true;
   }
+  async refreshBindings(id: string) {
+    const a = this.active.get(id);
+    if (!a) return;
+    const rows = (
+      await this.pool.query(
+        "SELECT id,external_group_id,receive_after FROM groups WHERE session_id=$1 AND enabled=true",
+        [id],
+      )
+    ).rows;
+    a.monitored = new Map(
+      rows.map((g) => [
+        g.external_group_id,
+        {
+          id: g.id,
+          since: Math.floor(new Date(g.receive_after).getTime() / 1000),
+        },
+      ]),
+    );
+  }
   async receiveDiagnostics(id: string) {
     const row = (
       await this.pool.query(
@@ -463,6 +529,9 @@ export class WhatsAppConnector implements WhatsAppTransport {
       active: !!a && !a.closed,
       counts: { ...a?.receiveCounts },
       lastObservedAt: a?.lastObservedAt ?? null,
+      durable: await receiptSummary(this.pool, id),
+      durableRetentionDays: 7,
+      durableMaxRecords: 10000,
     };
   }
   canSend(id: string) {

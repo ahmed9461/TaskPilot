@@ -111,6 +111,44 @@ export function inspectTextEvent(
 export function textEvent(raw: unknown, since: number): IncomingText | null {
   return inspectTextEvent(raw, since).item;
 }
+// Fixed shape bits only. Never serialize arbitrary content keys or values.
+export function packetFlags(raw: unknown): number {
+  const m = raw as Partial<WAMessage> | null,
+    c = m?.message;
+  if (!c) return m?.messageStubType != null ? 128 : 0;
+  let bits = 0;
+  if (
+    typeof c.conversation === "string" ||
+    typeof c.extendedTextMessage?.text === "string"
+  )
+    bits |= 1;
+  if (c.senderKeyDistributionMessage) bits |= 2;
+  if (c.messageContextInfo) bits |= 4;
+  if (c.ephemeralMessage) bits |= 8;
+  if (c.viewOnceMessage || c.viewOnceMessageV2 || c.viewOnceMessageV2Extension)
+    bits |= 16;
+  if (c.protocolMessage) bits |= 32;
+  if (
+    Object.keys(c).some(
+      (k) =>
+        c[k as keyof typeof c] != null &&
+        ![
+          "conversation",
+          "extendedTextMessage",
+          "senderKeyDistributionMessage",
+          "messageContextInfo",
+          "ephemeralMessage",
+          "viewOnceMessage",
+          "viewOnceMessageV2",
+          "viewOnceMessageV2Extension",
+          "protocolMessage",
+        ].includes(k),
+    )
+  )
+    bits |= 64;
+  if (m?.messageStubType != null) bits |= 128;
+  return bits;
+}
 
 // This is the only runtime import/socket construction boundary for the real library.
 export async function baileysFactory(): Promise<SocketFactory> {

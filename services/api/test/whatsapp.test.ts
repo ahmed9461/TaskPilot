@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   textEvent,
   inspectTextEvent,
+  packetFlags,
   baileysFactory,
 } from "../src/whatsapp/socket.js";
 import { WhatsAppConnector } from "../src/whatsapp/connector.js";
@@ -73,6 +74,18 @@ test("SDK text with sender-key metadata is accepted without retaining key materi
     message,
   };
   const result = inspectTextEvent(base, 100);
+  const legacyKeys = [
+    "conversation",
+    "extendedTextMessage",
+    "messageContextInfo",
+  ];
+  assert.equal(
+    Object.keys(message).some(
+      (k) => (message as any)[k] != null && !legacyKeys.includes(k),
+    ),
+    true,
+  );
+  assert.equal(packetFlags(base), 3);
   assert.equal(result.reason, "ACCEPTED_TEXT");
   assert.equal(result.item?.text, message.conversation);
   assert.equal(JSON.stringify(result).includes("axolotl"), false);

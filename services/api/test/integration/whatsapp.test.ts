@@ -271,8 +271,8 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
       },
     },
   });
-  async function enqueue(id: string, user?: string) {
-    sockets.at(-1)!.messages([raw(id, user)], "notify");
+  async function enqueue(id: string, user?: string, type = "notify") {
+    sockets.at(-1)!.messages([raw(id, user)], type);
     await connector.settled(session.id);
   }
   await t.test(
@@ -280,12 +280,12 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
     async () => {
       const s = sockets[0]!;
       s.messages([raw("unselected", undefined, "456-789@g.us")], "notify");
-      s.messages([raw("historical")], "append");
+      s.messages([{ ...raw("historical"), messageTimestamp: 0 }], "append");
       s.messages(
         [{ ...raw("self"), key: { ...raw("self").key, fromMe: true } }],
         "notify",
       );
-      await enqueue("selected");
+      await enqueue("selected", undefined, "append");
       await enqueue("selected");
       assert.equal(
         (
@@ -301,12 +301,14 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
         `/v1/sessions/${session.id}/receive-diagnostics`,
       );
       assert.deepEqual(diagnostics.counts, {
-        HISTORY_EVENT: 1,
+        STALE_TIMESTAMP: 1,
         FROM_SELF: 1,
         ACCEPTED_TEXT: 2,
       });
       assert.equal(diagnostics.scope, "enabled-groups-only");
       assert.equal(diagnostics.resetOnProcessRestart, true);
+      assert.equal(diagnostics.durable.acceptedAppendReceipts, 1);
+      assert.equal(diagnostics.durable.acceptedWithoutIngress, 0);
       assert.equal(JSON.stringify(diagnostics).includes("@"), false);
       assert.equal(
         JSON.stringify(diagnostics).includes("synthetic-wa-secret"),
@@ -356,7 +358,10 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
         await pool.query("SELECT count(*)::int n FROM source_messages")
       ).rows[0].n;
       sockets.at(-1)!.messages(
-        Array.from({ length: 500 }, (_, i) => raw(`history-burst-${i}`)),
+        Array.from({ length: 500 }, (_, i) => ({
+          ...raw(`history-burst-${i}`),
+          messageTimestamp: 0,
+        })),
         "append",
       );
       await connector.settled(session.id);
@@ -373,9 +378,62 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
       );
       assert.equal(diagnostics.bestEffort, true);
       assert.ok(
-        diagnostics.counts.HISTORY_EVENT > 1 &&
-          diagnostics.counts.HISTORY_EVENT <= 11,
+        diagnostics.counts.STALE_TIMESTAMP > 1 &&
+          diagnostics.counts.STALE_TIMESTAMP <= 11,
       );
+    },
+  );
+  await t.test(
+    "disabled bindings and pre-resume append packets cannot recreate old work",
+    async () => {
+      group = (await ok("GET", "/v1/groups")).find(
+        (g: any) => g.id === group.id,
+      );
+      const disabled = await ok(
+        "PATCH",
+        `/v1/groups/${group.id}`,
+        { version: group.version, enabled: false },
+        true,
+      );
+      sockets.at(-1)!.messages([raw("while-disabled")], "notify");
+      await connector.settled(session.id);
+      group = await ok(
+        "PATCH",
+        `/v1/groups/${group.id}`,
+        { version: disabled.version, enabled: true },
+        true,
+      );
+      const row = (
+        await pool.query(
+          "UPDATE groups SET receive_after=now()+interval '5 seconds' WHERE id=$1 RETURNING receive_after",
+          [group.id],
+        )
+      ).rows[0];
+      await connector.refreshBindings(session.id);
+      sockets.at(-1)!.messages(
+        [
+          {
+            ...raw("pre-resume"),
+            messageTimestamp:
+              Math.floor(new Date(row.receive_after).getTime() / 1000) - 1,
+          },
+        ],
+        "append",
+      );
+      await connector.settled(session.id);
+      assert.equal(await connector.drainOnce(), false);
+      assert.equal(
+        (
+          await pool.query(
+            "SELECT count(*)::int n FROM whatsapp_ingress WHERE external_message_id IN ('while-disabled','pre-resume')",
+          )
+        ).rows[0].n,
+        0,
+      );
+      await pool.query("UPDATE groups SET receive_after=now() WHERE id=$1", [
+        group.id,
+      ]);
+      await connector.refreshBindings(session.id);
     },
   );
   await t.test(
