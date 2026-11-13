@@ -42,7 +42,11 @@ const ps = (script, input, env) =>
       "$ErrorActionPreference='Stop'; " + script,
     ],
     input,
-    env,
+    {
+      PSModulePath:
+        process.env.SystemRoot + "\\System32\\WindowsPowerShell\\v1.0\\Modules",
+      ...env,
+    },
   );
 async function dpapi(mode, input) {
   const code = `Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String([Console]::In.ReadToEnd()); $e=[Convert]::FromBase64String('${entropy}'); $v=[Security.Cryptography.ProtectedData]::${mode}($b,$e,[Security.Cryptography.DataProtectionScope]::CurrentUser); [Console]::Out.Write([Convert]::ToBase64String($v));`;
@@ -52,18 +56,22 @@ async function dpapi(mode, input) {
   );
 }
 let container;
+let stage = "platform";
 try {
   if (
     process.platform !== "win32" ||
     resolve(root).toLowerCase().includes("codex\\tasks")
   )
     throw Error();
+  stage = "folder";
   await mkdir(root, { recursive: true });
+  stage = "acl";
   await ps(
-    "$p=$env:TASKPILOT_PRIVATE_FOLDER; $i=Get-Item -LiteralPath $p; if($i.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'REPARSE_POINT'}; $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User; $acl=New-Object Security.AccessControl.DirectorySecurity; $acl.SetOwner($sid); $acl.SetAccessRuleProtection($true,$false); foreach($s in @($sid.Value,'S-1-5-18')){$r=New-Object Security.AccessControl.FileSystemAccessRule($s,'FullControl','ContainerInherit,ObjectInherit','None','Allow');$acl.AddAccessRule($r)}; Set-Acl -LiteralPath $p -AclObject $acl",
+    "$p=$env:TASKPILOT_PRIVATE_FOLDER; $i=Get-Item -LiteralPath $p; if($i.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'REPARSE_POINT'}; $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value; & icacls.exe $p '/inheritance:r' '/grant:r' ('*'+$sid+':(OI)(CI)F') '*S-1-5-18:(OI)(CI)F' | Out-Null; if($LASTEXITCODE -ne 0){throw 'ACL_FAILED'}; $acl=Get-Acl -LiteralPath $p; if(!$acl.AreAccessRulesProtected){throw 'ACL_INHERITANCE'}; foreach($r in $acl.Access){if($r.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -notin @($sid,'S-1-5-18')){throw 'UNEXPECTED_ACL'}}",
     undefined,
     { TASKPILOT_PRIVATE_FOLDER: root },
   );
+  stage = "protected-key";
   const privatePath = join(root, "recovery-current-user.dpapi");
   let rsa;
   try {
@@ -79,6 +87,7 @@ try {
     await writeFile(privatePath, await dpapi("Protect", bytes), { flag: "wx" });
     bytes.fill(0);
   }
+  stage = "export";
   const { createPublicKey } = await import("node:crypto");
   const publicKey = createPublicKey(rsa).export({
     type: "spki",
@@ -147,6 +156,7 @@ try {
   const sealed = await readFile(join(root, result.name));
   if (createHash("sha256").update(sealed).digest("hex") !== result.sha256)
     throw Error();
+  stage = "decrypt";
   const decrypt = (key, iv, tag, data, aad) => {
     const d = createDecipheriv("aes-256-gcm", key, iv);
     d.setAAD(Buffer.from(aad));
@@ -180,6 +190,7 @@ try {
     backup.subarray(32),
     "TPG1",
   );
+  stage = "isolated-container";
   const name = "taskpilot-recovery-" + Date.now();
   const id = (
     await run("docker.exe", [
@@ -270,6 +281,7 @@ try {
         )
       ).toString(),
     );
+  stage = "restored-data-check";
   const counts = await sql(
     `SELECT json_build_object('accounts',(SELECT count(*) FROM accounts),'assignments',(SELECT count(*) FROM assignments),'migrations',(SELECT count(*) FROM schema_migrations),'liveSources',(SELECT count(*) FROM source_messages s JOIN whatsapp_sessions w ON w.id=s.session_id WHERE w.provider='baileys'),'sent',(SELECT count(*) FROM reply_jobs WHERE status='SENT'),'sending',(SELECT count(*) FROM reply_jobs WHERE status='SENDING'),'aiRequests',(SELECT count(*) FROM ai_requests));`,
   );
@@ -333,7 +345,7 @@ try {
   );
   console.log(JSON.stringify(report));
 } catch {
-  console.error("OFFHOST_BACKUP_OR_RECOVERY_FAILED");
+  console.error("OFFHOST_BACKUP_OR_RECOVERY_FAILED:" + stage);
   process.exitCode = 1;
 } finally {
   if (container)
