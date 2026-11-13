@@ -30,6 +30,7 @@ dist/
 build/
 bin/
 obj/
+__pycache__/
 .vs/
 .vscode/*
 !.vscode/extensions.json
