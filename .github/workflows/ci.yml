@@ -37,3 +37,5 @@ jobs:
       - run: dotnet restore apps/windows/TaskPilot.Windows.csproj --locked-mode
       - run: dotnet build apps/windows/TaskPilot.Windows.csproj -c Release -p:Platform=x64 --no-restore
       - run: dotnet run --project apps/windows-tests/TaskPilot.ClientChecks.csproj -c Release
+      - run: dotnet publish apps/windows/TaskPilot.Windows.csproj -c Release -p:Platform=x64 --no-restore -o work/publish-check
+      - run: ./scripts/check-windows-package.ps1 -Path work/publish-check

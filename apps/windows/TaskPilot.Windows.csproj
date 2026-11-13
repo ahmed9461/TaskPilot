@@ -9,4 +9,16 @@
  </PropertyGroup>
  <ItemGroup><Content Include="Assets\**" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
  <ItemGroup><PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2957"/><PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.5"/></ItemGroup>
+ <!-- Unpackaged MRT Core currently generates these resources without adding them to publish. -->
+ <Target Name="PublishTaskPilotXamlResources" BeforeTargets="ComputeResolvedFilesToPublishList" DependsOnTargets="$(GenerateProjectPriFile)">
+  <Error Condition="!Exists('$(ProjectPriFullPath)')" Text="TaskPilot app PRI is required for portable publication." />
+  <ItemGroup>
+   <ResolvedFileToPublish Include="$(ProjectPriFullPath)" RelativePath="$(ProjectPriFileName)" CopyToPublishDirectory="PreserveNewest" />
+   <_TaskPilotXbf Include="$(TargetDir)**\*.xbf" />
+   <ResolvedFileToPublish Include="@(_TaskPilotXbf)">
+    <RelativePath>%(_TaskPilotXbf.RecursiveDir)%(_TaskPilotXbf.Filename)%(_TaskPilotXbf.Extension)</RelativePath>
+    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+   </ResolvedFileToPublish>
+  </ItemGroup>
+ </Target>
 </Project>
