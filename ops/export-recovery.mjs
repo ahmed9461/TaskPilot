@@ -1,13 +1,7 @@
 // Root-only export: encrypted dump plus hybrid-encrypted key escrow to an owner public key.
 import { readFile } from "node:fs/promises";
-import {
-  createCipheriv,
-  createPublicKey,
-  publicEncrypt,
-  randomBytes,
-  createHash,
-  constants,
-} from "node:crypto";
+import { createPublicKey, createHash } from "node:crypto";
+import { sealEnvelope, decryptGcm } from "../scripts/recovery-crypto.mjs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 const exec = promisify(execFile);
@@ -41,30 +35,36 @@ try {
     if ((await readFile(`/etc/taskpilot/${n}`, "utf8")).trim() !== recovery[n])
       throw Error();
   const dump = await readFile(path);
-  const dataKey = randomBytes(32),
-    iv = randomBytes(12),
-    cipher = createCipheriv("aes-256-gcm", dataKey, iv);
-  cipher.setAAD(Buffer.from("TaskPilot-recovery-v1"));
+  // Validate the exact snapshot against the captured backup key before exporting it.
+  decryptGcm(
+    Buffer.from(recovery["backup-key"], "base64"),
+    dump.subarray(4, 16),
+    dump.subarray(16, 32),
+    dump.subarray(32),
+    "TPG1",
+  ).fill(0);
   const plain = Buffer.from(JSON.stringify(recovery));
-  const ciphertext = Buffer.concat([cipher.update(plain), cipher.final()]);
-  plain.fill(0);
-  const wrapped = publicEncrypt(
-    { key, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" },
-    dataKey,
+  const custodian = await readFile(
+    "/etc/taskpilot/recovery-custodian.pem",
+    "utf8",
   );
-  dataKey.fill(0);
+  const escrow = sealEnvelope(
+    plain,
+    key.export({ type: "spki", format: "pem" }),
+  );
+  const custodianEscrow = sealEnvelope(
+    plain,
+    createPublicKey(custodian).export({ type: "spki", format: "pem" }),
+    "TaskPilot-custodian-v1",
+  );
+  plain.fill(0);
   process.stdout.write(
     JSON.stringify({
       name,
       sha256: createHash("sha256").update(dump).digest("hex"),
       backup: dump.toString("base64"),
-      escrow: {
-        version: 1,
-        wrapped: wrapped.toString("base64"),
-        iv: iv.toString("base64"),
-        tag: cipher.getAuthTag().toString("base64"),
-        ciphertext: ciphertext.toString("base64"),
-      },
+      escrow,
+      custodianEscrow,
     }),
   );
 } catch {

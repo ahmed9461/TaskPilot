@@ -78,8 +78,8 @@ export class PgAuthStore {
           this.context(e.category, key),
         );
         await c.query(
-          "INSERT INTO whatsapp_auth(session_id,category,id_hash,encrypted_payload) VALUES($1,$2,$3,$4) ON CONFLICT(session_id,category,id_hash) DO UPDATE SET encrypted_payload=EXCLUDED.encrypted_payload,updated_at=now()",
-          [this.sessionId, e.category, key, sealed],
+          "INSERT INTO whatsapp_auth(session_id,category,id_hash,encrypted_payload,key_version) VALUES($1,$2,$3,$4,$5) ON CONFLICT(session_id,category,id_hash) DO UPDATE SET encrypted_payload=EXCLUDED.encrypted_payload,key_version=EXCLUDED.key_version,updated_at=now()",
+          [this.sessionId, e.category, key, sealed, this.vault.keyVersion],
         );
       }
     });

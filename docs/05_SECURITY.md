@@ -32,3 +32,7 @@
 
 ## شرط الإطلاق
 فحص أسرار، اختبارات حذف واستعادة، اختبار مصادقة وتفويض، اختبار منع تسرب لوجات/إشعارات، وتجربة استرجاع نسخة احتياطية.
+
+##0.7 versioned keys and recovery domains
+Legacy ciphertext1.iv.tag.data uses captured key1; new2.keyId.iv.tag.data authenticates format/key ID/context as AAD. JSON taskpilot-keyring-v1 active/keys stored in same protected external file. No keys exposed by API. Source raw, source quote, ingress, auth and account credentials all rewrap together; metadata key_version follows writes. Root-only journal/checkpoint and DB run marker support interruption without a half-encrypted DB. Old backups and their matching encrypted escrow are retained. Rotation revokes old local API/reauth credentials and existing temporary sessions, not SSH/provider credentials or WhatsApp identity.
+Off-host exports add independent root-VPS RSA4096 custodian recipient beside Windows RSA3072/DPAPI recipient. --recover-profile uses copied ciphertext/manifest/custodian envelope in a new private recovery folder, never loads/creates DPAPI key blobs, and receives decrypted snapshot keys through private authenticated root SSH IPC only. Unseal helper reads only custodian private key, not original field/backup files. Surviving VPS/root access and copied snapshot are required; simultaneous VPS+Windows-profile/laptop loss is not covered. No plaintext master key/private RSA/dump is written to Windows.

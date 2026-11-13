@@ -60,9 +60,9 @@ export class Service {
       )
         throw new Fault("CREDENTIAL_CONFLICT");
       await c.query(
-        `INSERT INTO account_credentials(account_id,ciphertext,key_version) VALUES($1,$2,1)
-        ON CONFLICT(account_id) DO UPDATE SET ciphertext=EXCLUDED.ciphertext,updated_at=now()`,
-        [row.id, ciphertext],
+        `INSERT INTO account_credentials(account_id,ciphertext,key_version) VALUES($1,$2,$3)
+        ON CONFLICT(account_id) DO UPDATE SET ciphertext=EXCLUDED.ciphertext,key_version=EXCLUDED.key_version,updated_at=now()`,
+        [row.id, ciphertext, this.vault.keyVersion],
       );
     }
     return row;

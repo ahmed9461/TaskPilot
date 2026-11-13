@@ -6,6 +6,7 @@ if (Get-ScheduledTask -TaskName $taskpilotName -ErrorAction SilentlyContinue) { 
 $taskpilotRunner = Join-Path $taskpilotPrivate 'offhost-backup.mjs'
 if (Test-Path -LiteralPath $taskpilotRunner) { throw 'EXISTING_RUNNER_REQUIRES_REVIEW' }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'offhost-backup.mjs') -Destination $taskpilotRunner
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'recovery-crypto.mjs') -Destination (Join-Path $taskpilotPrivate 'recovery-crypto.mjs')
 $taskpilotNode = (Get-Command node.exe -ErrorAction Stop).Source
 $taskpilotAction = New-ScheduledTaskAction -Execute $taskpilotNode -Argument ('"' + $taskpilotRunner + '" --backup-only') -WorkingDirectory $taskpilotPrivate
 $taskpilotTrigger = New-ScheduledTaskTrigger -Daily -At '03:15'

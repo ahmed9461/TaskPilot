@@ -1,3 +1,4 @@
+import { recipientId, openEnvelope, openField } from "./recovery-crypto.mjs";
 // Windows-only: no plaintext dump/master keys on disk, current-user DPAPI recovery escrow.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
@@ -11,7 +12,18 @@ import {
 } from "node:crypto";
 import { execFile } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
-const root = "E:\\TaskPilot-Backups";
+const profileRecovery = process.argv[2] === "--recover-profile";
+const rotateProtector = process.argv[2] === "--rotate-protector";
+const root = resolve(
+  process.env.TASKPILOT_RECOVERY_ROOT ?? "E:\\TaskPilot-Backups",
+);
+if (
+  process.env.TASKPILOT_RECOVERY_ROOT &&
+  !/^E:\\TaskPilot-Recovery-[A-Za-z0-9_-]{1,40}$/i.test(root)
+)
+  throw Error("PRIVATE_RECOVERY_DIRECTORY_REQUIRED");
+if (process.env.TASKPILOT_RECOVERY_ROOT && !profileRecovery)
+  throw Error("PROFILE_RECOVERY_ROOT_ONLY");
 const image =
   "postgres@sha256:d4bb0a8c1b7bb2e29f976d099e7bfb9a5d8858cffe9e46b35cd302cd1f1f8168";
 const entropy = Buffer.from("TaskPilot-recovery-v1").toString("base64");
@@ -24,6 +36,7 @@ function run(file, args, input, env = {}) {
         encoding: "buffer",
         maxBuffer: 64 * 1024 * 1024,
         windowsHide: true,
+        timeout: 120000,
         env: { ...process.env, ...env },
       },
       (e, out) => (e ? no(Error("PRIVATE_OPERATION_FAILED")) : ok(out)),
@@ -48,7 +61,10 @@ const ps = (script, input, env) =>
       ...env,
     },
   );
+let dpapiCalls = 0;
 async function dpapi(mode, input) {
+  if (profileRecovery) throw Error("DPAPI_NOT_ALLOWED_IN_PROFILE_RECOVERY");
+  dpapiCalls++;
   const code = `Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String([Console]::In.ReadToEnd()); $e=[Convert]::FromBase64String('${entropy}'); $v=[Security.Cryptography.ProtectedData]::${mode}($b,$e,[Security.Cryptography.DataProtectionScope]::CurrentUser); [Console]::Out.Write([Convert]::ToBase64String($v));`;
   return Buffer.from(
     (await ps(code, input.toString("base64"))).toString(),
@@ -72,28 +88,68 @@ try {
     { TASKPILOT_PRIVATE_FOLDER: root },
   );
   stage = "protected-key";
-  const privatePath = join(root, "recovery-current-user.dpapi");
   let rsa;
-  try {
-    const sealed = await readFile(privatePath);
-    const bytes = await dpapi("Unprotect", sealed);
-    rsa = createPrivateKey({ key: bytes, type: "pkcs8", format: "der" });
-    bytes.fill(0);
-  } catch (e) {
-    if (e.code !== "ENOENT") throw e;
-    const generated = generateKeyPairSync("rsa", { modulusLength: 3072 });
-    rsa = generated.privateKey;
-    const bytes = rsa.export({ type: "pkcs8", format: "der" });
-    await writeFile(privatePath, await dpapi("Protect", bytes), { flag: "wx" });
-    bytes.fill(0);
+  if (!profileRecovery) {
+    const registryPath = join(root, "recovery-active.json");
+    let activeId = null;
+    try {
+      activeId = JSON.parse(await readFile(registryPath, "utf8")).active;
+      if (!/^[a-f0-9]{64}$/.test(activeId)) throw Error();
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+    }
+    const privatePath = join(
+      root,
+      activeId ? `recovery-${activeId}.dpapi` : "recovery-current-user.dpapi",
+    );
+    try {
+      const bytes = await dpapi("Unprotect", await readFile(privatePath));
+      rsa = createPrivateKey({ key: bytes, type: "pkcs8", format: "der" });
+      bytes.fill(0);
+    } catch (e) {
+      if (e.code !== "ENOENT" || activeId || process.argv[2] === "--restore")
+        throw e;
+      const generated = generateKeyPairSync("rsa", { modulusLength: 3072 });
+      rsa = generated.privateKey;
+      const bytes = rsa.export({ type: "pkcs8", format: "der" });
+      await writeFile(privatePath, await dpapi("Protect", bytes), {
+        flag: "wx",
+      });
+      bytes.fill(0);
+    }
+    if (rotateProtector) {
+      const fresh = generateKeyPairSync("rsa", {
+          modulusLength: 3072,
+        }).privateKey,
+        id = recipientId(fresh),
+        bytes = fresh.export({ type: "pkcs8", format: "der" });
+      await writeFile(
+        join(root, `recovery-${id}.dpapi`),
+        await dpapi("Protect", bytes),
+        { flag: "wx" },
+      );
+      bytes.fill(0);
+      const { rename } = await import("node:fs/promises");
+      await writeFile(registryPath + ".tmp", JSON.stringify({ active: id }), {
+        flag: "wx",
+      });
+      await rename(registryPath + ".tmp", registryPath);
+      console.log(
+        JSON.stringify({
+          protectorRotation: "PASS",
+          oldProtectedKeysRetained: true,
+          plainPrivateKeyOnDisk: false,
+        }),
+      );
+      process.exit(0);
+    }
   }
   stage = "export";
   const { createPublicKey } = await import("node:crypto");
-  const publicKey = createPublicKey(rsa).export({
-    type: "spki",
-    format: "pem",
-  });
-  const restoreOnly = process.argv[2] === "--restore";
+  const publicKey = rsa
+    ? createPublicKey(rsa).export({ type: "spki", format: "pem" })
+    : null;
+  const restoreOnly = process.argv[2] === "--restore" || profileRecovery;
   const backupOnly = process.argv[2] === "--backup-only";
   if (process.argv.length > 2 && !restoreOnly && !backupOnly) throw Error();
   let result;
@@ -132,6 +188,11 @@ try {
       { flag: "wx" },
     );
     await writeFile(
+      join(root, result.name + ".custodian.json"),
+      JSON.stringify(result.custodianEscrow),
+      { flag: "wx" },
+    );
+    await writeFile(
       join(root, result.name + ".manifest.json"),
       JSON.stringify({
         name: result.name,
@@ -164,23 +225,51 @@ try {
     return Buffer.concat([d.update(data), d.final()]);
   };
   // Reload every local file; recovery below uses no server-side original key.
-  const escrow = JSON.parse(
-    await readFile(join(root, result.name + ".escrow.json"), "utf8"),
-  );
-  const dataKey = privateDecrypt(
-    { key: rsa, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" },
-    Buffer.from(escrow.wrapped, "base64"),
-  );
-  const recovered = decrypt(
-    dataKey,
-    Buffer.from(escrow.iv, "base64"),
-    Buffer.from(escrow.tag, "base64"),
-    Buffer.from(escrow.ciphertext, "base64"),
-    "TaskPilot-recovery-v1",
-  );
-  dataKey.fill(0);
-  const keys = JSON.parse(recovered.toString());
-  recovered.fill(0);
+  let keys;
+  if (profileRecovery) {
+    const envelope = await readFile(
+      join(root, result.name + ".custodian.json"),
+    );
+    const recovered = await run(
+      "ssh.exe",
+      [
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "New-VPS",
+        "cd /opt/taskpilot/current && node ops/unseal-recovery.mjs",
+      ],
+      envelope,
+    );
+    keys = JSON.parse(recovered.toString());
+    recovered.fill(0);
+  } else {
+    const escrow = JSON.parse(
+      await readFile(join(root, result.name + ".escrow.json"), "utf8"),
+    );
+    const path = escrow.recipientKeyId
+      ? join(root, `recovery-${escrow.recipientKeyId}.dpapi`)
+      : join(root, "recovery-current-user.dpapi");
+    // Legacy snapshots used a single pre-registry DPAPI file.
+    let sealedKey;
+    try {
+      sealedKey = await readFile(path);
+    } catch (e) {
+      if (e.code !== "ENOENT" || !escrow.recipientKeyId) throw e;
+      sealedKey = await readFile(join(root, "recovery-current-user.dpapi"));
+    }
+    const bytes = await dpapi("Unprotect", sealedKey);
+    const snapshotKey = createPrivateKey({
+      key: bytes,
+      type: "pkcs8",
+      format: "der",
+    });
+    bytes.fill(0);
+    const recovered = openEnvelope(escrow, snapshotKey);
+    keys = JSON.parse(recovered.toString());
+    recovered.fill(0);
+  }
   const backup = await readFile(join(root, result.name));
   if (backup.subarray(0, 4).toString() !== "TPG1") throw Error();
   const dump = decrypt(
@@ -289,35 +378,30 @@ try {
   const rows = await sql(
     "SELECT COALESCE(json_agg(json_build_object('v',encrypted_payload,'aad','wa-auth:'||session_id||':'||category||':'||id_hash)),'[]'::json) FROM whatsapp_auth;",
   );
-  const fieldKey = Buffer.from(keys["encryption-key"], "base64");
   for (const row of rows) {
-    const [version, iv, tag, data] = row.v.split(".");
-    if (version !== "1") throw Error();
-    const opened = decrypt(
-      fieldKey,
-      Buffer.from(iv, "base64"),
-      Buffer.from(tag, "base64"),
-      Buffer.from(data, "base64"),
-      row.aad,
-    );
+    const opened = openField(keys["encryption-key"], row.v, row.aad);
     JSON.parse(opened.toString());
     opened.fill(0);
   }
   const credentials = await sql(
     "SELECT COALESCE(json_agg(json_build_object('v',ciphertext,'aad','credential:'||account_id)),'[]'::json) FROM account_credentials;",
   );
-  for (const row of credentials) {
-    const [version, iv, tag, data] = row.v.split(".");
-    if (version !== "1") throw Error();
-    decrypt(
-      fieldKey,
-      Buffer.from(iv, "base64"),
-      Buffer.from(tag, "base64"),
-      Buffer.from(data, "base64"),
-      row.aad,
-    ).fill(0);
+  for (const row of credentials)
+    openField(keys["encryption-key"], row.v, row.aad).fill(0);
+  const remainingFields = await sql(
+    "SELECT COALESCE(json_agg(x),'[]'::json) FROM (SELECT encrypted_payload v,'message:'||id aad,'review' domain FROM source_messages WHERE encrypted_payload IS NOT NULL UNION ALL SELECT encrypted_transport_key,'wa-source:'||id,'sourceQuote' FROM source_messages WHERE encrypted_transport_key IS NOT NULL UNION ALL SELECT encrypted_payload,'wa-ingress:'||session_id||':'||group_id||':'||encode(sha256(convert_to(external_message_id,'UTF8')),'hex'),'ingress' FROM whatsapp_ingress WHERE encrypted_payload IS NOT NULL) x;",
+  );
+  const fieldDomains = {
+    auth: rows.length,
+    credentials: credentials.length,
+    review: 0,
+    sourceQuote: 0,
+    ingress: 0,
+  };
+  for (const row of remainingFields) {
+    openField(keys["encryption-key"], row.v, row.aad).fill(0);
+    fieldDomains[row.domain]++;
   }
-  fieldKey.fill(0);
   const replay = await sql(
     "BEGIN; WITH original AS (SELECT * FROM source_messages LIMIT 1), inserted AS (INSERT INTO source_messages(id,session_id,group_id,external_message_id,state) SELECT id,session_id,group_id,external_message_id,state FROM original ON CONFLICT DO NOTHING RETURNING id) SELECT json_build_object('inserted',(SELECT count(*) FROM inserted)); ROLLBACK;",
   );
@@ -332,10 +416,15 @@ try {
     authRows: rows.length,
     credentials: credentials.length,
     encryptedAuthValid: true,
+    encryptedFieldDomainsValidated: fieldDomains,
     replayInserted: 0,
     providerConnections: 0,
     outboundMessages: 0,
-    dpapiScope: "CurrentUser; loss of Windows profile is not covered",
+    dpapiScope: profileRecovery
+      ? "NOT_USED; independent surviving VPS custodian, no original field/backup keys read"
+      : "CurrentUser; alternate custodian recovery also available",
+    profileRecovery,
+    dpapiCalls,
     containerNetwork: "none",
     plaintextDumpOnDisk: false,
   };

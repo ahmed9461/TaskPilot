@@ -64,3 +64,5 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 - I-028 CLOSED2026-11-14: model may correctly return taskCode=null/confidence0. Windows0.6.0 displayed blank task code;0.6.1 labels safe abstention/manual selection explicitly. Actual same-key native replay and protected manual-review editor/cancel verified, no additional provider call or business mutation.
 
 - I-0292026-11-14: credential flag/evidence combos exposed English implementation enums and generic error for unproven error claims.0.6.2 preserves API enums behind Arabic labels, explains rejection; native verification pending.
+
+- I-029 native0.6.2 VERIFIED: Arabic kind/evidence choices map to correct API enums. Unproven error rejected with explicit Arabic guidance, manual fictitious confirmed flag stored; no real credential checked. Generic toast accepted; visible shell popup/activation remains NOT_OBSERVED, no OS setting changed.
