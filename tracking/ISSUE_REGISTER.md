@@ -37,3 +37,5 @@ I-016 update2026-11-13: code/identity labels added to Windows task/group/session
 | I-020 | Published0.5 app crashed0xc000027b; app PRI/XBF absent although build output/native worked | FIX VERIFIED startup; final package/CI pending | Explicit generated-resource publish items and app-relative icon; actual republished portable SSH dashboard now rendered from other cwd. Add CI publish/artifact guard. Historical0.4 ZIP integrity/build-native checks do not establish portable startup |
 
 I-020 final: corrected0.5 actual portable startup from different cwd and native SSH/task/source/session controls PASS;6157855 CI43486994434 including publish/resource check SUCCESS. I-016 code/identity labels implemented/build verified; broad selector human acceptance remains open. I-019 actual provider gate still open.
+
+| I-021 | Pre-live source inspection: libsignal session_record.js console calls include session objects outside Pino | FIX IMPLEMENTED / deployment pending | TaskPilot systemd output/error=null, LimitCORE0; config regression PASS. No real auth/network existed at discovery; no key leakage incident inferred |

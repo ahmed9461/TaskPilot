@@ -22,3 +22,6 @@ Windows `dotnet run --project apps/windows-tests/TaskPilot.ClientChecks.csproj -
 4. Optional AI runtime/UI remains open; isolated DeepSeek/OpenRouter adapters already privacy-tested offline. Personal scope: unsigned ZIP accepted, signing not required, installer/updater optional, enterprise RBAC out of scope.
 
 Current provider limitations: direct new incoming group text only; no history/media/view-once/ephemeral/edited support, no lost-message guarantee. Per-account history includes extant linked records; global audit remains redacted. Quarantined ingress is encrypted, retry internal only. Selected purge >1000 backlog/corrupt decrypt requires intervention; don't broad-delete to clear it without explicit scope.
+
+## Approved QR pairing continuation —2026-11-13
+D-043 authorizes real connection/owner-scanned QR only; actual send and group monitoring remain unapproved/disabled. Pre-live vendor inspection found libsignal direct console session-object output despite silent Pino. D-044 adds own-service stdout/stderr=null and LimitCORE0 before any real socket.15 Node/build tests PASS incl service privacy guard;20 offline C# regression pending completion. Added explicit private-SSH pairing/status CLI, no QR/auth export/provider discovery/send. Live gate/config/session still unchanged at this implementation checkpoint; deployment and pairing evidence follows.

@@ -13,6 +13,11 @@ Restart=on-failure
 RestartSec=5
 TimeoutStopSec=30
 UMask=0077
+# libsignal has direct console calls that can include session key objects.
+# Diagnostics use redacted database events/health; never persist provider stdout/stderr.
+StandardOutput=null
+StandardError=null
+LimitCORE=0
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
