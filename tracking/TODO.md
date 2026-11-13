@@ -23,7 +23,7 @@ Checked means verified within synthetic pilot scope only. Exact source/CI/eviden
 ## P2 — Windows
 - [x] P2-001 native Arabic RTL/dashboard/theme/self-contained x64 build.
 - [ ] P2-002 session/group/task/rule forms implemented; full config/live pairing acceptance open.
-- [ ] P2-003 accounts/task/paged filters/status verified partly; account details/flags/history and broad acceptance open.
+- [ ] P2-003 accounts/task/paged filters/status verified partly; account details/flags/history implemented and API/direct checks PASS; native task/source views observed, broad acceptance open.
 - [ ] P2-004 review reveal/resolve implemented and direct C# verified; full GUI review acceptance open.
 - [ ] P2-005 preview/cancel verified; sensitive GUI confirmations/reconciliation/export acceptance open. Signing is not required; installer is optional (D-037).
 - [x] P2-006 template create/edit/scope/disable/filter/reload observed on deployed0.4; server stale/snapshot tests PASS. Source-switch visual race acceptance open.
@@ -39,7 +39,7 @@ Checked means verified within synthetic pilot scope only. Exact source/CI/eviden
 - [x] P3-006 exact-version bounded deployment readiness fixes Type=simple startup race; real rollout and regression PASS.
 
 ## Next
-1. Account details/flags/tasks/source history and duplicate-name selectors with codes (I-016).
+1. Continue broader synthetic native review/reconciliation/CSV/history/flags/source-switch/accessibility/load checks. Account details and code/identity labels are implemented.
 2. Synthetic native review/reconciliation/CSV/source-switch/accessibility and bounded load/recovery checks.
 3. Single-owner access review, retention/key recovery/off-host backup and live-provider decisions before real data. Signing is excluded; installer/update channel optional.
 No real WhatsApp or outbound messages without explicit separate permission. Completed code87f986b; latest hosted CI43100482889 backend+Windows SUCCESS.
@@ -47,6 +47,9 @@ No real WhatsApp or outbound messages without explicit separate permission. Comp
 ## 0.5 progress override —2026-11-13
 - [x] Real connector implementation + encrypted auth/ingress/provider isolation and fake-socket PostgreSQL acceptance (32 total),14 Node checks. This is not live provider acceptance.
 - [x] Windows gated session/QR/discovery/bind/stop and disambiguated choices implemented; final/native acceptance pending.
-- [ ] Account details/flags/tasks/source history.
-- [ ] Exact-source CI, dormant0.5 rollout/Windows-server/native acceptance and8-migration restore/package.
+- [x] Account details/flags/tasks/source history API and Windows implemented; privacy/isolation/pages and34 direct-server checks PASS; native task/source views observed.
+- [x] Dormant0.5 rollout/34 Windows-server checks; native portable task/source/session gates;8-migration restore and corrected ZIP verified. CI43486994434 both jobs SUCCESS. Broad native acceptance remains open.
 - [ ] Real pairing, receive and send acceptance: separate owner authorization remains required; both runtime flags false.
+
+## Final0.5 checkpoint
+API5265c5b deployed; Windows6157855 package.14 Node/33 PG/20 offline C#/34 direct-server PASS; CI43486994434 backend+Windows/publish check SUCCESS. I-020 corrected portable resources/native startup; use0.5 ZIP. Both live gates false; auth/requested0. Account details/code labels implemented, native task/source/session metadata/disabled controls observed. Live provider, wider GUI and optional AI runtime/policy gates above remain open.
