@@ -37,6 +37,11 @@ public sealed partial class MainPage : Page
         "WHATSAPP_GROUP_NOT_DISCOVERED" => "اقرأ المجموعات المتاحة من الجلسة ثم اختر المجموعة المطلوبة.",
         "REAUTH_REQUIRED" => "انتهى التحقق أو استُخدم. أعد فتح معاينة العملية للتحقق من جديد.",
         "PERMISSION_DENIED" or "SESSION_EXPIRED" => "انتهت جلسة الاتصال أو أُلغيت. أعد الاتصال للمتابعة.",
+        "AI_DISABLED" => "فعّل الاقتراحات والموافقة على اتصال المزود من صفحة الذكاء الاصطناعي.",
+        "AI_CONFIGURATION_REQUIRED" => "مفتاح المزود غير مضبوط على الخادم.",
+        "AI_DAILY_LIMIT" => "بلغت الحد اليومي للطلبات أو حجز التوكنات. راجع الاستخدام والحدود.",
+        "AI_UNAVAILABLE" or "AI_MODEL_UNAVAILABLE" => "تعذر استخدام المزود أو النموذج. تستمر القواعد والمراجعة المحلية.",
+        "AI_REVIEW_SOURCE_REQUIRED" or "AI_IDEMPOTENCY_CONFLICT" => "تغير المصدر أو إعداد التحليل. حدّث صندوق المراجعة.",
         "RATE_LIMITED" => "وصلت إلى حد الطلبات المؤقت. انتظر قليلًا قبل المحاولة.",
         "SSH_SESSION_FAILED" or "SSH_TUNNEL_FAILED" => "تعذر الاتصال عبر SSH. تحقق من الاتصال المحفوظ ثم أعد المحاولة.",
         "VALIDATION_ERROR" => "راجع الحقول المطلوبة وصيغتها.",
@@ -309,6 +314,9 @@ public sealed partial class MainPage : Page
             case "audit":
                 await Audit();
                 break;
+            case "ai":
+                await AiSettings();
+                break;
             case "operations":
                 await Operations();
                 break;
@@ -523,8 +531,15 @@ public sealed partial class MainPage : Page
         foreach (var row in rows)
         {
             var n = row!;
-            Card("بيانات تحتاج مراجعة", V(n, "group_title") + " • " + V(n, "external_message_id"), Button("مراجعة", async () =>
-            {
+            Card("بيانات تحتاج مراجعة", V(n, "group_title") + " • " + V(n, "external_message_id"),
+                Button("مراجعة", () => ReviewSource(n)), Button("اقتراح المهمة بالذكاء الاصطناعي", () => AiSuggest(n)));
+        }
+        if (rows.Count == 0)
+            Body.Children.Add(Text("صندوق المراجعة فارغ."));
+        Pager("inbox", result);
+    }
+    private async Task ReviewSource(JsonNode n, string? suggestedTask = null)
+    {
                 var reauth = ReauthField();
                 if (!await Dialog("مراجعة الوارد", reauth, "فتح"))
                     return;
@@ -535,7 +550,7 @@ public sealed partial class MainPage : Page
                 var user = Field("المستخدم");
                 var ns = Field("النظام", V(n, "namespace"));
                 var pass = Secret("كلمة المرور (اختياري)");
-                var task = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), V(n, "routing_task_type_id"));
+                var task = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), suggestedTask ?? V(n, "routing_task_type_id"));
                 var view = new TextBox { Header = "محتوى محمي — يُخفى بعد 30 ثانية", IsReadOnly = true, AcceptsReturn = true, Text = V(raw, "text"), TextWrapping = TextWrapping.Wrap, MinHeight = 90, MaxHeight = 180 };
                 var hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
                 hide.Tick += (_, _) => { view.Text = ""; hide.Stop(); };
@@ -555,11 +570,6 @@ public sealed partial class MainPage : Page
                 }
                 reauth.Password = pass.Password = "";
                 await Render();
-            }));
-        }
-        if (rows.Count == 0)
-            Body.Children.Add(Text("صندوق المراجعة فارغ."));
-        Pager("inbox", result);
     }
     private async Task Sessions() => await WhatsAppSessions();
     private async Task Groups()

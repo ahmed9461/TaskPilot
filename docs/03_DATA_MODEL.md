@@ -45,3 +45,5 @@ Migration007: reply_templates version/enabled plus optional group_id/task_type_i
 
 ## Migration008 — WhatsApp connector
 Append-only new schema: session provider baileys/status/version/requested/consent timestamp/connected/error/auth_epoch؛ unique requested-live-session index(max1). `whatsapp_auth` يخزن session/category/hashed key ID/ciphertext/key version فقط. `source_messages.encrypted_transport_key` سياقه source UUID؛ لا يظهر في public lists. `whatsapp_ingress` يحفظ unique session/group/external ID، ciphertext مؤقتًا، PENDING/DONE/DROPPED/ERROR ومحاولات/error code. DONE/DROPPED يحتفظان tombstone دونraw. ERROR مشفر إلى المعالجة أو الحذف المقصود. Auth لا تمحى بمجرد قطع الاتصال.
+
+Migration011 adds singleton versioned ai_settings and ai_requests reservation/result ledger (hashed idempotency, candidate task codes, source/settings version, safe errors/tokens/nullable estimated and reported costs). Source deletion nulls source_id, retains usage without account data. No plaintext key/provider body storage. Existing migrations immutable.

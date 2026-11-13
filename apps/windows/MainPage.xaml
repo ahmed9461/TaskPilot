@@ -12,6 +12,7 @@
     <NavigationViewItem Content="الجلسات" Tag="sessions" Icon="Link"/>
     <NavigationViewItem x:Name="NotificationsNav" Content="الإشعارات" Tag="notifications" Icon="Flag"><NavigationViewItem.InfoBadge><InfoBadge x:Name="UnreadBadge" Value="0" Visibility="Collapsed"/></NavigationViewItem.InfoBadge></NavigationViewItem>
     <NavigationViewItem Content="سجل النشاط" Tag="audit" Icon="List"/>
+    <NavigationViewItem Content="الذكاء الاصطناعي" Tag="ai" Icon="Help"/>
     <NavigationViewItem Content="المراقبة" Tag="operations" Icon="View"/>
    </NavigationView.MenuItems>
    <Grid Padding="32,24" RowSpacing="20">

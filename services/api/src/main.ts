@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { AiRuntime } from "./ai-runtime.js";
 import { createPool } from "./db.js";
 import { createApp } from "./app.js";
 import { startMockWorker } from "./outbox.js";
@@ -16,6 +17,8 @@ if (!["127.0.0.1", "::1"].includes(host))
   throw new Error("LOOPBACK_REQUIRED_FOR_PILOT");
 const pool = createPool(process.env.DATABASE_URL ?? "");
 const encryptionKey = await secret("TASKPILOT_ENCRYPTION_KEY");
+const ai = new AiRuntime(pool, new Vault(encryptionKey));
+await ai.recoverInterrupted();
 const whatsapp = new WhatsAppConnector(pool, new Vault(encryptionKey), {
   connectionEnabled: process.env.WHATSAPP_CONNECTION_ENABLED === "true",
   sendingEnabled: process.env.WHATSAPP_SENDING_ENABLED === "true",
@@ -29,6 +32,7 @@ const app = await createApp(
     mockEnabled: process.env.TASKPILOT_MOCK_ENABLED === "true",
   },
   whatsapp,
+  ai,
 );
 const stop = await startMockWorker(pool, new MockTransport());
 // Recover interrupted live SENDING jobs even when live use is disabled.

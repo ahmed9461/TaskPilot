@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { routingContext } from "./rules.js";
 // Codes are administrator-authored task vocabulary, never extracted account identifiers.
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,63}$/);
 const input = z.object({ candidateCodes: z.array(code).max(20) }).strict();
@@ -9,12 +10,19 @@ export function projectTaskCodes(
 ): RedactedMessage {
   if (raw.length > 16000 || rules.length > 20)
     throw new Error("AI_INPUT_REJECTED");
+  const context = routingContext(raw);
   return input.parse({
     candidateCodes: [
       ...new Set(
         rules
-          .filter((r) =>
-            r.keywords.some((k) => k.length > 0 && raw.includes(k)),
+          .filter(
+            (r) =>
+              code.safeParse(r.code).success &&
+              r.keywords.some(
+                (k) =>
+                  k.length > 0 &&
+                  context.includes(k.normalize("NFKC").toLowerCase()),
+              ),
           )
           .map((r) => r.code),
       ),
@@ -28,6 +36,8 @@ export interface AiResult {
   provenance: string;
   promptTokens: number | null;
   completionTokens: number | null;
+  reportedCostUsd?: number | null;
+  cacheHitTokens?: number | null;
 }
 export interface AiProvider {
   listModels(): Promise<string[]>;
@@ -139,6 +149,9 @@ export class ChatProvider implements AiProvider {
         response_format: { type: "json_object" },
         max_tokens: 256,
         stream: false,
+        ...(this.config.provider === "deepseek"
+          ? { thinking: { type: "disabled" } }
+          : { provider: { data_collection: "deny", zdr: true } }),
       });
       const envelope = z
         .object({
@@ -154,6 +167,8 @@ export class ChatProvider implements AiProvider {
             .object({
               prompt_tokens: z.number().int().min(0).optional(),
               completion_tokens: z.number().int().min(0).optional(),
+              prompt_cache_hit_tokens: z.number().int().min(0).optional(),
+              cost: z.number().min(0).optional(),
             })
             .optional(),
         })
@@ -177,6 +192,8 @@ export class ChatProvider implements AiProvider {
         provenance: `${this.config.provider}:${this.config.model}`,
         promptTokens: envelope.usage?.prompt_tokens ?? null,
         completionTokens: envelope.usage?.completion_tokens ?? null,
+        cacheHitTokens: envelope.usage?.prompt_cache_hit_tokens ?? null,
+        reportedCostUsd: envelope.usage?.cost ?? null,
       };
     } catch {
       throw new Error("AI_UNAVAILABLE");

@@ -1,6 +1,6 @@
 # API v1 — implementation reference (synthetic pilot)
 
-Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts and PostgreSQL constraints. No live WhatsApp or AI endpoints. Unlisted target features remain TODO.
+Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts and PostgreSQL constraints. See appended live WhatsApp and manual AI contracts for current endpoints. Unlisted target features remain TODO.
 
 ## Access
 - `GET /health` is minimal/unauthenticated; every other endpoint including `/ready` requires `Authorization: Bearer <owner token>`.
@@ -41,7 +41,7 @@ Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts an
 | GET /v1/audit | redacted action/UUID/time, no raw message/password |
 
 ## Pilot limits / pending contracts
-Live pairing/disconnect/session health, production JWT/MFA, rate limiting across multiple API hosts, true push/toast notifications, production retention/key rotation and live AI are not implemented. UI uses safe polling and server persistence. Backup/restore uses isolated operator tooling (not public API).
+Live pairing/disconnect/session health, production JWT/MFA, rate limiting across multiple API hosts, true push/toast notifications, production retention/key rotation are not all implemented; manual AI is specified below. UI uses safe polling and server persistence. Backup/restore uses isolated operator tooling (not public API).
 
 ## SSH client sessions (continuation)
 Migration004 stores only hashes of30-minute owner sessions. Root-only issue-client-session CLI uses the existing SSH trust channel, never HTTP or permanent API-key export. Each sensitive action uses a fresh60-second single-use grant from --reauth SESSION_ID. Expiry/revocation/consumption checked server-side; operator file keys remain supported locally. POST /v1/client-session/revoke revokes the caller session. Windows SshConnection owns its loopback tunnel, uses BatchMode and strict existing host trust, and kills only its child tunnel at window close. Explicit logout revokes; expiry is the fallback on lost connection. No passwords/tokens are persisted by Windows. Production MFA remains open.
@@ -85,3 +85,9 @@ GET `/v1/accounts/:id/details?section=tasks|sources|flags|history&limit=50&offse
 Diagnostics also return bestEffort=true. Rejected-event observations have an independent10-query concurrency cap and never consume durable ingress queue capacity or disconnect the session. Counts are sampled under bursts and capped1000000 per fixed reason; restart resets them.
 
 0.5.3: receive-diagnostics adds durable aggregate counts/firstReasons/lastReasons/acceptedAppendReceipts/withSenderKeyMetadata/acceptedWithoutIngress plus diagnostic retention7 days/max10000, no hashes or packet bodies in API. Group projections add receive_after. Creation starts monitoring at now; enabling a stopped group advances the boundary. Direct selected notify/append text after both consent boundaries can be accepted; bulk history remains disabled.
+
+##0.6.0 manual AI
+- GET /v1/ai/config: safe settings/version/keyConfigured only. PATCH with reauth, strict {version,provider:deepseek|openrouter,model,enabled,outboundApproved,dailyRequestLimit:1..100,dailyTokenLimit:1000..100000}; enabling checks current model catalog.
+- GET /v1/ai/models?provider=deepseek|openrouter: explicit authenticated upstream catalog. GET /v1/ai/usage: UTC aggregate plus recent20 safe ledger entries; token reservations, estimates and provider-reported cost separate.
+- POST /v1/inbox/:id/ai-preview: local candidate task codes/sourceVersion/settingsVersion, no upstream. POST ai-suggestion with reauth and strict {idempotencyKey:16..200}; REVIEW encrypted source only, no raw input accepted. Always needsReview/automaticActions=false. Status SUCCEEDED,UNAVAILABLE,REQUESTED or local ABSTAINED; repeated key reuses stored request. Manual resolve uses existing source version.
+- AI_DISABLED403,AI_CONFIGURATION_REQUIRED409,AI_MODEL_UNAVAILABLE409,AI_REVIEW_SOURCE_REQUIRED409,AI_IDEMPOTENCY_CONFLICT409,AI_DAILY_LIMIT429,AI_UNAVAILABLE503. No raw provider responses or key values returned.

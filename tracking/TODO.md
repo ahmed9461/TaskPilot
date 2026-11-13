@@ -46,3 +46,5 @@ Checked means verified within stated scope. API0.5.2/Windows0.5.1 personal pilot
 2. Reviewed retention/auth identity/key/off-host recovery scope.
 3. Optional AI runtime/UI/accounting. Installer/updater optional; signing not a gate.
 Current deployed API a715fce, Windows b9bb27e. One selected live test group remains enabled; sending=false. D-051 authorizes continuation of scoped tests, not broad messaging/other groups/real credentials.
+
+Current continuation:0.5.3 outage/300s observation VERIFIED.0.6.0 AI runtime/API/UI and encrypted off-host tools IMPLEMENTED,16 Node/45 PG/C# build PASS; deploy/live AI/native/off-host verification pending.

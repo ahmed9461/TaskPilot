@@ -176,10 +176,10 @@ export class WhatsAppConnector implements WhatsAppTransport {
         observing: 0,
       };
       this.active.set(id, a);
-      await this.refreshBindings(id);
       lease.on("error", () => {
         if (a && !a.closed) void this.fail(a, "WHATSAPP_LEASE_LOST");
       });
+      await this.refreshBindings(id);
       await this.open(a);
     } catch (error) {
       if (a) await this.fail(a, "CONNECTOR_START_FAILED");

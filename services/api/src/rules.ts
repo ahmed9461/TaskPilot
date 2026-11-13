@@ -5,19 +5,22 @@ export interface Rule {
   priority: number;
   enabled: boolean;
 }
-export function routeTask(raw: string, rules: Rule[], defaultTask: string) {
+export function routingContext(raw: string) {
   // Identity/credential lines cannot determine task routing.
-  const context = normalize(
+  return normalize(
     normalize(raw)
       .split(/\r?\n/)
       .filter(
         (line) =>
-          !/^\s*(name|user(?:name)?|password|pass|الاسم|اليوزر|المستخدم|كلمة المرور)\s*[:：]/i.test(
+          !/^\s*(name|user(?:name)?|password|pass|otp|code|email|phone|الاسم|اليوزر|المستخدم|كلمة المرور|الرمز|رمز|الهاتف|البريد)\s*[:：]/i.test(
             line,
           ),
       )
       .join("\n"),
   );
+}
+export function routeTask(raw: string, rules: Rule[], defaultTask: string) {
+  const context = routingContext(raw);
   const matches = rules.filter(
     (r) => r.enabled && r.keywords.some((k) => context.includes(normalize(k))),
   );

@@ -57,3 +57,5 @@ I-025 final2026-11-14: first pre-update event remains unprocessed/unreconstructe
 I-024 final native template acceptance: two-line save/reopen/render/restore in portable0.5.1→API0.5.2 PASS; original SENT body unchanged, version3. Source-switch/flag/accessibility matrix still partial. I-010 latest overall verifier nonzero external drift0 added/1 removed; own checks/paired continuity PASS, other service untouched.
 
 | I-026 | All append upserts treated as history although pinned SDK uses append for server offline delivery | FIX VERIFIED isolated / live outage pending | Accept only selected text after session+binding consent; actual bulk history disabled; new receipt event-type metadata and regression distinguish queued delivery from old history. I-025 original event still lacks historical evidence |
+
+- I-026 update2026-11-14: confirmed live offline append recovery after controlled45s outage; real accepted receipt and ingress matched. Historical first-packet cause remains unknown. Bounded300s observation PASS20 samples; SSH reset after final PASS, transport exit1 recorded separately.

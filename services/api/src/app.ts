@@ -1,4 +1,5 @@
 import { accountDetails } from "./account-details.js";
+import { AiRuntime } from "./ai-runtime.js";
 import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { z } from "zod";
@@ -53,6 +54,7 @@ export async function createApp(
   pool: pg.Pool,
   config: AppConfig,
   whatsapp?: WhatsAppConnector,
+  ai = new AiRuntime(pool, new Vault(config.encryptionKey)),
 ) {
   if (
     config.apiToken.length < 32 ||
@@ -125,12 +127,37 @@ export async function createApp(
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.5.3",
+    version: "0.6.0",
     provider: "mock",
   }));
   app.get("/ready", async () => {
     await pool.query("SELECT 1");
     return { status: "ready" };
+  });
+  app.get("/v1/ai/config", () => ai.settings());
+  app.patch("/v1/ai/config", async (req) => {
+    await reauth(req);
+    return ai.configure(req.body);
+  });
+  app.get("/v1/ai/models", async (req) =>
+    ai.models(
+      z
+        .object({ provider: z.enum(["deepseek", "openrouter"]) })
+        .strict()
+        .parse(req.query).provider,
+    ),
+  );
+  app.get("/v1/ai/usage", () => ai.usage());
+  app.post("/v1/inbox/:id/ai-preview", async (req) =>
+    ai.preview(uuidParam.parse(req.params).id),
+  );
+  app.post("/v1/inbox/:id/ai-suggestion", async (req) => {
+    await reauth(req);
+    const body = z
+      .object({ idempotencyKey: z.string().min(16).max(200) })
+      .strict()
+      .parse(req.body);
+    return ai.analyze(uuidParam.parse(req.params).id, body.idempotencyKey);
   });
   app.get("/v1/me", async () => ({
     id: "owner",

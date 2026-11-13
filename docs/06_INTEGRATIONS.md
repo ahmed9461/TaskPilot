@@ -26,7 +26,7 @@
 - مخرجات الاستخراج المنظمة: fields, confidence, missing_fields, reasoning_summary_without_secrets, source_provenance.
 - لا يفعل AI الإرسال أو الحذف أو تسجيل الدخول للمواقع؛ الموافقات خارج AI.
 
-## تنفيذ adapters — 2026-11-11
+## تنفيذ adapters الأولي — 2026-11-11 (historical)
 `services/api/src/ai.ts` implements separate DeepSeek/OpenRouter adapters: listModels, health, structured task suggestion, usage token fields and explicitly unknown estimatedCost. It is not wired into ingest/API/UI and no production key/request was used. Activation requires both enabled and outboundApproved; main service does not instantiate it. This preserves local rules/review if AI is unavailable.
 
 Privacy boundary: `projectTaskCodes` projects raw text into administrator-authored task codes. Only allowlisted codes cross the adapter boundary; no raw message, account name, username, password or code value is accepted by its strict input schema. Unknown/unstructured material causes abstention. The adapter always returns needsReview=true, validates that output is one of the candidates, suppresses provider free-form reasoning, limits input/output/time and forbids redirects. This intentionally supports task suggestions only; unrestricted account extraction and pricing/persistent usage accounting remain TODO.
@@ -47,3 +47,8 @@ Transient reconnect:2/4/8/16/32 ثانية ثم ERROR، restart-required515 بع
 المراجع المقروءة: https://baileys.wiki/authentication/session-management ، https://baileys.wiki/concepts/socket-config ، https://baileys.wiki/migration/v7 ، https://github.com/WhiskeySockets/Baileys/releases/tag/v7.0.0-rc14 . الاتصال الحقيقي والإرسال والقبول مع مزود واتساب لم تحدث في هذه المرحلة.
 
 0.5.1 QR compatibility: paired identity is `creds.me.id`, as used by the pinned SDK login path. Its `registered` flag remains false after QR and is set in the phone-code flow; it is not a valid QR restart predicate. Store.paired() checks saved identity without mutating flags/auth. This was observed after owner QR connection; selected groups and send remain off.
+
+## Manual AI runtime0.6.0
+Owner-authenticated configuration/model catalog/usage and source REVIEW preview/suggestion endpoints. Enable+outbound gates and server key files required. Only configured task codes leave the service, never account fields or source body; missing candidates abstain locally. DeepSeek uses thinking disabled, JSON256-token output and10-second request timeout. OpenRouter requests data_collection=deny/zdr=true, but live OpenRouter acceptance requires its own key. No automatic actions/ingest dependency.
+Reservations serialize UTC daily request/token limits (defaults20/10000); failed/unknown/interrupted requests keep unresolved reservations. Same source/version/settings idempotency key never sends twice. Provider token usage and optional reported cost are distinct from an estimate. DeepSeek peak rates for known flash/v4-pro names are a dated2026-11-14 estimate, not confirmed charges; unknown models/providers show unknown cost. Source resolve remains independently versioned/manual.
+Sources: https://api-docs.deepseek.com/api/create-chat-completion/ and https://api-docs.deepseek.com/quick_start/pricing/ (verified2026-11-14).
