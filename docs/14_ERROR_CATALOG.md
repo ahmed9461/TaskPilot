@@ -17,3 +17,5 @@
 | AI_UNAVAILABLE | مزود AI غير متاح | «التحليل الذكي متوقف مؤقتًا» | القواعد والمراجعة |
 
 لا تُعرض قيم كلمات المرور أو رموز الوصول في التنبيهات أو السجلات أو رسائل الأخطاء، ولا يُستنتج الخطأ الصحيح من تخمين نموذج لغوي فقط.
+
+AI runtime0.6: AI_DISABLED403 requires enable/outbound gates; AI_CONFIGURATION_REQUIRED409 requires server key file; AI_DAILY_LIMIT429 includes requests plus unresolved token reservations; AI_REVIEW_SOURCE_REQUIRED/AI_IDEMPOTENCY_CONFLICT409 require fresh source/settings context. AI_UNAVAILABLE503 never exposes provider text. SUCCEEDED with taskCode=null is safe abstention, Windows asks for manual task selection; no mutation inferred.

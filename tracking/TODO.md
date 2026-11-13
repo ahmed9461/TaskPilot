@@ -1,5 +1,5 @@
 # خطة التنفيذ والتتبع —2026-11-14
-Checked means verified within stated scope. API0.5.2/Windows0.5.1 personal pilot, unsigned portable accepted (D-037). D-051 authorizes scoped tests without repeated permission; product per-job confirmation remains.
+Checked means verified within stated scope. API0.6.0/Windows0.6.1 personal pilot, unsigned portable accepted (D-037). D-051 authorizes scoped tests without repeated permission; product per-job confirmation remains.
 
 ## P0 — القرارات
 - [x] P0-001 requirements/project memory/decisions/tracking.
@@ -18,7 +18,7 @@ Checked means verified within stated scope. API0.5.2/Windows0.5.1 personal pilot
 - [x] P1-007 scoped/versioned templates/preview/reauth/outbox, actual quoted reply/idempotent approval and recipient visibility; send gate restored false.
 - [x] P1-008 verified/manual versus UNVERIFIED recorded flags (API/isolated tests).
 - [x] P1-009 archive/restore/scoped purge/stale and uncertainty safeguards (synthetic); real-source purge not exercised.
-- [x] P1-010 redacted audit/encrypted same-host restore incl real auth/source/SENT state and restored-source replay. Off-host/scheduler/key recovery open.
+- [x] P1-010 redacted audit/encrypted same-host restore incl real auth/source/SENT state and restored-source replay. Independent Windows off-host/key-escrow restore and manual daily-job invocation verified; profile-loss recovery/rotation open.
 - [x] Baileys encrypted auth/ingress/lease/epoch/filter/quarantine/provider isolation; actual same-identity restart continuity.
 - [x] Selected-group private bounded diagnostic counters + SDK metadata compatibility; first missed-event cause remains unconfirmed (I-025).
 
@@ -34,17 +34,19 @@ Checked means verified within stated scope. API0.5.2/Windows0.5.1 personal pilot
 - [x] Automatic same-page scroll retention.
 
 ## P3 — الاستقرار والتكاملات
-- [ ] P3-001 —16 Node/35 isolated PG incl two parents/20 offline C#/34 direct-server and exact-source CI PASS; bounded live workflows/recovery verified. Sustained provider/network-loss/accessibility matrix remains open.
-- [x] P3-002 isolated API0.5.2 deployed; own role/restart/data/startup/paired identity verified. Latest external set drift0 added/1 removed produces nonzero; other service untouched.
+- [ ] P3-001 —16 Node/45 isolated PG incl four parents/20 offline C#/34 direct-server and exact-source CI PASS; bounded live workflows/recovery verified. Sustained provider/network-loss/accessibility matrix remains open.
+- [x] P3-002 isolated API0.6.0 deployed; own role/restart/data/startup/paired identity verified. Latest external set drift0 added/1 removed produces nonzero; other service untouched.
 - [ ] P3-003 multi-mock verified, multi-live beyond initial1 untested.
-- [ ] P3-004 AI adapters offline only; runtime/UI/keys/models/accounting open.
-- [ ] P3-005 safe CSV/operations done; broader reports/alerts/off-host recovery open.
+- [x] P3-004 manual AI runtime/API/native UI/key/model catalog/usage/reservation accounting; DeepSeek live+idempotent replay verified. OpenRouter live acceptance open.
+- [ ] P3-005 safe CSV/operations done; independent Windows off-host recovery and own daily snapshot job verified; broader reports/alerts/profile-loss recovery open.
 - [x] P3-006 bounded exact-version readiness and authenticated smoke.
 
 ## Next
 1. Scoped sustained provider and native source-switch/flags/accessibility/toast acceptance.
 2. Reviewed retention/auth identity/key/off-host recovery scope.
-3. Optional AI runtime/UI/accounting. Installer/updater optional; signing not a gate.
-Current deployed API a715fce, Windows b9bb27e. One selected live test group remains enabled; sending=false. D-051 authorizes continuation of scoped tests, not broad messaging/other groups/real credentials.
+3. Optional OpenRouter live acceptance, broader reports, independent profile-loss recovery. Installer/updater optional; signing not a gate.
+Current deployed API ecf75ce, native Windows/recovery runner bb67c71. One selected live test group remains enabled; sending=false. D-051 authorizes continuation of scoped tests, not broad messaging/other groups/real credentials.
 
 Current continuation:0.5.3 outage/300s observation VERIFIED.0.6.0 AI runtime/API/UI and encrypted off-host tools IMPLEMENTED,16 Node/45 PG/C# build PASS; deploy/live AI/native/off-host verification pending.
+
+Verified current continuation:45s outage recovered real selected append,300s observation PASS;600s/40samples0.6.0 observation PASS/exit0,0errors/disconnect/pending. Native0.6.1 AI abstention/manual-review handoff/cancel and same-key replay verified. DeepSeek fixture cleaned, live test rows retained. Independent Windows encrypted restore, local-only restore and manual scheduled snapshot invocation verified. Long soak/natural daily trigger/profile-loss recovery remain open.
