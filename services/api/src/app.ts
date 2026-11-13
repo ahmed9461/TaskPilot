@@ -125,7 +125,7 @@ export async function createApp(
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.5.1",
+    version: "0.5.2",
     provider: "mock",
   }));
   app.get("/ready", async () => {
@@ -253,6 +253,9 @@ export async function createApp(
     await reauth(req);
     return connector().listGroups(uuidParam.parse(req.params).id);
   });
+  app.get("/v1/sessions/:id/receive-diagnostics", async (req) =>
+    connector().receiveDiagnostics(uuidParam.parse(req.params).id),
+  );
   app.get(
     "/v1/whatsapp/ingress-errors",
     async () =>

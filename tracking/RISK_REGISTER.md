@@ -29,3 +29,5 @@ R-02/R-03/R-04/R-05/R-06: synthetic encryption/dedup/outbox/evidence/purge tests
 
 ## Actual paired pilot0.5.1 —2026-11-13
 R-01 now has owner-approved actual QR and same-identity restart proof, not selected-group receive/send/long-running proof. R-02 upstream direct console session dumps mitigated before real connection via own-service /dev/null/core0; encrypted auth and restored816 rows verified. No leak incident inferred, no raw logs collected. R-07 final same-host encrypted backup/restore includes real auth; off-host/key-loss/reboot remain unverified. R-08 latest own-service verification0 external-service set delta in bounded sample; unrelated services unchanged by us. Sending stays false/groups0; production risks are not closed by synthetic workflow tests.
+
+Receive continuation: one selected live test group authorized/bound; no broad chat-data permission. First approved desktop submission produced no durable receive evidence (I-025), so provider reliability risk remains open. Candidate diagnostics expose fixed aggregate reason codes only; no SDK raw logging, identifiers, bodies or auth. Bounded sampling is explicitly not a complete traffic ledger.

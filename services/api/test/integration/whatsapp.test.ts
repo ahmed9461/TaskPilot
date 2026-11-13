@@ -265,6 +265,10 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
     messageTimestamp: Math.floor(Date.now() / 1000) + 1,
     message: {
       conversation: `name: Synthetic fixture\nuser: ${user}\npassword: synthetic-wa-secret`,
+      senderKeyDistributionMessage: {
+        groupId: jid,
+        axolotlSenderKeyDistributionMessage: Buffer.from([1, 2, 3]),
+      },
     },
   });
   async function enqueue(id: string, user?: string) {
@@ -283,6 +287,31 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
       );
       await enqueue("selected");
       await enqueue("selected");
+      assert.equal(
+        (
+          await app.inject({
+            method: "GET",
+            url: `/v1/sessions/${session.id}/receive-diagnostics`,
+          })
+        ).statusCode,
+        401,
+      );
+      const diagnostics = await ok(
+        "GET",
+        `/v1/sessions/${session.id}/receive-diagnostics`,
+      );
+      assert.deepEqual(diagnostics.counts, {
+        HISTORY_EVENT: 1,
+        FROM_SELF: 1,
+        ACCEPTED_TEXT: 2,
+      });
+      assert.equal(diagnostics.scope, "enabled-groups-only");
+      assert.equal(diagnostics.resetOnProcessRestart, true);
+      assert.equal(JSON.stringify(diagnostics).includes("@"), false);
+      assert.equal(
+        JSON.stringify(diagnostics).includes("synthetic-wa-secret"),
+        false,
+      );
       const pending = (await pool.query("SELECT * FROM whatsapp_ingress")).rows;
       assert.equal(pending.length, 1);
       assert.equal(pending[0].state, "PENDING");
@@ -317,6 +346,35 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
         (await pool.query("SELECT count(*)::int n FROM assignment_sources"))
           .rows[0].n,
         1,
+      );
+    },
+  );
+  await t.test(
+    "rejected history burst cannot backpressure or populate the durable receive queue",
+    async () => {
+      const before = (
+        await pool.query("SELECT count(*)::int n FROM source_messages")
+      ).rows[0].n;
+      sockets.at(-1)!.messages(
+        Array.from({ length: 500 }, (_, i) => raw(`history-burst-${i}`)),
+        "append",
+      );
+      await connector.settled(session.id);
+      assert.equal(await connector.getSessionHealth(session.id), "CONNECTED");
+      assert.equal(
+        (await pool.query("SELECT count(*)::int n FROM source_messages"))
+          .rows[0].n,
+        before,
+      );
+      assert.equal(await connector.drainOnce(), false);
+      const diagnostics = await ok(
+        "GET",
+        `/v1/sessions/${session.id}/receive-diagnostics`,
+      );
+      assert.equal(diagnostics.bestEffort, true);
+      assert.ok(
+        diagnostics.counts.HISTORY_EVENT > 1 &&
+          diagnostics.counts.HISTORY_EVENT <= 11,
       );
     },
   );

@@ -46,3 +46,8 @@ Checked means verified only within the stated scope. Exact evidence/source/CI in
 2. Owner-selected dedicated WhatsApp test group for real receive/restart testing; sending remains false until separate authorization.
 3. Reviewed retention/auth recovery/off-host policy and optional AI scope before activating them.
 Current API aa8dabe, Windows functional source b9bb27e, CI43496342263 backend+windows SUCCESS. Do not restart pairing or infer group/send permission from successful QR.
+
+## Selected test group continuation
+- [x] Owner-approved exact group bound receive-only in separate test scope; TaskPilot sending remains false.
+- [x] Separately approved one desktop fictitious message submitted; different sender identity verified privately.
+- [ ] Real receive: first test no ingress/source, I-025 open. API0.5.2 diagnostic/metadata compatibility candidate35 PG/16 Node/20 C# verified; deploy and separately authorized retest next. No automatic repeat.

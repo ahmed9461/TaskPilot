@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { textEvent, baileysFactory } from "../src/whatsapp/socket.js";
+import {
+  textEvent,
+  inspectTextEvent,
+  baileysFactory,
+} from "../src/whatsapp/socket.js";
 import { WhatsAppConnector } from "../src/whatsapp/connector.js";
 import { Vault } from "../src/security.js";
 import { randomBytes } from "node:crypto";
@@ -43,6 +47,69 @@ test("WhatsApp ingress accepts only new incoming direct group text", () => {
     assert.equal(textEvent({ ...base, message }, 100), null);
   assert.equal(textEvent(base, 101), null);
   assert.equal(textEvent(null, 0), null);
+});
+
+test("SDK text with sender-key metadata is accepted without retaining key material", async () => {
+  const { proto } = await import("baileys");
+  const message = proto.Message.decode(
+    proto.Message.encode(
+      proto.Message.fromObject({
+        conversation: "name: Synthetic\nuser: synthetic-metadata",
+        senderKeyDistributionMessage: {
+          groupId: "123-456@g.us",
+          axolotlSenderKeyDistributionMessage: Buffer.from([1, 2, 3]),
+        },
+      }),
+    ).finish(),
+  );
+  const base = {
+    key: {
+      id: "metadata-fixture",
+      remoteJid: "123-456@g.us",
+      participant: "123@lid",
+      fromMe: false,
+    },
+    messageTimestamp: 100,
+    message,
+  };
+  const result = inspectTextEvent(base, 100);
+  assert.equal(result.reason, "ACCEPTED_TEXT");
+  assert.equal(result.item?.text, message.conversation);
+  assert.equal(JSON.stringify(result).includes("axolotl"), false);
+  assert.equal(
+    textEvent(
+      {
+        ...base,
+        message: {
+          ...message,
+          viewOnceMessage: { message: { conversation: "synthetic" } },
+        },
+      },
+      100,
+    ),
+    null,
+  );
+  assert.equal(
+    textEvent(
+      {
+        ...base,
+        message: {
+          senderKeyDistributionMessage: message.senderKeyDistributionMessage,
+        },
+      },
+      100,
+    ),
+    null,
+  );
+  assert.equal(
+    inspectTextEvent({ ...base, message: undefined }, 100).reason,
+    "NO_CONTENT",
+  );
+  assert.equal(
+    inspectTextEvent({ ...base, key: { ...base.key, fromMe: true } }, 100)
+      .reason,
+    "FROM_SELF",
+  );
 });
 
 test("disabled live policy never touches DB or constructs a socket", async () => {

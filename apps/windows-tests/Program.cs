@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using TaskPilot_Windows;
+if (args.Length > 0 && args[0] is "--bind-whatsapp-test-group" or "--whatsapp-test-group-status") { if (args.Length != 2) throw new InvalidOperationException("EXACT_TEST_GROUP_TITLE_REQUIRED"); await WhatsAppReceiveAcceptance.Run(args[0] == "--bind-whatsapp-test-group", args[1]); return; }
 if (args.Length == 1 && args[0] == "--native-ui-change") { await NativeUiFixtures.Change(); return; }
 if (args.Length == 1 && args[0] is "--begin-whatsapp-pairing" or "--whatsapp-pairing-status") { await WhatsAppPairing.Run(args[0] == "--begin-whatsapp-pairing"); return; }
 if (args.Length == 1 && args[0] is "--seed-native-ui" or "--seed-native-ui-extended") { await NativeUiFixtures.Seed(args[0].EndsWith("extended",StringComparison.Ordinal)); return; }

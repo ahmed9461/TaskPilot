@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { PgAuthStore } from "./auth-store.js";
 import {
   baileysFactory,
-  textEvent,
+  inspectTextEvent,
   type LiveSocket,
   type SocketFactory,
   type SocketUpdate,
@@ -41,6 +41,9 @@ interface Active {
   credentials: Promise<void>;
   queued: number;
   groups: Map<string, string>;
+  receiveCounts: Record<string, number>;
+  lastObservedAt: string | null;
+  observing: number;
 }
 export class WhatsAppConnector implements WhatsAppTransport {
   readonly provider = "baileys" as const;
@@ -164,6 +167,9 @@ export class WhatsAppConnector implements WhatsAppTransport {
         credentials: Promise.resolve(),
         queued: 0,
         groups: new Map(),
+        receiveCounts: {},
+        lastObservedAt: null,
+        observing: 0,
       };
       this.active.set(id, a);
       lease.on("error", () => {
@@ -227,14 +233,52 @@ export class WhatsAppConnector implements WhatsAppTransport {
       }
     });
     socket.onMessages((messages, type) => {
-      if (a.closed || a.generation !== generation || type !== "notify") return;
+      if (a.closed || a.generation !== generation) return;
       for (const raw of messages) {
+        const remote = (raw as { key?: { remoteJid?: unknown } } | null)?.key
+          ?.remoteJid;
+        if (typeof remote !== "string" || !/^\d[\d-]*@g\.us$/.test(remote))
+          continue;
+        const result = inspectTextEvent(raw, a.since);
+        const reason =
+          type === "notify"
+            ? result.reason
+            : type === "append"
+              ? "HISTORY_EVENT"
+              : "OTHER_EVENT";
+        const observe = () => {
+          a.receiveCounts[reason] = Math.min(
+            1000000,
+            (a.receiveCounts[reason] ?? 0) + 1,
+          );
+          a.lastObservedAt = new Date(this.now()).toISOString();
+        };
+        const item = type === "notify" ? result.item : null;
+        // Rejected/history traffic must never consume the durable queue or
+        // disconnect a session. Diagnostic sampling is bounded and best effort.
+        if (!item) {
+          if (a.observing >= 10) continue;
+          a.observing++;
+          this.track(a, async () => {
+            try {
+              const group = await this.pool.query(
+                "SELECT g.id FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.session_id=$1 AND g.external_group_id=$2 AND g.enabled=true AND s.connect_requested=true",
+                [a.id, remote],
+              );
+              if (!a.closed && a.generation === generation && group.rowCount)
+                observe();
+            } catch {
+              // Diagnostics never turn a rejected event into a connector failure.
+            } finally {
+              a.observing--;
+            }
+          });
+          continue;
+        }
         if (a.queued >= 100) {
           void this.fail(a, "WHATSAPP_BACKPRESSURE");
           break;
         }
-        const item = textEvent(raw, a.since);
-        if (!item) continue;
         a.queued++;
         const task = a.queue
           .then(async () => {
@@ -242,10 +286,11 @@ export class WhatsAppConnector implements WhatsAppTransport {
             const group = (
               await this.pool.query(
                 "SELECT g.id FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE g.session_id=$1 AND g.external_group_id=$2 AND g.enabled=true AND s.provider='baileys' AND s.connect_requested=true",
-                [a.id, item.key.remoteJid],
+                [a.id, remote],
               )
             ).rows[0];
             if (!group) return;
+            observe();
             const context = `wa-ingress:${a.id}:${group.id}:${hash(item.key.id)}`;
             const sealed = this.vault.seal(JSON.stringify(item), context);
             await transaction(this.pool, async (c) => {
@@ -401,6 +446,24 @@ export class WhatsAppConnector implements WhatsAppTransport {
   }
   knownGroup(id: string, external: string) {
     return this.active.get(id)?.groups.has(external) === true;
+  }
+  async receiveDiagnostics(id: string) {
+    const row = (
+      await this.pool.query(
+        "SELECT id FROM whatsapp_sessions WHERE id=$1 AND provider='baileys'",
+        [id],
+      )
+    ).rows[0];
+    if (!row) throw new Fault("NOT_FOUND", 404);
+    const a = this.active.get(id);
+    return {
+      scope: "enabled-groups-only",
+      resetOnProcessRestart: true,
+      bestEffort: true,
+      active: !!a && !a.closed,
+      counts: { ...a?.receiveCounts },
+      lastObservedAt: a?.lastObservedAt ?? null,
+    };
   }
   canSend(id: string) {
     return (

@@ -39,15 +39,28 @@ export interface SocketFactory {
 }
 
 // Conservative allowlist: text only; no private/self/history/media/edited/ephemeral/view-once content.
-export function textEvent(raw: unknown, since: number): IncomingText | null {
+export type ReceiveReason =
+  | "ACCEPTED_TEXT"
+  | "INVALID_KEY"
+  | "NO_CONTENT"
+  | "FROM_SELF"
+  | "STALE_TIMESTAMP"
+  | "UNSUPPORTED_CONTENT"
+  | "EXPIRING_CONTENT"
+  | "INVALID_TEXT";
+export function inspectTextEvent(
+  raw: unknown,
+  since: number,
+): {
+  item: IncomingText | null;
+  reason: ReceiveReason;
+} {
   const m = raw as Partial<WAMessage> | null;
   const key = m?.key,
     content = m?.message;
   const timestamp = Number(m?.messageTimestamp);
   if (
     !key ||
-    !content ||
-    key.fromMe !== false ||
     typeof key.id !== "string" ||
     !key.id ||
     key.id.length > 200 ||
@@ -55,37 +68,48 @@ export function textEvent(raw: unknown, since: number): IncomingText | null {
     !/^\d[\d-]*@g\.us$/.test(key.remoteJid) ||
     typeof key.participant !== "string" ||
     !/^\d+(?::\d+)?@(lid|s\.whatsapp\.net)$/.test(key.participant) ||
-    !Number.isFinite(timestamp) ||
-    timestamp < since
+    !Number.isFinite(timestamp)
   )
-    return null;
+    return { item: null, reason: "INVALID_KEY" };
+  if (key.fromMe !== false) return { item: null, reason: "FROM_SELF" };
+  if (!content) return { item: null, reason: "NO_CONTENT" };
+  if (timestamp < since) return { item: null, reason: "STALE_TIMESTAMP" };
   const keys = Object.keys(content).filter(
     (k) => content[k as keyof typeof content] != null,
   );
   if (
     keys.some(
       (k) =>
-        !["conversation", "extendedTextMessage", "messageContextInfo"].includes(
-          k,
-        ),
+        ![
+          "conversation",
+          "extendedTextMessage",
+          "messageContextInfo",
+          "senderKeyDistributionMessage",
+        ].includes(k),
     )
   )
-    return null;
+    return { item: null, reason: "UNSUPPORTED_CONTENT" };
   if ((content.extendedTextMessage?.contextInfo?.expiration ?? 0) > 0)
-    return null;
+    return { item: null, reason: "EXPIRING_CONTENT" };
   const text = content.conversation ?? content.extendedTextMessage?.text;
   if (typeof text !== "string" || !text.trim() || text.length > 16000)
-    return null;
+    return { item: null, reason: "INVALID_TEXT" };
   return {
-    key: {
-      id: key.id,
-      remoteJid: key.remoteJid,
-      participant: key.participant,
-      fromMe: false,
+    reason: "ACCEPTED_TEXT",
+    item: {
+      key: {
+        id: key.id,
+        remoteJid: key.remoteJid,
+        participant: key.participant,
+        fromMe: false,
+      },
+      text,
+      timestamp,
     },
-    text,
-    timestamp,
   };
+}
+export function textEvent(raw: unknown, since: number): IncomingText | null {
+  return inspectTextEvent(raw, since).item;
 }
 
 // This is the only runtime import/socket construction boundary for the real library.
