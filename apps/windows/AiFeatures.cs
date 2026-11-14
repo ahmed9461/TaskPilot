@@ -11,7 +11,7 @@ public sealed partial class MainPage
         var c = await api.Send("GET", "/v1/ai/config");
         var usage = await api.Send("GET", "/v1/ai/usage");
         var provider = new ComboBox { Header = "المزود", ItemsSource = new[] { "deepseek", "openrouter" }, SelectedItem = V(c,"provider") };
-        var model = new ComboBox { Header = "النموذج", ItemsSource = new[] { V(c,"model") }, SelectedIndex = 0, MinWidth = 300 };
+        var model = new ComboBox { Header = "النموذج", ItemsSource = new[] { V(c,"model") }, SelectedIndex = 0 };
         var enabled = new CheckBox { Content = "تفعيل اقتراحات المهام اليدوية", IsChecked = c["enabled"]?.GetValue<bool>() };
         var outbound = new CheckBox { Content = "السماح بإرسال رموز أنواع المهام إلى المزود", IsChecked = c["outboundApproved"]?.GetValue<bool>() };
         var requests = new NumberBox { Header = "الحد اليومي للطلبات (UTC)", Minimum = 1, Maximum = 100, Value = c["dailyRequestLimit"]!.GetValue<int>() };

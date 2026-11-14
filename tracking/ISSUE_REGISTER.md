@@ -86,3 +86,10 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 
 I-034 CLOSED WITH ACTUAL LAUNCHER EVIDENCE: inherited uppercase PSMODULEPATH beat explicit PSModulePath when helper was launched through Python; negative recovery harness stopped at acl, not intended decrypt rejection. Case-insensitive removal of overridden env keys fixes Windows selection. Repeat wrong-code/tamper rejects at decrypt/zero containers, positive independent cloud-kit restore through same launcher PASS. Initial failure retained in TEST_RESULTS.
 I-010 current bounded0.8 ops sample PASS/0services added/0removed; historical nonzero drift remains recorded. This does not prove continuous host invariance or justify touching unrelated services.
+
+
+I-035 Windows notification activation route changed content/title but not selected sidebar item; source-confirmed.0.6.5 candidate synchronizes through NotificationsNav/SelectionChanged; actual OS click acceptance remains OPEN. Notification lifecycle/fault/stale callbacks covered by9 offline checks; normal SDK shutdown corrected per official guidance. No historical popup root-cause claim.
+I-036 narrow-window risk from forced expanded navigation/horizontal actions/fixed300px fields addressed in0.6.5 candidate with adaptive navigation/flow actions/shrinkable fields/wrapping names. Geometry28scenarios PASS; visible native resize/keyboard/scaling remains OPEN.
+I-037 native UI acceptance BLOCKED_BY_TOOLING: both computer-use tools fail initialization with kernel asset filesystem error(os error3), including reset/retry; no app inventory/input available. Preserve0.6.4 tested artifact, separate native API/component probes from interaction proof. Repair/restart of Codex/host tooling is outside project UI automation scope.
+
+I-036 follow-up: initial detached WinUI component harness failed bounds and is retained; attached12case WinUI probe and28pure geometry scenarios now PASS. These do not close visible keyboard/resize/scaling acceptance. Native API probe generic receipt PASS/non-admin; no historical missing-popup cause proved.

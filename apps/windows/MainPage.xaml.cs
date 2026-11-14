@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Media;
 using System.Text.Json.Nodes;
 namespace TaskPilot_Windows;
@@ -62,7 +63,7 @@ public sealed partial class MainPage : Page
     private static string V(JsonNode? n, string key) => n?[key]?.ToString() ?? "";
     private static int Ver(JsonNode n) => n["version"]!.GetValue<int>();
     private static TextBlock Text(string s, int size = 14) => new() { Text = s, FontSize = size, TextWrapping = TextWrapping.Wrap };
-    private static TextBox Field(string label, string s = "") => new() { Header = label, Text = s, MinWidth = 300, MaxLength = 200 };
+    internal static TextBox Field(string label, string s = "") => new() { Header = label, Text = s, MaxLength = 200 };
     private static PasswordBox Secret(string label) => new() { Header = label, PasswordRevealMode = PasswordRevealMode.Hidden };
     private PasswordBox ReauthField() => new() { Header = sshConnection is null ? "سر إعادة التحقق" : "ستتم إعادة المصادقة عبر SSH عند الموافقة", IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
     private static StackPanel Stack(params UIElement[] items)
@@ -72,15 +73,21 @@ public sealed partial class MainPage : Page
             p.Children.Add(x);
         return p;
     }
+    internal static Button ActionButton(string title)
+    {
+        var b = new Button { Content = Text(title) };
+        AutomationProperties.SetName(b, title);
+        return b;
+    }
     private Button Button(string title, Func<Task> action)
     {
-        var b = new Button { Content = title };
+        var b = ActionButton(title);
         b.Click += async (_, _) => await Run(action);
         return b;
     }
     private void Card(string title, string detail, params UIElement[] actions)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var row = new ActionFlowPanel { Spacing = 8 };
         foreach (var a in actions)
             row.Children.Add(a);
         Body.Children.Add(new Border { Padding = new Thickness(20), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1), BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"], Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"], Child = Stack(Text(title, 20), Text(detail), row) });
@@ -125,9 +132,35 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         InitializeComponent();
-        desktop.OpenRequested += () => DispatcherQueue.TryEnqueue(async () => { if (shuttingDown) return; App.CurrentWindow?.Activate(); page = "notifications"; Heading.Text = "الإشعارات"; if (busy) renderPending = true; else await Run(Render); });
+        desktop.OpenRequested += () => DispatcherQueue.TryEnqueue(async () =>
+        {
+            if (shuttingDown) return;
+            App.CurrentWindow?.Activate();
+            if (!ReferenceEquals(Nav.SelectedItem, NotificationsNav))
+            {
+                // SelectionChanged owns heading/content and coalesces a busy render.
+                Nav.SelectedItem = NotificationsNav;
+                return;
+            }
+            page = "notifications";
+            Heading.Text = "الإشعارات";
+            if (busy) renderPending = true;
+            else await Run(Render);
+        });
         Loaded += async (_, _) =>
         {
+            var probeFile = Environment.GetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_FILE");
+            var closeAfterProbe = Environment.GetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_AUTOCLOSE") == "1";
+            Environment.SetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_FILE", null);
+            Environment.SetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_AUTOCLOSE", null);
+            if (probeFile is not null)
+            {
+                // Local OS probe never consumes injected client configuration or opens SSH/API.
+                await Run(async () => { await Render(); await NotificationProbe.Run(desktop, probeFile, Body); });
+                if (closeAfterProbe) App.CurrentWindow?.Close();
+                else if (!shuttingDown) timer.Start();
+                return;
+            }
             await Run(async () =>
         {
             var file = Environment.GetEnvironmentVariable("TASKPILOT_CLIENT_CONFIG_FILE");
@@ -153,10 +186,6 @@ public sealed partial class MainPage : Page
         });
             if (!shuttingDown)
                 timer.Start();
-            var probeFile = Environment.GetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_FILE");
-            Environment.SetEnvironmentVariable("TASKPILOT_NOTIFICATION_PROBE_FILE", null);
-            if (probeFile is not null)
-                await Run(() => NotificationProbe.Run(desktop, probeFile));
         };
         Unloaded += async (_, _) => { timer.Stop(); if (sshConnection is not null) await sshConnection.DisposeAsync(); api.Dispose(); };
         timer.Tick += async (_, _) => await PollChanges();
@@ -531,7 +560,7 @@ public sealed partial class MainPage : Page
             if (groups.Count == 0)
                 throw new InvalidOperationException("أضف مجموعة محاكاة أولًا.");
             var group = Choice("المجموعة", groups.Select(g => (V(g, "id"), ChoiceLabel(g!, "title"))));
-            var content = new TextBox { Header = "بيانات وهمية فقط", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinWidth = 320, Height = 150, MaxLength = 16000, Text = "الاسم: حساب اختبار\nاليوزر: demo-new\nكلمة المرور: synthetic-only" };
+            var content = new TextBox { Header = "بيانات وهمية فقط", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Height = 150, MaxLength = 16000, Text = "الاسم: حساب اختبار\nاليوزر: demo-new\nكلمة المرور: synthetic-only" };
             if (!await Dialog("محاكاة استلام رسالة", Stack(Text("تُحفظ الرسالة في الخادم؛ لا تُرسل إلى واتساب."), group, content), "استقبال محاكى"))
                 return;
             var selected = groups.Single(g => V(g, "id") == Selected(group))!;

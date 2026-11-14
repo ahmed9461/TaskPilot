@@ -40,7 +40,7 @@ public sealed partial class MainPage
         var total=result["total"]!.GetValue<int>();
         var previous=Button("السابق",async()=>{detailOffset=Math.Max(0,detailOffset-50);await Render();}); previous.IsEnabled=detailOffset>0;
         var next=Button("التالي",async()=>{detailOffset+=50;await Render();}); next.IsEnabled=detailOffset+50<total;
-        Body.Children.Add(Stack(Text(total==0 ? "لا توجد سجلات في هذا القسم." : $"النتائج {Math.Min(detailOffset+1,total)}–{Math.Min(detailOffset+50,total)} من {total}"),new StackPanel {Orientation=Orientation.Horizontal,Spacing=12,Children={previous,next}}));
+        Body.Children.Add(Stack(Text(total==0 ? "لا توجد سجلات في هذا القسم." : $"النتائج {Math.Min(detailOffset+1,total)}–{Math.Min(detailOffset+50,total)} من {total}"),new ActionFlowPanel {Spacing=12,Children={previous,next}}));
         Body.Children.Add(Text("تُعرض بيانات المصدر الوصفية فقط. يعرض النشاط السجلات المرتبطة الموجودة حاليًا؛ الحذف النهائي يزيل روابط البيانات المحذوفة، ويبقى سجل التدقيق العام منقّحًا."));
     }
 }

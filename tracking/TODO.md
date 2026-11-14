@@ -58,6 +58,9 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [x] Native0.6.4 retention save/preview/phrase/SSHreauth/history; stopped synthetic forgetting/history preservation/read-only tombstone/server proof; actual identity untouched.
 - [x] Repeatable encrypted recovery kit builder/entry hashes/private cloud copy+download hash+fresh-dir isolated restore. Installed daily runner manual trigger and its owner-envelope restore PASS.
 
+- [x] Windows0.6.5 candidate: notification lifecycle/fault/stale callbacks/normal shutdown and adaptive controls;33offlineC#/28geometry+12attachedWinUI component/nativeSDK receipt PASS.
+- [ ] Native0.6.5 actual popup/click/navigation/keyboard/resize/scaling; blocked by computer-use kernel startup I-037, not a project PASS.0.6.4 delivery retained.
+
 ## Next
 1. Remaining Windows accessibility/scaling/full session-group/filter cases and actual notification popup/click.
 2. Wider provider network/late delivery and scoped reboot acceptance with all other services protected; never run shared VPS reboot automatically.24h stays owner-waived.

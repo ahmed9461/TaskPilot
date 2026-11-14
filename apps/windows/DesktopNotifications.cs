@@ -1,78 +1,57 @@
 using Microsoft.Windows.AppNotifications;
 using Microsoft.Windows.AppNotifications.Builder;
+using System.Security.Principal;
 namespace TaskPilot_Windows;
 
 public sealed class DesktopNotifications : IDisposable
 {
-    private bool registered;
-    public bool Enabled
+    private readonly NotificationSession session = new(new WindowsNotificationPlatform());
+    public bool Enabled => session.Enabled;
+    public string Status => session.Status;
+    public event Action? OpenRequested
     {
-        get; private set;
+        add => session.OpenRequested += value;
+        remove => session.OpenRequested -= value;
     }
-    public string Status { get; private set; } = "إشعارات Windows متوقفة لهذه الجلسة.";
-    public event Action? OpenRequested;
-    public void Enable(bool enabled)
+    public void Enable(bool enabled) => session.Enable(enabled);
+    public uint Show(int count) => session.Show(count);
+    public void Dispose() => session.Dispose();
+}
+
+internal sealed class WindowsNotificationPlatform : INotificationPlatform
+{
+    public bool IsSupported => AppNotificationManager.IsSupported();
+    public bool IsElevated
     {
-        if (!enabled)
+        get
         {
-            Dispose();
-            Status = "إشعارات Windows متوقفة لهذه الجلسة.";
-            return;
+            using var identity = WindowsIdentity.GetCurrent();
+            return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
         }
-        if (Enabled)
-            return;
-        try
-        {
-            if (!AppNotificationManager.IsSupported())
-            {
-                Status = "إشعارات Windows غير مدعومة في بيئة التشغيل الحالية.";
-                return;
-            }
-            var manager = AppNotificationManager.Default;
-            manager.NotificationInvoked += OnInvoked;
-            try
-            {
-                manager.Register();
-                registered = true;
-            }
-            catch { manager.NotificationInvoked -= OnInvoked; throw; }
-            Enabled = manager.Setting == AppNotificationSetting.Enabled;
-            Status = Enabled ? "إشعارات عامة صامتة أثناء تشغيل التطبيق؛ لا أسماء أو بيانات حسابات." : "لم يسمح Windows بالإشعارات؛ الإشعارات داخل التطبيق متاحة.";
-            if (!Enabled)
-                Dispose();
-        }
-        catch { Dispose(); Status = "تعذر تهيئة إشعارات Windows. الإشعارات داخل التطبيق متاحة."; }
     }
-    private void OnInvoked(AppNotificationManager sender, AppNotificationActivatedEventArgs args) => OpenRequested?.Invoke();
-    public uint Show(int count)
+    public bool IsEnabled => AppNotificationManager.Default.Setting == AppNotificationSetting.Enabled;
+    public event Action? Invoked;
+    public void Register()
     {
-        if (!Enabled)
-            return 0;
-        try
-        {
-            var notification = new AppNotificationBuilder().AddArgument("action", "notifications")
-                .AddText("TaskPilot").AddText(ChangeFeed.SafeSummary(count)).MuteAudio()
-                .SetTag("workspace-updates").SetGroup("TaskPilot").BuildNotification();
-            notification.Expiration = DateTimeOffset.UtcNow.AddMinutes(2);
-            notification.ExpiresOnReboot = true;
-            AppNotificationManager.Default.Show(notification);
-            if (notification.Id == 0)
-                Status = "لم يؤكد Windows قبول الإشعار؛ راجع الإشعارات داخل التطبيق.";
-            return notification.Id;
-        }
-        catch { Status = "تعذر عرض إشعار Windows؛ التنبيه محفوظ داخل التطبيق."; return 0; }
+        var manager = AppNotificationManager.Default;
+        manager.NotificationInvoked += OnInvoked;
+        manager.Register();
     }
-    public void Dispose()
+    private void OnInvoked(AppNotificationManager sender, AppNotificationActivatedEventArgs args) => Invoked?.Invoke();
+    public uint Show(string summary)
     {
-        Enabled = false;
-        if (!registered)
-            return;
-        try
-        {
-            AppNotificationManager.Default.NotificationInvoked -= OnInvoked;
-            AppNotificationManager.Default.UnregisterAll();
-        }
-        catch { /* Notification availability must never interrupt the workspace. */ }
-        registered = false;
+        var notification = new AppNotificationBuilder().AddArgument("action", "notifications")
+            .AddText("TaskPilot").AddText(summary).MuteAudio()
+            .SetTag("workspace-updates").SetGroup("TaskPilot").BuildNotification();
+        notification.Expiration = DateTimeOffset.UtcNow.AddMinutes(2);
+        notification.ExpiresOnReboot = true;
+        AppNotificationManager.Default.Show(notification);
+        return notification.Id;
+    }
+    public void Unregister()
+    {
+        var manager = AppNotificationManager.Default;
+        try { manager.NotificationInvoked -= OnInvoked; }
+        finally { manager.Unregister(); }
     }
 }

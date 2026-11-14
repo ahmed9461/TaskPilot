@@ -45,3 +45,6 @@
 
 
 0.8 final:62PG incl6parents/24Node/21offlineC#/exact backend+Windows CI PASS; native privacy save/cleanup/history/selected synthetic forgetting/server readback verified. Independent old11/new13/cloud-readback/scheduled13 restore DPAPI0/SSH0, wrong-code/tamper rejected before container. Initial negative ACL launcher failure fixed/repeated, original retained in TEST_RESULTS. Physical secret custody/new user/device/cutover and OS toast activation remain separate acceptance.
+
+
+Windows0.6.5 candidate:9notification lifecycle/fault/stale-callback and3action-flow groups(28width/font cases) extend offlineC# to33. Actual native API receipt/generic payload and attachedWinUI12cases pass; first detached harness FAIL preserved. Actual popup/click/keyboard/resize/OSscale remains OPEN_TOOLING because kernel fails before inventory, not an app test success.

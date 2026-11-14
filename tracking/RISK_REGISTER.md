@@ -50,3 +50,6 @@ R-01/R-03 one-hour quiet live observation plus isolated30m874unique+874replays p
 
 ##0.8 bounded privacy/independent recovery evidence
 R-02/R-05 explicit retention/forget preview+reauth+phrase/stale/lease/uncertain guards and native stopped-synthetic acceptance reduce accidental erasure; immutable forgotten UUID cannot be reused. Business history retained; phone linked devices/old backups not retroactively erased. R-07 third owner recipient and private cloud download/hash/fresh-dir independent restore DPAPI0/SSH0 cover cryptographic loss when kit+code survive. Owner external code custody/new-device/full production cutover unverified; daily laptop backup availability and manual cloud refresh remain risks. Legacy copies retained. R-08 current bounded ops delta0/0 PASS, historical unrelated drift not erased/no continuous global-host guarantee. R-11 native accessibility/visible popup-click remains open.
+
+
+Windows0.6.5 candidate reduces callback/registration and narrow-action risks with33offlineC# and12native attached-component cases; actual visible interaction remains blocked by tool initialization I-037. Keep exact tested0.6.4 artifact. API0.8/identity833/selected group/live counters/sendfalse remain unchanged; no elevated app launch or OS setting changes.

@@ -19,7 +19,7 @@ public sealed partial class MainPage
     private async Task<JsonNode> PageData(string resource) => await api.Send("GET", "/v1/" + resource + "?" + string.Join("&", Query(resource).Where(kv => kv.Value != "").Select(kv => kv.Key + "=" + Uri.EscapeDataString(kv.Value))));
     private static ComboBox Choice(string header, IEnumerable<(string Code, string Label)> options, string selected = "")
     {
-        var c = new ComboBox { Header = header, MinWidth = 160 };
+        var c = new ComboBox { Header = header };
         foreach (var (code, label) in options)
         {
             var item = new ComboBoxItem { Content = label, Tag = code };
@@ -45,7 +45,7 @@ public sealed partial class MainPage
         prev.IsEnabled = offset > 0;
         var next = Button("التالي", async () => { offsets[resource] = offset + limit; await Render(); });
         next.IsEnabled = offset + limit < total;
-        Body.Children.Add(Stack(Text($"النتائج {Math.Min(offset + 1, total)}–{Math.Min(offset + limit, total)} من {total}"), new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { prev, next } }));
+        Body.Children.Add(Stack(Text($"النتائج {Math.Min(offset + 1, total)}–{Math.Min(offset + limit, total)} من {total}"), new ActionFlowPanel { Spacing = 12, Children = { prev, next } }));
     }
     private void TrackDraft(params Control[] controls)
     {

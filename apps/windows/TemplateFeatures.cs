@@ -18,7 +18,7 @@ public sealed partial class MainPage
         var tasks = (await api.Send("GET", "/v1/task-types")).AsArray();
         var code = Field("رمز القالب", V(template, "code"));
         code.IsReadOnly = template is not null;
-        var body = new TextBox { Header = "نص الرد", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 2000, MinWidth = 300, Height = 120, Text = V(template, "body") };
+        var body = new TextBox { Header = "نص الرد", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 2000, Height = 120, Text = V(template, "body") };
         var group = ScopeChoice("المجموعة (الكل = قالب عام)", groups, "title", V(template, "group_id"), V(template, "group_title"));
         var task = ScopeChoice("نوع المهمة (الكل = قالب عام)", tasks, "name", V(template, "task_type_id"), V(template, "task_name"));
         var enabled = new CheckBox { Content = "متاح للمعاينات الجديدة", IsChecked = template?["enabled"]?.GetValue<bool>() ?? true };
@@ -57,7 +57,7 @@ public sealed partial class MainPage
         if (sources.Count == 0)
             throw new InvalidOperationException("لا توجد رسالة مصدر لهذا التكليف.");
         var source = new ComboBox { Header = "رسالة المصدر", ItemsSource = sources.Select(n => $"{V(n, "sessionId")} / {V(n, "groupId")} / {V(n, "externalMessageId")}").ToArray(), SelectedIndex = 0, MaxWidth = 440 };
-        var template = new ComboBox { Header = "القالب المتاح لهذه المهمة والمجموعة", MinWidth = 300 };
+        var template = new ComboBox { Header = "القالب المتاح لهذه المهمة والمجموعة" };
         var hint = Text("");
         var matching = new List<JsonNode>();
         var generation = 0;

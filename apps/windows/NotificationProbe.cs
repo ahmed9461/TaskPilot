@@ -1,14 +1,21 @@
 using Microsoft.Windows.AppNotifications;
 using System.Text.Json;
 using System.Xml.Linq;
+using Microsoft.UI.Xaml.Controls;
 namespace TaskPilot_Windows;
 
 // Opt-in local acceptance hook. Does not connect to a server or transmit account data.
 internal static class NotificationProbe
 {
-    public static async Task Run(DesktopNotifications desktop, string resultFile)
+    public static async Task Run(DesktopNotifications desktop, string resultFile, Panel host)
     {
-        var supported = AppNotificationManager.IsSupported();
+        object layout;
+        try { layout = NativeLayoutChecks.Run(host); }
+        catch (InvalidOperationException e) when (e.Message.StartsWith("NATIVE_", StringComparison.Ordinal))
+        { layout = new { status = "FAIL", code = e.Message, scope = "in-process WinUI component check" }; }
+        var platform = new WindowsNotificationPlatform();
+        var supported = platform.IsSupported;
+        var elevated = platform.IsElevated;
         desktop.Enable(true);
         var acceptedId = desktop.Show(1);
         var stored = false;
@@ -27,10 +34,12 @@ internal static class NotificationProbe
         var result = new
         {
             supported,
+            elevated,
             enabled = desktop.Enabled,
             accepted = acceptedId > 0,
             stored,
             generic,
+            layout,
             status = desktop.Status,
             scope = "local generic test only; visible popup not inferred from API receipt"
         };
