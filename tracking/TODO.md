@@ -30,7 +30,7 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 ## P2 — Windows
 - [x] P2-001 portable resources/startup/ArabicRTL/SSH/unsigned packaging.
 - [ ] P2-002 full native session/group configuration matrix; actual QR/binding observed partly.
-- [ ] P2-003 remaining accessibility/full-filter cases; native account/task/source/history/flags/53-account pagination verified.
+- [ ] P2-003 remaining functional configuration/filter cases; native account/task/source/history/flags/53-account pagination verified.
 - [x] P2-004 review reveal/30-second hide/reauth/resolve/raw clear.
 - [x] P2-005 synthetic CSV/reconciliation/source-B mock approval/task deletion/selected pair/global cancel native acceptance; actual quoted live reply retained. Uncertain delivery never auto-retried.
 - [x] P2-006 scoped template editing/disable/filter/multiline save+reopen; source A→B selects B-only preview/mock reply verified, sent snapshot immutable.
@@ -39,7 +39,7 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [x] Same-page automatic scroll retention; Arabic flag/evidence labels and explanatory refusal.
 
 ## P3 — الاستقرار والتكاملات
-- [ ] P3-001 full sustained provider/network/late-delivery/reboot/accessibility acceptance.
+- [ ] P3-001 functional provider/network/late-delivery/restart acceptance.
 - [x] P3-001a quiet live3600s/239samples/0failure-disconnection-PIDchanges-errors-pending-gaps.
 - [x] P3-001b isolated1800s/874unique+874replay/8accounts/16tasks/8valid encrypted credentials/0errors-provider-outbound. Original070 harness FAIL retained; fresh071 PASS.
 - [x] P3-001c24 Node/62 isolated PG incl6parents/34 offline C#/fresh34 Windows→SSH→API0.8/exact-code hosted CI PASS.
@@ -61,12 +61,13 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 
 - [x] Windows0.6.5 candidate: notification lifecycle/fault/stale callbacks/normal shutdown and adaptive controls;34offlineC#/28geometry+12attachedWinUI component/nativeSDK receipt PASS.
 - [x] Native0.6.5 exact dfebeb1: SSH/dashboard, actual Tab/Shift+Tab/Enter/Escape, expanded/compact/minimal navigation and narrow598px two-row actions, canceled mock draft/server count0, logout/revoked-client/closed-window+own-tunnel proof. I-037 tooling recovered2026-11-15.
-- [ ] Native0.6.5 actual notification popup/click and full screen-reader/OSscale/config/filter acceptance. Local generic notification accepted; Shell BUSY sampled, popup/click NOT_OBSERVED. Keep0.6.4 delivery and0.6.5 candidate identities distinct.
+- [x] Native0.6.6 source69f6757 bounded225%/344x244/keyboard/filter/mock-cancel/logout proof; prior failures retained. Narrator test removed by owner D-068; no further cosmetic acceptance work D-069. OS popup/click unverified and low-priority, not a release gate.
 
 ## Next
-1. Remaining Windows accessibility/scaling/full session-group/filter cases and actual notification popup/click.
-2. Wider provider network/late delivery and scoped reboot acceptance with all other services protected; never run shared VPS reboot automatically.24h stays owner-waived.
-3. External owner code custody/new-device/full cutover proof and always-on backup destination; optional OpenRouter/broader reporting.
+1. Durable ingress under transient database failure; isolated reproduction/fix I-039.
+2. Outbox/restart/idempotency/recovery functional acceptance with unrelated services protected.24h stays waived.
+3. Functional Windows/server workflow gaps and always-on independent backup; external recovery-code custody remains owner-managed.
+
 API/native accepted0.6.4 source1bd7344; candidate0.6.5 sourcedfebeb1(code CI43633370508 SUCCESS),security8585562 CI43633806414 SUCCESS; installed recovery runner b876096. One actual group/connectiontrue/sendingfalse. Installer/updater optional/signing not a gate. Never reset CONNECTED identity or auto-retry UNKNOWN_DELIVERY.
 
 ## Historical checkpoints (superseded by current checklist)
@@ -93,4 +94,8 @@ Postrotation34 direct Windows→SSH→VPS checks PASS, fixture synthetic-accepta
 
 Queued native activation now carries its opt-in generation into DispatcherQueue; dispatch rechecks current generation/enabled state. Deferred old click cannot navigate after opt-out/re-enable(10notification checks,34offlineC# PASS). Final candidate source/evidence recorded in latest TEST_RESULTS; actual OS click still unobserved.
 
-- [ ] I-038 native0.6.6 retry: actual225%/small344x244 whole-page scroll/navigation wrapping/filter title/keyboard/dialog; source implemented, not yet verified. Original100% and DND-on state restored after reproduction.
+- [x] I-038 source69f6757 actual225%/344x244/body scroll/nav icons/keyboard/filter/mock-cancel verified; prior failed candidates retained.
+
+- [x] D-068 Narrator/screen-reader test WAIVED_BY_OWNER, stopped; not PASS.
+- [x] D-069 font-scaling test finished; further cosmetic tests removed from active priority/release gates.
+- [ ] I-039 transient DB failures must not quarantine valid durable ingress; isolated regression/fix in progress.

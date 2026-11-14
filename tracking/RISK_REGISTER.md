@@ -57,3 +57,5 @@ Windows0.6.5 candidate reduces callback/registration and narrow-action risks wit
 Bounded54-request pilot security acceptance reduces evidence gaps for auth/reauth/input bounds/masked reads/security headers/revocation. No broad penetration, tenant separation/MFA/DoS or unsafe live mutation claimed. Actual identity proof remains unchanged.
 
 R-11 enlarged-text risk reproduced at actual225%/344x244px: clipped labels/body unreachable. I-0380.6.6 correction pending native retry. OS notification permissions allowed but DND on/reappears; no toast target/click evidence. Temporary text settings restored100/current DND on; no security/privacy changes.
+
+D-068 removes Narrator testing; D-069 prioritizes functional correctness over further cosmetic gates. Actual225%/344x244 defect corrected/native verified69f6757, original100 restored. OS popup unverified/nonblocking; actual in-app sync remains required. New functional risk I-039: transient DB errors may consume poison budget and quarantine valid ingress; isolated reproduction pending.

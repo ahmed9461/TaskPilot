@@ -1,14 +1,15 @@
 # الحالة الحالية — 2026-11-15 (Asia/Riyadh)
 
-## Windows0.6.6 accessibility correction — IN_PROGRESS
-Actual Windows text225% exposed clipped navigation/filter headers and unreachable body at344x244px (I-038). Text100 restored, DND original/current on; no actual popup/click observed.0.6.6 whole-page scrolling/wrapped labels/heading semantics implemented; initial build0warnings/errors and34offlineC# PASS; exact-source publish/native retry pending. API0.8/same identity/sendingfalse unchanged. Prior0.6.5 acceptance below retains its exact boundaries.
+## Windows0.6.6 — VERIFIED ضمن النطاق الوظيفي المختبر
+Source69f6757/CI43648017438 backend+Windows SUCCESS. اكتمل اختبار225% وإصلاح التفاف التنقل/البحث والتمرير في344x244 وحوار الإلغاء والخروج؛لا rebuild بعد القبول. ZIP94769232bytes/530files/SHA256b87aeb3c58ad7f1ada923f6b81bd682fd3128247f96e0856ee2e6b9bfe7d0dea؛النسخ السابقة محفوظة. تفاصيل الإخفاقات والقبول في أحدثTEST_RESULTS/evidence066.
+D-068: أُلغي اختبار الراوي بطلب المالك وأُوقف،لا PASS. D-069: أولوية التشغيل السليم،لا اختبارات شكلية إضافية؛اختبار الخط منتهٍ وإعداد100% مستعاد. Popup/click غير مثبت ومنخفض الأولوية،ليس بوابة إصدار. التركيز التالي الاستقبال/الطوابير/التعافي/منع التكرار. نفس هويةWhatsApp/auth833/source5/SENT1/sendfalse/accounts4/tasks4/activeClients0/privacyRuns2. لا إرسال أو نشر جديد.
 
 API **0.8.0 DEPLOYED / VERIFIED**؛ Windows portable **0.6.4 VERIFIED** في حالات القبول الموصوفة أدناه. مشروع شخصي لمالك واحد، ZIP غير موقع مقبول D-037. سياسة الاحتفاظ والنسيان المحلي والاستعادة المستقلة منفذة ومختبرة. **24h WAIVED_BY_OWNER D-060**؛ لا تُشغّل أو تُصنّف PASS. ملفات TEST_RESULTS/CHANGELOG/ذاكرة المشروع تحتفظ بالأدلة والأخطاء التاريخية؛ هذا الملف هو الحالة الحالية.
 
 ## متابعة Windows0.6.5 — candidate مع قبول تفاعلي جزئي
 تفعيل التنبيه يحدد عنصر الإشعارات والعنوان والمحتوى معًا،ودورة التسجيل مفصولة عن OS باختبارات فشل/تفعيل متأخر. تعطيل آمن عند unsupported/elevated/رفض Windows؛normal Unregister،عدّاد فقط وصمت ومدةدقيقتين. NavigationView Auto وأزرار/عناوين ملتفة وصفوف إجراءات متدفقة وحقول قابلة للتصغير.34 offlineC# PASS (10notification+3geometry groups جديدة،28سيناريوهندسي)،WinUI build/publish0warnings/errors. Native API قبول/حفظ/محتوىعامPASS،وقياسWinUI مرتبط بالنافذة12حالةPASS؛لا تعني actualpopup/click/keyboard/OSscale. فحص مكونات منفصلة أولًا فشل وحُفظ،ثم صُحح إعداد الفحص وأعيد بنجاح.
 عاد التحكم Windows للعمل2026-11-15؛ I-037 RESOLVED_TOOLING بعد فشل kernel التاريخي. على نفس candidate dfebeb1: اتصال SSH ولوحة4حسابات/4مهام،Tab/Shift+Tab/Enter/Escape فعليًا،تغيير النافذة من1233 إلى1032/822/598px ثم maximized1659px،والتنقل expanded/compact/minimal ملتفًا. أزرار الجلسات في598px ظهرت على صفين بلا قص،وحوار mock أُلغي دون حفظ. تسجيل الخروج أظهر «غير متصل» وأزال المدة/الإجراء؛client revoked1/active0،لا عملية أو نفق اختبار باقٍ. لا تغييرات إعدادات OS أو ربط/إرسال/AI.
-قبل Windows إشعارًا عامًا من الواجهة،لكن popup/click NOT_OBSERVED. فحص Shell للقراءة فقط أعطى HRESULT0/state2 BUSY؛قرينة حالية محتملة لحجب العرض،وليست سببًا مثبتًا للفشل التاريخي أو تشخيصًا كاملاً لسياسة Windows App SDK. لا تعطيل صريح في قيم banner التي فُحصت للتطبيق؛لم تُغيّر إعدادات النظام. full screen-reader/OSscale/config/filter ما زالت جزئية. التفاصيل والأدلة المنقحة في TEST_RESULTS وtracking/evidence/windows-0.6.5-native-20261115.json.
+قبل Windows إشعارًا عامًا من الواجهة،لكن popup/click NOT_OBSERVED. فحص Shell للقراءة فقط أعطى HRESULT0/state2 BUSY؛قرينة حالية محتملة لحجب العرض،وليست سببًا مثبتًا للفشل التاريخي أو تشخيصًا كاملاً لسياسة Windows App SDK. لا تعطيل صريح في قيم banner التي فُحصت للتطبيق؛لم تُغيّر إعدادات النظام. core session/group/filter ما زالت جزئية. التفاصيل والأدلة المنقحة في TEST_RESULTS وtracking/evidence/windows-0.6.5-native-20261115.json.
 
 Candidate0.6.5 exact source `dfebeb1c03955adb36ef3b5f032d147ed039972c`،34offlineC#/12attachedWinUI/nativeSDK generic receipt PASS تاريخيًا،وقبول تفاعلي جزئي كما أعلاه. ZIPcandidate 94770110bytes/532files/SHA256`17b3363a7fb8ebefd6f4279a2ff857acee02d83f55b4f827528226c2d0e3fae8` أُعيد التحقق منه الآن؛لا rebuild بعد القبول.0.6.4native-testedمحفوظ ولا ترقية شاملة قبل إغلاق الحدود الباقية. CI للشيفرة: dfebeb1/43633370508 و8585562/43633806414 كلاهما backend+Windows SUCCESS؛9c/43632489470 SUCCESS أيضًا.
 
@@ -46,9 +47,10 @@ E:\TaskPilot-Backups خاص بالمالك+SYSTEM وخارج Git/outputs. ثلا
 ZIP0.6.4 في task outputs:94761294bytes/532files/CRC+resources+runtime-data guard PASS/SHA256 `0b6a78695c15c5bcadd7e4be4785052dcd4fc60195086f91be893383923eab4b`. ProductVersion0.6.4+1bd7344. النسخ السابقة محفوظة؛ لا مفاتيح/نسخ DB/صور في ZIP. Installer/updater اختياريان والتوقيع ليس شرطًا شخصيًا.
 
 ## المتبقي حسب الأولوية
-1. بقية مصفوفة Windows: الوصول/التكبير/keyboard/filter،وظهور التنبيه وتفعيله فعليًا دون تغيير إعدادات OS.
-2. wider provider late-delivery/network/reboot acceptance فقط مع حماية خدمات المضيف؛ لا reboot مشترك تلقائيًا ولا24h.
-3. حيازة رمز المالك خارج اللابتوب وتجربة جهاز جديد/تحويل مستقل؛ تحديث cloud متكرر على هدف دائم يحتاج وجهة وتشغيلًا مستقلاً. لا تُعتبر هذه منجزة بالحزمة الحالية.
-4. optional OpenRouter live/تقارير وتنبيهات أوسع/أكثر من جلسة حقيقية،ضمن قرار صريح للنطاق. لا retry تلقائي لحالة UNKNOWN_DELIVERY.
+1. الاستقبال المتين: أخطاء DB المؤقتة، استكمال الوارد بعد الانقطاع، منع التكرار وحماية الطوابير(I-039 جارٍ).
+2. استقرار الردود والاستعادة والنسخ الاحتياطي؛ اختبارات restart محددة لخدمةTaskPilot فقط،لا reboot مشترك ولا24h.
+3. سير عمل Windows الوظيفي مع الخادم،ثم وجهة نسخ دائمة وحيازة رمز الاستعادة خارج اللابتوب.
+اختبار الراوي مستبعد D-068؛اختبار الخط مكتمل ولا توسع شكلي D-069. إشعار OS غير مثبت ومنخفض الأولوية؛التنبيهات داخل التطبيق وعقود المزامنة تبقى وظيفية.
+
 
 Queued native activation now carries its opt-in generation into DispatcherQueue; dispatch rechecks current generation/enabled state. Deferred old click cannot navigate after opt-out/re-enable(10notification checks,34offlineC# PASS). Final candidate source/evidence recorded in latest TEST_RESULTS; actual OS click still unobserved.

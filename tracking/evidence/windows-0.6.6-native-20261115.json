@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-15",
+  "functionalSource": "69f6757eacc49db35421dd51156f8e33d3f1b1a4",
+  "windowsVersion": "0.6.6",
+  "apiVersion": "0.8.0",
+  "package": {
+    "functionalSource": "69f6757eacc49db35421dd51156f8e33d3f1b1a4",
+    "version": "0.6.6",
+    "zip": "TaskPilot-Windows-x64-0.6.6-candidate-69f6757.zip",
+    "bytes": 94769232,
+    "entries": 530,
+    "sha256": "b87aeb3c58ad7f1ada923f6b81bd682fd3128247f96e0856ee2e6b9bfe7d0dea",
+    "crc": "PASS",
+    "native": "BOUNDED_TEXT225_KEYBOARD_SMALL_WINDOW_VERIFIED",
+    "notificationPopupClick": "NOT_OBSERVED",
+    "narrator": "WAIVED_BY_OWNER"
+  },
+  "actualWindowsTextScalePercent": [
+    100,
+    225,
+    100
+  ],
+  "nativePassed": [
+    "Normal startup icons and standard brand restored",
+    "SSH from Settings selects correct dashboard/title/sidebar",
+    "225-percent wrapped navigation and filter heading",
+    "344x244 page scroll reaches body, original0.6.5 body was unreachable",
+    "Keyboard focus reaches visible NumberBox; values remain30/14/1/90",
+    "344px-wide filter typing, seven Tabs to Apply, Enter, results0-0of0 and page reset",
+    "225-percent mock-session draft, visible Save focus, ShiftTab/Escape cancel",
+    "Retention preview dialog canceled; no cleanup executed",
+    "Logout disconnected; expiry/logout action removed; app/settings/narrator windows closed"
+  ],
+  "postcheck": {
+    "samePairedIdentity": true,
+    "authRows": 833,
+    "liveGroup": 1,
+    "liveSources": 5,
+    "liveSentReplies": 1,
+    "sendingEnabled": false,
+    "accounts": 4,
+    "assignments": 4,
+    "canceledMockSessions": 0,
+    "activeClients": 0,
+    "privacyRuns": 2,
+    "originalRetentionValues": true,
+    "ownedNativeTunnels": 0,
+    "textScaleFinal": 100
+  },
+  "nativeLimitations": {
+    "popupClick": "NOT_OBSERVED; no toast target exposed, DND visually on and returned on after off attempts; cause unconfirmed",
+    "narrator": "WAIVED_BY_OWNER_D-068; temporary on stopped, no audio/navigation acceptance claimed",
+    "additionalCosmeticTests": "REMOVED_FROM_ACTIVE_GATES_D-069; finished225-percent evidence retained",
+    "displayDpiChange": "NOT_RUN"
+  },
+  "historicalFailures": [
+    {
+      "source": "0b54da5",
+      "result": "VISUAL_FAIL",
+      "detail": "Custom navigation template hid icons/brand despite component PASS"
+    },
+    {
+      "source": "0c54be0",
+      "result": "VISUAL_FAIL",
+      "detail": "Brand fixed, icons still absent; style-only hypothesis insufficient"
+    },
+    {
+      "source": "06ea8dd",
+      "result": "BUILD_FAIL_WMC9997",
+      "detail": "Header rewrite matched destination prefix; corrected exact element and parsed XML"
+    },
+    {
+      "result": "POSTCHECK_HARNESS_ASSERT_FAIL",
+      "detail": "Exact-second revocation assertion expected2, matched1; aggregate business counts/privacy runs/policy unchanged and active clients0. No2-client exact-time proof claimed."
+    }
+  ],
+  "ci": {
+    "run": 43648017438,
+    "backend": "SUCCESS",
+    "windows": "SUCCESS"
+  },
+  "newWhatsAppOrAiSends": 0,
+  "serverDeploymentOrKeyChanges": false,
+  "screenshotsPersisted": false
+}

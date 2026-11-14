@@ -267,3 +267,7 @@ Final exact-code hosted checks: dfebeb1 CI43633370508 and8585562 CI43633806414 b
 0.6.6 second native follow-up: replace custom ContentTemplate with wrapped TextBlock content/explicit accessibility names; retain readable heading and named dashboard selection. Prior style-only correction did not restore icons; original failed evidence retained.
 
 0.6.6 build correction: restore exact standard brand-header element after destination rewrite; XAML XML parse verified before republishing.
+
+## 2026-11-15 functional handoff
+- Exact69f6757 native225%/small-window/keyboard/filter/cancel/logout verified; package and clean pilot postchecks recorded.
+- Owner canceled Narrator test; it was stopped. Font test already finished; no further cosmetic gates. Functional ingress/outbox/recovery work prioritized.
