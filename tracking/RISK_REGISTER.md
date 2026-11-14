@@ -53,3 +53,5 @@ R-02/R-05 explicit retention/forget preview+reauth+phrase/stale/lease/uncertain 
 
 
 Windows0.6.5 candidate reduces callback/registration and narrow-action risks with33offlineC# and12native attached-component cases; actual visible interaction remains blocked by tool initialization I-037. Keep exact tested0.6.4 artifact. API0.8/identity833/selected group/live counters/sendfalse remain unchanged; no elevated app launch or OS setting changes.
+
+Bounded54-request pilot security acceptance reduces evidence gaps for auth/reauth/input bounds/masked reads/security headers/revocation. No broad penetration, tenant separation/MFA/DoS or unsafe live mutation claimed. Actual identity proof remains unchanged.

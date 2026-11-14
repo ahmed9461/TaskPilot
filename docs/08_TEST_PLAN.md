@@ -48,3 +48,6 @@
 
 
 Windows0.6.5 candidate:9notification lifecycle/fault/stale-callback and3action-flow groups(28width/font cases) extend offlineC# to33. Actual native API receipt/generic payload and attachedWinUI12cases pass; first detached harness FAIL preserved. Actual popup/click/keyboard/resize/OSscale remains OPEN_TOOLING because kernel fails before inventory, not an app test success.
+
+
+Bounded real-pilot HTTP security check: dotnet run --project apps/windows-tests/TaskPilot.ClientChecks.csproj -c Release -- --security-acceptance New-VPS. Strict alias;54requests (<120/min), no valid reauth obtained, no preview or business mutation, only own temporary client revoked. Checks auth/error/header/privacy/query/body/origin boundaries and unchanged dashboard/queues; not rate-limit stress or full penetration. Postcheck exact private paired identity proof retained.

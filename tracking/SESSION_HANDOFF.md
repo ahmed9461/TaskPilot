@@ -29,3 +29,7 @@ Windows remaining accessibility/scaling/fullconfig/filter and actualtoastpopup/c
 SDK work/dotnet/dotnet.exe10.0.404؛PowerShellnewline لا يوقف بعدfailure،افحصexitcodes؛استخدمUTF8/Python-Xutf8. حدّث tracking/tests/projectmemory/commits كل مرحلة.
 
 Queued native activation now carries its opt-in generation into DispatcherQueue; dispatch rechecks current generation/enabled state. Deferred old click cannot navigate after opt-out/re-enable(10notification checks,34offlineC# PASS). Final candidate source/evidence recorded in latest TEST_RESULTS; actual OS click still unobserved.
+
+SecurityAcceptance runner (--security-acceptance New-VPS) PASS54HTTP requests against actualAPI0.8. Anonymous/invalid/cookie rejection,8sensitive gates/forgedreauth,query/body/masking/security headers,unchangedbusinesscounts,revoke+deny. No grants/previews/business changes/new provider/AI; own temporary audit/client only. Bounded check, not full penetration. Root private identity proof remained exact833/5sources/SENT1/sendfalse.
+
+Final0.6.5 candidate source dfebeb1c03955adb36ef3b5f032d147ed039972c/34offlineC#/12native components/SDK receipt PASS; candidate ZIP 94770110bytes/532files/SHA17b3363a7fb8ebefd6f4279a2ff857acee02d83f55b4f827528226c2d0e3fae8.9c candidate remains historical.0.6.4 remains native-interaction-accepted delivery. I-037 is tooling block beforeinventory;do not infer actualpopup/click/keyboard/resize from in-process probes.54HTTP security checks and exact paired-identity postcheck PASS.

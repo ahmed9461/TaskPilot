@@ -10,6 +10,7 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [x] P0-003a actual project field/backup/API/reauth/Windows-protector rotation; old clients revoked,839 fields/same identity preserved; crash/mixed-key resume verified.
 - [x] P0-003b per-snapshot old/new encrypted recovery and profile-mode DPAPI0 verified WITH surviving VPS custodian/root SSH. Third recipient now covers simultaneous cryptographic-domain loss when kit+code survive; fresh-user/total-physical-laptop-loss still unverified.
 - [x] P0-004 namespace/account/task/period/source contracts.
+- [x] P0-005a54 bounded Windows→SSH→API0.8 auth/reauth/headers/query/body/masking/revocation checks; no business mutation.
 - [ ] P0-005 broader personal security review; SSH sessions/reauth/recovery verified, enterprise identity outside scope.
 
 ## P1 — Backend
