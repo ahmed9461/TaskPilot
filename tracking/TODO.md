@@ -42,7 +42,7 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [ ] P3-001 full sustained provider/network/late-delivery/reboot/accessibility acceptance.
 - [x] P3-001a quiet live3600s/239samples/0failure-disconnection-PIDchanges-errors-pending-gaps.
 - [x] P3-001b isolated1800s/874unique+874replay/8accounts/16tasks/8valid encrypted credentials/0errors-provider-outbound. Original070 harness FAIL retained; fresh071 PASS.
-- [x] P3-001c24 Node/62 isolated PG incl6parents/21 offline C#/fresh34 Windows→SSH→API0.8/exact-code hosted CI PASS.
+- [x] P3-001c24 Node/62 isolated PG incl6parents/34 offline C#/fresh34 Windows→SSH→API0.8/exact-code hosted CI PASS.
 - [x] P3-002 API0.8.0 deployed/own privilege+restart+data+startup+identity verified; current bounded other-service delta0/0 PASS, historical I-010 drift retained/unrelated services untouched.
 - [ ] P3-003 multi-live beyond initial1 (multi-mock verified).
 - [x] P3-004 manual AI runtime/API/native catalog/usage/reservations; DeepSeek live+replay verified previously, no inference this increment. OpenRouter live acceptance OPEN.
@@ -66,7 +66,7 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 1. Remaining Windows accessibility/scaling/full session-group/filter cases and actual notification popup/click.
 2. Wider provider network/late delivery and scoped reboot acceptance with all other services protected; never run shared VPS reboot automatically.24h stays owner-waived.
 3. External owner code custody/new-device/full cutover proof and always-on backup destination; optional OpenRouter/broader reporting.
-API/native source1bd7344; installed recovery runner b876096. One actual group/connectiontrue/sendingfalse. Installer/updater optional/signing not a gate. Never reset CONNECTED identity or auto-retry UNKNOWN_DELIVERY.
+API/native accepted0.6.4 source1bd7344; candidate0.6.5 sourcedfebeb1(code CI43633370508 SUCCESS),security8585562 CI43633806414 SUCCESS; installed recovery runner b876096. One actual group/connectiontrue/sendingfalse. Installer/updater optional/signing not a gate. Never reset CONNECTED identity or auto-retry UNKNOWN_DELIVERY.
 
 ## Historical checkpoints (superseded by current checklist)
 

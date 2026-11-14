@@ -6,7 +6,7 @@ API **0.8.0 DEPLOYED / VERIFIED**؛ Windows portable **0.6.4 VERIFIED** في ح�
 تفعيل التنبيه يحدد عنصر الإشعارات والعنوان والمحتوى معًا،ودورة التسجيل مفصولة عن OS باختبارات فشل/تفعيل متأخر. تعطيل آمن عند unsupported/elevated/رفض Windows؛normal Unregister،عدّاد فقط وصمت ومدةدقيقتين. NavigationView Auto وأزرار/عناوين ملتفة وصفوف إجراءات متدفقة وحقول قابلة للتصغير.34 offlineC# PASS (10notification+3geometry groups جديدة،28سيناريوهندسي)،WinUI build/publish0warnings/errors. Native API قبول/حفظ/محتوىعامPASS،وقياسWinUI مرتبط بالنافذة12حالةPASS؛لا تعني actualpopup/click/keyboard/OSscale. فحص مكونات منفصلة أولًا فشل وحُفظ،ثم صُحح إعداد الفحص وأعيد بنجاح.
 أداتا التحكم Windows فشلتا عند kernel assets filesystem error(os error3) قبلinventory،حتىبعدreset/retry؛القبول التفاعلي I-037 OPEN_BLOCKED_BY_TOOLING. لا مدخلات UI ولا تغييرات إعداداتWindows،ولا استبدال ZIP0.6.4. هذه هي الخطوة التالية عند استعادة الأداة.
 
-Candidate0.6.5 exact source `dfebeb1c03955adb36ef3b5f032d147ed039972c`،34offlineC#/12attachedWinUI/nativeSDK generic receipt PASS. ZIPcandidate 94770110bytes/532files/SHA256`17b3363a7fb8ebefd6f4279a2ff857acee02d83f55b4f827528226c2d0e3fae8`،CRC/resources/runtimeguardPASS.0.6.4native-testedمحفوظ ولاترقيةبصريةمرئية. source9c CI43632489470SUCCESS؛follow-up dfebCIيُتحققمنهفيالتسليم.
+Candidate0.6.5 exact source `dfebeb1c03955adb36ef3b5f032d147ed039972c`،34offlineC#/12attachedWinUI/nativeSDK generic receipt PASS. ZIPcandidate 94770110bytes/532files/SHA256`17b3363a7fb8ebefd6f4279a2ff857acee02d83f55b4f827528226c2d0e3fae8`،CRC/resources/runtimeguardPASS.0.6.4native-testedمحفوظ ولاترقيةبصريةمرئية. CI للشيفرة: dfebeb1/43633370508 و8585562/43633806414 كلاهما backend+Windows SUCCESS؛9c/43632489470 SUCCESS أيضًا.
 
 ## المصادر والتشغيل المحمي
 - Branch feat/mvp-foundation. API ونواة Windows المنشورة/المختبرة: `1bd734426b18d6cebc80b56618a6afaf8afd4623`. قبول الخصوصية: `5d9444032d0acee75b45b71d537214c7970ca557`. أداة النسخ والاستعادة المثبتة: `b876096a5364c254c6198a0b190a138b78fc8c6a`. CI43546799203/43549621045/43549978803 backend+windows SUCCESS. commits التتبع لا تغيّر هوية البنية المنشورة.
@@ -38,7 +38,7 @@ E:\TaskPilot-Backups خاص بالمالك+SYSTEM وخارج Git/outputs. ثلا
 - DeepSeek يدوي/task-codes فقط/reauth/caps/idempotency،2طلبات ناجحة سابقة دون طلب جديد. التقدير/الحجز لا يساويان فاتورة فعلية،null آمن لا يثبت دقة تصنيف. OpenRouter live اختياري غير مختبر.
 
 ## الاختبارات والتسليم
-**24 Node(19TS+5JS)/build/format/secrets،62 isolatedPG incl6parents،21offlineC# PASS** وCI exact-code أعلاه SUCCESS. أُعيدت34 Windows→SSH→API0.8 checks الآن PASS: ready/auth/قواعد العمل/مراجعة/رد mock/أرشفة/flags/export/حذف محدد/إلغاء token/قطع tunnel/reconnect؛نُظف fixture المستقل ولا إرسال حقيقي. قبول الواجهة native منفصل وموضح أعلاه. WinUI0.6.4 build/publish0warnings/errors ثم native؛ لم يُعَد بناؤه بعد القبول.
+**24 Node(19TS+5JS)/build/format/secrets،62 isolatedPG incl6parents،34offlineC# PASS** وCI exact-code أعلاه SUCCESS. أُعيدت34 Windows→SSH→API0.8 checks الآن PASS: ready/auth/قواعد العمل/مراجعة/رد mock/أرشفة/flags/export/حذف محدد/إلغاء token/قطع tunnel/reconnect؛نُظف fixture المستقل ولا إرسال حقيقي. قبول الواجهة native منفصل وموضح أعلاه. WinUI0.6.4 build/publish0warnings/errors ثم native؛ لم يُعَد بناؤه بعد القبول.
 ZIP0.6.4 في task outputs:94761294bytes/532files/CRC+resources+runtime-data guard PASS/SHA256 `0b6a78695c15c5bcadd7e4be4785052dcd4fc60195086f91be893383923eab4b`. ProductVersion0.6.4+1bd7344. النسخ السابقة محفوظة؛ لا مفاتيح/نسخ DB/صور في ZIP. Installer/updater اختياريان والتوقيع ليس شرطًا شخصيًا.
 
 ## المتبقي حسب الأولوية
