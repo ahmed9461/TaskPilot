@@ -1,15 +1,16 @@
 # الحالة الحالية — 2026-11-15 (Asia/Riyadh)
 
-## API0.8.1 — VERIFIED_ISOLATED / نشر تجريبي قيد التنفيذ
-أُصلح I-039: خطأ DB مؤقت قبل حفظ العمل أو بعده لا يستهلك محاولات الرسالة التالفة؛تبقى PENDING مشفرة ثم تستكمل مرة واحدة. وأُصلح I-040: انقطاع اتصال DB خامل لا يسقط عملية الخادم؛العميل التالف يُزال ويُنشأ اتصال جديد. ثُبت فشل الحالتين قبل الإصلاح ثم نجاحهما. 29Node(24TS+5JS)/66PostgreSQL بما فيها7parents/build/format/secrets/audit0 PASS؛قاعدة081_test مستقلة،لا provider أو إرسال.13مهاجرة دون تغيير. CI43651611399/sourcef0af940 نجح لكن فحص النشر رفض health0.8.0 الثابت وأعاد1bd7344/0.8.0 تلقائيًا. I-041 عولج بقراءة إصدار الحزمة واختبار source+built RED→GREEN؛CI والنشر المصحح قيد التنفيذ. API0.8.0 هو المنشور حتى دليل لاحق.
-D-068/069 نافذان: لا اختبار راوي أو توسع شكلي؛التكبير مكتمل سابقًا. الأولوية لوصول الرسائل وسلامة المهام والردود والتعافي.
+## API0.8.1 — DEPLOYED / VERIFIED ضمن الاختبارات المحددة
+المصدر05283e12ed87f0064e8914adbd8468a9796582ed؛CI43652374112 لمساريBackend/Windows SUCCESS. أُصلح I-039(الاحتفاظ بالوارد عند خطأ DB مؤقت قبل/بعد حفظ العمل) وI-040(اتصال DB الخامل لا يُسقط العملية) وI-041(إصدارhealth منpackage.json).29Node(24TS+5JS)/66PG بما فيها7parents PASS؛13مهاجرة دون تغيير. نجحت34Windows C#→SSH→API0.8.1 checks؛ليست قبولWinUI أصليًا جديدًا،وحزمة0.6.6/source69f6757 المقبولة سابقًا محفوظة دون rebuild.
+بعد الاختبار:4حسابات/4مهام،fixtureAccounts0/activeClients0/PENDING0/ERROR0/unsettledReplies0/privacyRuns2. نفس الهوية الفعلية/auth833 AEAD-valid/livegroup1/liveSources5/SENT1،connectiontrue/sendingfalse؛لا WhatsApp/AI sends جديدة. تحقق restart/least-privilege/DDL denial/data/startup/identity PASS؛verifier الإجمالي EXTERNAL_SERVICE_DRIFT(added1/removed0) بسبب خدمة أخرى تعيد التشغيل ذاتيًا،لم تُعدّل. لا global-host invariance PASS.
+نسخةpredeploy327715bytes استُعيدت مستقلة:13مهاجرة/4حسابات/4مهام/auth833/no provider. أحدثنسخةWindows مشفرة328581bytes/SHA6aa28c5011158a245038306e42235d98601628e8a88e636b9f0cfa6220d6e8a8 بعدcleanup،مع3recipient files/hash readback؛استعادتها الجديدة NOT_RUN. النسخ/الرموز السابقة محفوظة،لا cloud refresh تلقائي.
+محاولةf0af940 رفضها فحصالإصدار وأعادت0.8.0 تلقائيًا؛الإصلاح المنشور نجح دون إضعافguard. verifier الخصوصية القديم توقف عندversion080؛توسيع081 للتحققread-only --verify-cleaned-synthetic فقط،الـseed بقي مقيدًا080؛التحقق المصححPASS. D-068/069 نافذان: لا راوي/توسعشكلي؛التكبير منتهٍ سابقًا. الأولوية لسيرالعمل والتعافي والنسخ.
 
-
-## Windows0.6.6 — VERIFIED ضمن النطاق الوظيفي المختبر
+## Windows0.6.6 — قبول سابق قبل تحديثAPI0.8.1
 Source69f6757/CI43648017438 backend+Windows SUCCESS. اكتمل اختبار225% وإصلاح التفاف التنقل/البحث والتمرير في344x244 وحوار الإلغاء والخروج؛لا rebuild بعد القبول. ZIP94769232bytes/530files/SHA256b87aeb3c58ad7f1ada923f6b81bd682fd3128247f96e0856ee2e6b9bfe7d0dea؛النسخ السابقة محفوظة. تفاصيل الإخفاقات والقبول في أحدثTEST_RESULTS/evidence066.
-D-068: أُلغي اختبار الراوي بطلب المالك وأُوقف،لا PASS. D-069: أولوية التشغيل السليم،لا اختبارات شكلية إضافية؛اختبار الخط منتهٍ وإعداد100% مستعاد. Popup/click غير مثبت ومنخفض الأولوية،ليس بوابة إصدار. التركيز التالي الاستقبال/الطوابير/التعافي/منع التكرار. نفس هويةWhatsApp/auth833/source5/SENT1/sendfalse/accounts4/tasks4/activeClients0/privacyRuns2. لا إرسال أو نشر جديد.
+D-068: أُلغي اختبار الراوي بطلب المالك وأُوقف،لا PASS. D-069: أولوية التشغيل السليم،لا اختبارات شكلية إضافية؛اختبار الخط منتهٍ وإعداد100% مستعاد. Popup/click غير مثبت ومنخفض الأولوية،ليس بوابة إصدار. التركيز التالي الاستقبال/الطوابير/التعافي/منع التكرار. نفس هويةWhatsApp/auth833/source5/SENT1/sendfalse/accounts4/tasks4/activeClients0/privacyRuns2. لم يحدث إرسال أو نشر جديد خلال مرحلةWindows تلك.
 
-API **0.8.0 DEPLOYED / VERIFIED**؛ Windows portable **0.6.4 VERIFIED** في حالات القبول الموصوفة أدناه. مشروع شخصي لمالك واحد، ZIP غير موقع مقبول D-037. سياسة الاحتفاظ والنسيان المحلي والاستعادة المستقلة منفذة ومختبرة. **24h WAIVED_BY_OWNER D-060**؛ لا تُشغّل أو تُصنّف PASS. ملفات TEST_RESULTS/CHANGELOG/ذاكرة المشروع تحتفظ بالأدلة والأخطاء التاريخية؛ هذا الملف هو الحالة الحالية.
+API **0.8.1 DEPLOYED / VERIFIED**؛ Windows portable **0.6.6 VERIFIED ضمن نطاقه** و0.6.4 للخصوصية سابقًا في حالات القبول الموصوفة أدناه. مشروع شخصي لمالك واحد، ZIP غير موقع مقبول D-037. سياسة الاحتفاظ والنسيان المحلي والاستعادة المستقلة منفذة ومختبرة. **24h WAIVED_BY_OWNER D-060**؛ لا تُشغّل أو تُصنّف PASS. ملفات TEST_RESULTS/CHANGELOG/ذاكرة المشروع تحتفظ بالأدلة والأخطاء التاريخية؛ هذا الملف هو الحالة الحالية.
 
 ## متابعة Windows0.6.5 — candidate مع قبول تفاعلي جزئي
 تفعيل التنبيه يحدد عنصر الإشعارات والعنوان والمحتوى معًا،ودورة التسجيل مفصولة عن OS باختبارات فشل/تفعيل متأخر. تعطيل آمن عند unsupported/elevated/رفض Windows؛normal Unregister،عدّاد فقط وصمت ومدةدقيقتين. NavigationView Auto وأزرار/عناوين ملتفة وصفوف إجراءات متدفقة وحقول قابلة للتصغير.34 offlineC# PASS (10notification+3geometry groups جديدة،28سيناريوهندسي)،WinUI build/publish0warnings/errors. Native API قبول/حفظ/محتوىعامPASS،وقياسWinUI مرتبط بالنافذة12حالةPASS؛لا تعني actualpopup/click/keyboard/OSscale. فحص مكونات منفصلة أولًا فشل وحُفظ،ثم صُحح إعداد الفحص وأعيد بنجاح.
@@ -48,12 +49,12 @@ E:\TaskPilot-Backups خاص بالمالك+SYSTEM وخارج Git/outputs. ثلا
 - DeepSeek يدوي/task-codes فقط/reauth/caps/idempotency،2طلبات ناجحة سابقة دون طلب جديد. التقدير/الحجز لا يساويان فاتورة فعلية،null آمن لا يثبت دقة تصنيف. OpenRouter live اختياري غير مختبر.
 
 ## الاختبارات والتسليم
-**24 Node(19TS+5JS)/build/format/secrets،62 isolatedPG incl6parents،34offlineC# PASS** وCI exact-code أعلاه SUCCESS. أُعيدت34 Windows→SSH→API0.8 checks الآن PASS: ready/auth/قواعد العمل/مراجعة/رد mock/أرشفة/flags/export/حذف محدد/إلغاء token/قطع tunnel/reconnect؛نُظف fixture المستقل ولا إرسال حقيقي. قبول الواجهة native منفصل وموضح أعلاه. WinUI0.6.4 build/publish0warnings/errors ثم native؛ لم يُعَد بناؤه بعد القبول.
+**29Node(24TS+5JS)/build/format/secrets،66isolatedPG incl7parents،34offlineC# PASS** وCI exact-code أعلاه SUCCESS. أُعيدت34 Windows→SSH→API0.8 checks الآن PASS: ready/auth/قواعد العمل/مراجعة/رد mock/أرشفة/flags/export/حذف محدد/إلغاء token/قطع tunnel/reconnect؛نُظف fixture المستقل ولا إرسال حقيقي. قبول الواجهة native منفصل وموضح أعلاه. WinUI0.6.4 build/publish0warnings/errors ثم native؛ لم يُعَد بناؤه بعد القبول.
 ZIP0.6.4 في task outputs:94761294bytes/532files/CRC+resources+runtime-data guard PASS/SHA256 `0b6a78695c15c5bcadd7e4be4785052dcd4fc60195086f91be893383923eab4b`. ProductVersion0.6.4+1bd7344. النسخ السابقة محفوظة؛ لا مفاتيح/نسخ DB/صور في ZIP. Installer/updater اختياريان والتوقيع ليس شرطًا شخصيًا.
 
 ## المتبقي حسب الأولوية
-1. الاستقبال المتين: أخطاء DB المؤقتة، استكمال الوارد بعد الانقطاع، منع التكرار وحماية الطوابير(I-039 جارٍ).
-2. استقرار الردود والاستعادة والنسخ الاحتياطي؛ اختبارات restart محددة لخدمةTaskPilot فقط،لا reboot مشترك ولا24h.
+1. بقية حالات سير عملWindows الوظيفية للإعدادات/المجموعات/القواعد والفلاتر،دون اختبارات شكلية؛I-039/I-040/I-041 منشورة ومثبتة.
+2. استقرار الردود عند فشل تأكيدDB/الانقطاع وحالات التعافي المتبقية؛UNKNOWN_DELIVERY لا يعاد إرساله؛لا reboot مشترك ولا24h.
 3. سير عمل Windows الوظيفي مع الخادم،ثم وجهة نسخ دائمة وحيازة رمز الاستعادة خارج اللابتوب.
 اختبار الراوي مستبعد D-068؛اختبار الخط مكتمل ولا توسع شكلي D-069. إشعار OS غير مثبت ومنخفض الأولوية؛التنبيهات داخل التطبيق وعقود المزامنة تبقى وظيفية.
 

@@ -1,6 +1,7 @@
 # سجل التغيير
 
 ## [API0.8.1] — 2026-11-15
+- Deployed05283e1/CI43652374112 bothSUCCESS,29Node/66PG/34actualWindows→SSH→API checks PASS. Own restart/identity/data verified; overall service-set verifier reports unrelated auto-restart drift. Predeploy restore and fresh encrypted offhost snapshot recorded.
 - Fixed release health metadata after guarded candidate deployment rejected a stale version and rolled back safely. package.json now supplies the version for source and compiled API; both routes tested.29Node PASS; no readiness bypass.
 - Fixed valid ingress becoming ERROR after3 transient PostgreSQL failures, including ACK timeout after the business transaction committed. Retry preserves encrypted PENDING work, then deduplicates and clears raw payload/error on DONE.
 - Preserved original transaction exception when rollback fails and discarded broken pooled clients. Idle PostgreSQL disconnect no longer terminates the worker; pg removes the client and the next query reconnects without logging credentials.

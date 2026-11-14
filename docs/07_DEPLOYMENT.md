@@ -43,7 +43,7 @@ Historical automatic export of the permanent server token was blocked by auto-re
 
 Manual token access remains an owner-operated fallback: `ssh -N -L 18240:127.0.0.1:8240 New-VPS`, then local address `http://127.0.0.1:18240`. Never place permanent keys in output ZIPs, documentation, shell arguments/history or logs.
 
-Rollback: inspect/readlink current and retain previous release. Stop only taskpilot, point current to a schema-compatible prior release, start taskpilot and run authenticated smoke. Never roll back DB by deleting the volume or run an older binary against incompatible migrations. Full rollback execution has not been tested yet.
+Rollback: inspect/readlink current and retain previous release. Stop only taskpilot, point current to a schema-compatible prior release, start taskpilot and run authenticated smoke. Never roll back DB by deleting the volume or run an older binary against incompatible migrations. Guarded code rollback was executed2026-11-15: stale-health candidate0.8.1 rejected, previous schema-compatible0.8.0 restored and ready with same data/paired identity. No DB rollback performed; exact results in tracking.
 
 Deployment now separates taskpilot_runtime DML role from bootstrap/migration owner. /etc/taskpilot/migration.env is root-only; API environment uses only the restricted role. Grants are scoped to TaskPilot DB and reapplied before/after migrations. Verify actual permissions with ops/verify-pilot.mjs.
 

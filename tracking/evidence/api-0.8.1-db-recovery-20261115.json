@@ -1,7 +1,7 @@
 {
   "date": "2026-11-15",
   "apiVersion": "0.8.1",
-  "status": "VERIFIED_ISOLATED_DEPLOYMENT_PENDING",
+  "status": "DEPLOYED_VERIFIED_BOUNDED",
   "issues": [
     "I-039",
     "I-040"
@@ -30,7 +30,7 @@
     "postgresIncludingParents": 66,
     "postgresParents": 7,
     "postgresFailed": 0,
-    "postgresDurationMs": 36764.543361,
+    "postgresDurationMs": 47597.366948,
     "build": "PASS",
     "format": "PASS",
     "repositoryGuard": "PASS",
@@ -67,5 +67,66 @@
     "sameActualIdentity": "PASS",
     "backupBytes": 327715,
     "isolatedRestore": "PASS_13_MIGRATIONS_AUTH833"
+  },
+  "deployedSource": "05283e12ed87f0064e8914adbd8468a9796582ed",
+  "ci": {
+    "run": 43652374112,
+    "backend": "SUCCESS",
+    "windows": "SUCCESS"
+  },
+  "deployment": {
+    "exactHealthVersion": "0.8.1",
+    "ownServiceRestart": "PASS",
+    "runtimeLeastPrivilege": "PASS",
+    "dataAndIdentityPreserved": "PASS",
+    "startup": "ENABLED",
+    "providerOutput": "DISCARDED",
+    "overallOpsVerifier": "EXTERNAL_SERVICE_DRIFT",
+    "otherRunningServiceSet": {
+      "added": 1,
+      "removed": 0
+    },
+    "otherServicesModified": 0,
+    "previousReleaseRetained": true
+  },
+  "windowsServerAcceptance": {
+    "checks": 34,
+    "result": "PASS",
+    "fixtureNamespace": "synthetic-acceptance-7189c7fd70",
+    "fixtureAccountsRemaining": 0,
+    "activeClients": 0,
+    "newNativeWinUiAcceptance": "NOT_RUN_EXISTING_066_ARTIFACT_RETAINED"
+  },
+  "pilotFinal": {
+    "accounts": 4,
+    "tasks": 4,
+    "authRowsAeadValid": 833,
+    "samePairedIdentity": true,
+    "monitoredLiveGroups": 1,
+    "liveSources": 5,
+    "liveSentJobs": 1,
+    "pendingIngress": 0,
+    "failedIngress": 0,
+    "unsettledReplies": 0,
+    "privacyRuns": 2,
+    "sendingEnabled": false
+  },
+  "finalOffhost": {
+    "bytes": 328581,
+    "sha256": "6aa28c5011158a245038306e42235d98601628e8a88e636b9f0cfa6220d6e8a8",
+    "hashReadback": "PASS",
+    "recipientFilesPresent": [
+      "windows",
+      "vps",
+      "owner"
+    ],
+    "afterSyntheticCleanup": true,
+    "freshRestore": "NOT_RUN",
+    "cloudRefresh": "NOT_RUN"
+  },
+  "operatorCompatibility": {
+    "legacy080ReadOnlyPostcheck": "REJECTED_081_AS_DESIGNED",
+    "updated081CleanedReadOnlyCheck": "PASS",
+    "seedingGuard": "STILL_080_ONLY"
   }
 }

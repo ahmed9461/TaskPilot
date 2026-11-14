@@ -1,17 +1,18 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
-## API0.8.1 — VERIFIED_ISOLATED / نشر تجريبي قيد التنفيذ
-أُصلح I-039: خطأ DB مؤقت قبل حفظ العمل أو بعده لا يستهلك محاولات الرسالة التالفة؛تبقى PENDING مشفرة ثم تستكمل مرة واحدة. وأُصلح I-040: انقطاع اتصال DB خامل لا يسقط عملية الخادم؛العميل التالف يُزال ويُنشأ اتصال جديد. ثُبت فشل الحالتين قبل الإصلاح ثم نجاحهما. 29Node(24TS+5JS)/66PostgreSQL بما فيها7parents/build/format/secrets/audit0 PASS؛قاعدة081_test مستقلة،لا provider أو إرسال.13مهاجرة دون تغيير. CI43651611399/sourcef0af940 نجح لكن فحص النشر رفض health0.8.0 الثابت وأعاد1bd7344/0.8.0 تلقائيًا. I-041 عولج بقراءة إصدار الحزمة واختبار source+built RED→GREEN؛CI والنشر المصحح قيد التنفيذ. API0.8.0 هو المنشور حتى دليل لاحق.
-D-068/069 نافذان: لا اختبار راوي أو توسع شكلي؛التكبير مكتمل سابقًا. الأولوية لوصول الرسائل وسلامة المهام والردود والتعافي.
+## API0.8.1 — DEPLOYED / VERIFIED ضمن الاختبارات المحددة
+المصدر05283e12ed87f0064e8914adbd8468a9796582ed؛CI43652374112 لمساريBackend/Windows SUCCESS. أُصلح I-039(الاحتفاظ بالوارد عند خطأ DB مؤقت قبل/بعد حفظ العمل) وI-040(اتصال DB الخامل لا يُسقط العملية) وI-041(إصدارhealth منpackage.json).29Node(24TS+5JS)/66PG بما فيها7parents PASS؛13مهاجرة دون تغيير. نجحت34Windows C#→SSH→API0.8.1 checks؛ليست قبولWinUI أصليًا جديدًا،وحزمة0.6.6/source69f6757 المقبولة سابقًا محفوظة دون rebuild.
+بعد الاختبار:4حسابات/4مهام،fixtureAccounts0/activeClients0/PENDING0/ERROR0/unsettledReplies0/privacyRuns2. نفس الهوية الفعلية/auth833 AEAD-valid/livegroup1/liveSources5/SENT1،connectiontrue/sendingfalse؛لا WhatsApp/AI sends جديدة. تحقق restart/least-privilege/DDL denial/data/startup/identity PASS؛verifier الإجمالي EXTERNAL_SERVICE_DRIFT(added1/removed0) بسبب خدمة أخرى تعيد التشغيل ذاتيًا،لم تُعدّل. لا global-host invariance PASS.
+نسخةpredeploy327715bytes استُعيدت مستقلة:13مهاجرة/4حسابات/4مهام/auth833/no provider. أحدثنسخةWindows مشفرة328581bytes/SHA6aa28c5011158a245038306e42235d98601628e8a88e636b9f0cfa6220d6e8a8 بعدcleanup،مع3recipient files/hash readback؛استعادتها الجديدة NOT_RUN. النسخ/الرموز السابقة محفوظة،لا cloud refresh تلقائي.
+محاولةf0af940 رفضها فحصالإصدار وأعادت0.8.0 تلقائيًا؛الإصلاح المنشور نجح دون إضعافguard. verifier الخصوصية القديم توقف عندversion080؛توسيع081 للتحققread-only --verify-cleaned-synthetic فقط،الـseed بقي مقيدًا080؛التحقق المصححPASS. D-068/069 نافذان: لا راوي/توسعشكلي؛التكبير منتهٍ سابقًا. الأولوية لسيرالعمل والتعافي والنسخ.
 
-
-## Windows0.6.6 — VERIFIED ضمن النطاق الوظيفي المختبر
+## Windows0.6.6 — قبول سابق قبل تحديثAPI0.8.1
 Source69f6757/CI43648017438 backend+Windows SUCCESS. اكتمل اختبار225% وإصلاح التفاف التنقل/البحث والتمرير في344x244 وحوار الإلغاء والخروج؛لا rebuild بعد القبول. ZIP94769232bytes/530files/SHA256b87aeb3c58ad7f1ada923f6b81bd682fd3128247f96e0856ee2e6b9bfe7d0dea؛النسخ السابقة محفوظة. تفاصيل الإخفاقات والقبول في أحدثTEST_RESULTS/evidence066.
-D-068: أُلغي اختبار الراوي بطلب المالك وأُوقف،لا PASS. D-069: أولوية التشغيل السليم،لا اختبارات شكلية إضافية؛اختبار الخط منتهٍ وإعداد100% مستعاد. Popup/click غير مثبت ومنخفض الأولوية،ليس بوابة إصدار. التركيز التالي الاستقبال/الطوابير/التعافي/منع التكرار. نفس هويةWhatsApp/auth833/source5/SENT1/sendfalse/accounts4/tasks4/activeClients0/privacyRuns2. لا إرسال أو نشر جديد.
+D-068: أُلغي اختبار الراوي بطلب المالك وأُوقف،لا PASS. D-069: أولوية التشغيل السليم،لا اختبارات شكلية إضافية؛اختبار الخط منتهٍ وإعداد100% مستعاد. Popup/click غير مثبت ومنخفض الأولوية،ليس بوابة إصدار. التركيز التالي الاستقبال/الطوابير/التعافي/منع التكرار. نفس هويةWhatsApp/auth833/source5/SENT1/sendfalse/accounts4/tasks4/activeClients0/privacyRuns2. لم يحدث إرسال أو نشر جديد خلال مرحلةWindows تلك.
 
 اقرأ AGENTS/README/PROJECT_STATE/TODO/DECISION_LOG/project memory أولًا. الحالة الحالية في PROJECT_STATE؛ الأدلة القديمة تاريخية. D-051/057/063 تصريح الاختبارات الوهمية دون العودة المتكررة؛ لا يشمل خدمات أخرى أو مجموعات حقيقية إضافية.24h WAIVED_BY_OWNER D-060، لا تعاود تشغيله أو تسجله PASS.
 
-## Baseline
+## خط أساس الخصوصية السابق (current API0.8.1/source05283e1 أعلاه)
 API0.8.0 ونواة Windows0.6.4 source1bd734426b18d6cebc80b56618a6afaf8afd4623؛ مصدر native fixture5d9444032d0acee75b45b71d537214c7970ca557؛ recovery runner المثبتb876096a5364c254c6198a0b190a138b78fc8c6a. CI43546799203/43549621045/43549978803 backend/windows SUCCESS.13 immutable migrations001..013؛ لا checksums bypass أو reset. taskpilot.service/API127.0.0.1:8240/PG17loopback15488 فقط.
 connectiontrue/sendingfalse،نفس CONNECTED identity/noQR/auth833 AEADvalid/key2/livegroup1/liveSources5/SENT1/unsettled0،إجمالي4accounts/4assignments بعد cleanup. لم تُرسل رسالة WhatsApp أو AI جديدة. provider output=/dev/null/core0. لا تقرأ أو تسجل QR/phones/JIDs/secrets/auth/raw logs.
 
@@ -45,3 +46,5 @@ SecurityAcceptance runner (--security-acceptance New-VPS) PASS54HTTP requests ag
 Final0.6.5 candidate source dfebeb1c03955adb36ef3b5f032d147ed039972c/34offlineC#/12native components/SDK receipt PASS; candidate ZIP 94770110bytes/532files/SHA17b3363a7fb8ebefd6f4279a2ff857acee02d83f55b4f827528226c2d0e3fae8.9c candidate remains historical.0.6.4 delivery retained. I-037 recovered;2026-11-15 interaction evidence is in tracking/evidence/windows-0.6.5-native-20261115.json. Remaining popup/click/OSscale are not inferred from SDK/component tests.54HTTP security checks remain previous bounded evidence.
 
 Final code CI: dfebeb1/43633370508 and security8585562/43633806414 backend+windows SUCCESS;9c/43632489470 also SUCCESS. Current candidate source dfebeb1 stays distinct from tracking/security source8585562 and deployedAPI1bd7344. No own test app/tunnel remains. Next remaining native popup/click and full accessibility/config/filter acceptance; do not repeatedly rerun successful SDK probes as a substitute.
+
+آخر تحقق2026-11-15:34Windows→SSH→API0.8.1 PASS/fixture synthetic-acceptance-7189c7fd70 cleaned؛activeclients0/queues0/accounts4/tasks4/privacyRuns2. لا إعادة تشغيل اختبارات ناجحة دون تغيير/concern جديد. لا native rebuild بعد69f6757؛لا Narrator/appearance/24h. Verifier privacy المصحح المرفوع /opt/taskpilot/test-reliability-081/privacy-native-081-verify.mjs يسمح081 read-only فقط؛لا تستخدم نسخة080 القديمة بعدالتحديث. Source05283e1 deployed/CI43652374112 bothSUCCESS. Ops overall remains EXTERNAL_SERVICE_DRIFT1added/0removed unrelated auto-restarting video-library-bot; not a TaskPilot functional failure, do not restart it.

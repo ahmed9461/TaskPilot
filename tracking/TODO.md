@@ -1,5 +1,5 @@
 # خطة التنفيذ والتتبع — 2026-11-15
-Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
+Checked means verified within stated scope. Current API0.8.1/Windows0.6.6 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
 
 ## P0 — القرارات والأمان
 - [x] P0-001 requirements/memory/decisions/tracking.
@@ -42,8 +42,8 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [ ] P3-001 functional provider/network/late-delivery/restart acceptance.
 - [x] P3-001a quiet live3600s/239samples/0failure-disconnection-PIDchanges-errors-pending-gaps.
 - [x] P3-001b isolated1800s/874unique+874replay/8accounts/16tasks/8valid encrypted credentials/0errors-provider-outbound. Original070 harness FAIL retained; fresh071 PASS.
-- [x] P3-001c24 Node/62 isolated PG incl6parents/34 offline C#/fresh34 Windows→SSH→API0.8/exact-code hosted CI PASS.
-- [x] P3-002 API0.8.0 deployed/own privilege+restart+data+startup+identity verified; current bounded other-service delta0/0 PASS, historical I-010 drift retained/unrelated services untouched.
+- [x] P3-001c29Node/66isolatedPG incl7parents/34offlineC#/fresh34Windows→SSH→API0.8.1/exact-code hosted CI PASS.
+- [x] P3-002 API0.8.1/source05283e1 deployed; own privilege/restart/data/startup/identity PASS. Overall verifier EXTERNAL_SERVICE_DRIFT1added/0removed from another auto-restarting service, untouched; no global host invariance claim.
 - [ ] P3-003 multi-live beyond initial1 (multi-mock verified).
 - [x] P3-004 manual AI runtime/API/native catalog/usage/reservations; DeepSeek live+replay verified previously, no inference this increment. OpenRouter live acceptance OPEN.
 - [ ] P3-005 broader reports/alerts/always-on independent backup; safe CSV/ops/offhost/daily trigger/profile+owner+private-cloud copy done, cloud refresh manual.
@@ -64,11 +64,11 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [x] Native0.6.6 source69f6757 bounded225%/344x244/keyboard/filter/mock-cancel/logout proof; prior failures retained. Narrator test removed by owner D-068; no further cosmetic acceptance work D-069. OS popup/click unverified and low-priority, not a release gate.
 
 ## Next
-1. Deploy/verify isolated-tested API0.8.1 I-039/I-040; encrypted backup then only TaskPilot restart; protect actual identity/other services.
+1. Remaining functional Windows session/group/rule/filter workflows; no cosmetic gates. API0.8.1 recovery/deploy/34client checks completed.
 2. Outbox/restart/idempotency/recovery functional acceptance with unrelated services protected.24h stays waived.
 3. Functional Windows/server workflow gaps and always-on independent backup; external recovery-code custody remains owner-managed.
 
-API/native accepted0.6.4 source1bd7344; candidate0.6.5 sourcedfebeb1(code CI43633370508 SUCCESS),security8585562 CI43633806414 SUCCESS; installed recovery runner b876096. One actual group/connectiontrue/sendingfalse. Installer/updater optional/signing not a gate. Never reset CONNECTED identity or auto-retry UNKNOWN_DELIVERY.
+Previous privacy/native acceptance0.6.4 source1bd7344 (currentAPI0.8.1/Windows0.6.6 above); candidate0.6.5 sourcedfebeb1(code CI43633370508 SUCCESS),security8585562 CI43633806414 SUCCESS; installed recovery runner b876096. One actual group/connectiontrue/sendingfalse. Installer/updater optional/signing not a gate. Never reset CONNECTED identity or auto-retry UNKNOWN_DELIVERY.
 
 ## Historical checkpoints (superseded by current checklist)
 
@@ -100,4 +100,5 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] D-069 font-scaling test finished; further cosmetic tests removed from active priority/release gates.
 - [x] I-039 isolated PostgreSQL precommit/postcommit-ACK regressions RED→GREEN, durable queue preserved/no duplicate work.
 - [x] I-040 isolated owned idle DB connection termination RED→GREEN; same child survives and uses new backend.
-- [ ] API0.8.1 exact-commit CI/scoped deploy/Windows→server acceptance/backup-restore.
+- [x] API0.8.1/source05283e1 CI43652374112 bothSUCCESS/scoped deploy/34Windows→server/pre-backup isolated restore/new offhost snapshot.
+- [x] I-041 source+built exact health version RED→GREEN; actual rejected-version guarded rollback PASS.

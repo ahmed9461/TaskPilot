@@ -16,10 +16,16 @@ try {
   )
     throw Error();
   const release = await realpath("/opt/taskpilot/current");
+  if (!/^\/opt\/taskpilot\/releases\/[a-f0-9]{40}$/.test(release))
+    throw Error();
+  const version = JSON.parse(
+    await readFile(release + "/package.json", "utf8"),
+  ).version;
+  // Only read-only verification of the already-cleaned fixture extends to 0.8.1.
+  // Seeding and every other operation retain the exact 0.8.0 guard.
   if (
-    !/^\/opt\/taskpilot\/releases\/[a-f0-9]{40}$/.test(release) ||
-    JSON.parse(await readFile(release + "/package.json", "utf8")).version !==
-      "0.8.0"
+    version !== "0.8.0" &&
+    !(version === "0.8.1" && process.argv[2] === "--verify-cleaned-synthetic")
   )
     throw Error();
   const env = Object.fromEntries(
