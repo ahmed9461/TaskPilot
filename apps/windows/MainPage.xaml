@@ -1,23 +1,20 @@
 <Page x:Class="TaskPilot_Windows.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" FlowDirection="RightToLeft">
- <Page.Resources>
-  <DataTemplate x:Key="WrappedNavigationLabel"><TextBlock Text="{Binding}" TextWrapping="Wrap"/></DataTemplate>
- </Page.Resources>
  <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
   <NavigationView x:Name="Nav" PaneDisplayMode="Auto" IsBackButtonVisible="Collapsed" SelectionChanged="Navigate" OpenPaneLength="232" AlwaysShowHeader="False">
    <NavigationView.MenuItems>
-    <NavigationViewItemHeader Content="TaskPilot"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="لوحة التحكم" Tag="dashboard" Icon="Home" IsSelected="True"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="صندوق المراجعة" Tag="inbox" Icon="Mail"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="الحسابات" Tag="accounts" Icon="People"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="المهام" Tag="assignments" Icon="AllApps"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="الردود والقوالب" Tag="replies" Icon="Message"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="المجموعات" Tag="groups" Icon="World"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="الجلسات" Tag="sessions" Icon="Link"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" x:Name="NotificationsNav" Content="الإشعارات" Tag="notifications" Icon="Flag"><NavigationViewItem.InfoBadge><InfoBadge x:Name="UnreadBadge" Value="0" Visibility="Collapsed"/></NavigationViewItem.InfoBadge></NavigationViewItem>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="سجل النشاط" Tag="audit" Icon="List"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="الذكاء الاصطناعي" Tag="ai" Icon="Help"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="المراقبة" Tag="operations" Icon="View"/>
-    <NavigationViewItem ContentTemplate="{StaticResource WrappedNavigationLabel}" Content="الخصوصية والاحتفاظ" Tag="privacy" Icon="Delete"/>
+    <NavigationViewItemHeader AutomationProperties.Name="TaskPilot"><NavigationViewItem.Content><TextBlock Text="TaskPilot" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem x:Name="DashboardNav" AutomationProperties.Name="لوحة التحكم" Tag="dashboard" Icon="Home" IsSelected="True"><NavigationViewItem.Content><TextBlock Text="لوحة التحكم" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="صندوق المراجعة" Tag="inbox" Icon="Mail"><NavigationViewItem.Content><TextBlock Text="صندوق المراجعة" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="الحسابات" Tag="accounts" Icon="People"><NavigationViewItem.Content><TextBlock Text="الحسابات" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="المهام" Tag="assignments" Icon="AllApps"><NavigationViewItem.Content><TextBlock Text="المهام" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="الردود والقوالب" Tag="replies" Icon="Message"><NavigationViewItem.Content><TextBlock Text="الردود والقوالب" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="المجموعات" Tag="groups" Icon="World"><NavigationViewItem.Content><TextBlock Text="المجموعات" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="الجلسات" Tag="sessions" Icon="Link"><NavigationViewItem.Content><TextBlock Text="الجلسات" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem x:Name="NotificationsNav" AutomationProperties.Name="الإشعارات" Tag="notifications" Icon="Flag"><NavigationViewItem.Content><TextBlock Text="الإشعارات" TextWrapping="Wrap"/></NavigationViewItem.Content><NavigationViewItem.InfoBadge><InfoBadge x:Name="UnreadBadge" Value="0" Visibility="Collapsed"/></NavigationViewItem.InfoBadge></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="سجل النشاط" Tag="audit" Icon="List"><NavigationViewItem.Content><TextBlock Text="سجل النشاط" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="الذكاء الاصطناعي" Tag="ai" Icon="Help"><NavigationViewItem.Content><TextBlock Text="الذكاء الاصطناعي" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="المراقبة" Tag="operations" Icon="View"><NavigationViewItem.Content><TextBlock Text="المراقبة" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItem AutomationProperties.Name="الخصوصية والاحتفاظ" Tag="privacy" Icon="Delete"><NavigationViewItem.Content><TextBlock Text="الخصوصية والاحتفاظ" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
    </NavigationView.MenuItems>
    <Grid Padding="32,24">
     <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled">

@@ -282,7 +282,7 @@ public sealed partial class MainPage : Page
         if (Body is null)
             return;
         page = e.IsSettingsSelected ? "settings" : e.SelectedItemContainer?.Tag?.ToString() ?? "dashboard";
-        Heading.Text = e.IsSettingsSelected ? "الإعدادات" : e.SelectedItemContainer?.Content?.ToString() ?? "لوحة التحكم";
+        Heading.Text = e.IsSettingsSelected ? "الإعدادات" : e.SelectedItemContainer?.Content is TextBlock label ? label.Text : e.SelectedItemContainer?.Content?.ToString() ?? "لوحة التحكم";
         if (busy)
         {
             renderPending = true;
@@ -387,7 +387,7 @@ public sealed partial class MainPage : Page
     {
         page = "dashboard";
         Heading.Text = "لوحة التحكم";
-        Nav.SelectedItem = Nav.MenuItems[0];
+        Nav.SelectedItem = DashboardNav;
     }
     private async Task ConnectSsh(string alias)
     {

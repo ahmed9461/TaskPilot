@@ -59,6 +59,6 @@ NavigationView Auto collapses at framework thresholds; heading/action labels wra
 
 Activation generation is carried into DispatcherQueue and revalidated on its UI thread before opening the window/page. This also rejects a click queued before opt-out then dispatched after opt-out/re-enable; it does not just guard late native event delivery. Deferred-queue regression is isolated proof, not an observed Windows toast click.
 
-Windows0.6.6/D-067: heading/banner/body share a scroll surface so large text in a short window cannot hide all actions. Page heading exposes level1 semantics; navigation string labels render through a wrapping template and filter expanders have explicit names/wrapped headers. Explicit render starts at top; automatic same-page changes restore offset. Native acceptance recorded separately.
+Windows0.6.6/D-067: heading/banner/body share a scroll surface so large text in a short window cannot hide all actions. Page heading exposes level1 semantics; navigation labels render as wrapped TextBlocks with explicit automation names and filter expanders have explicit names/wrapped headers. Explicit render starts at top; automatic same-page changes restore offset. Native acceptance recorded separately.
 
-0.6.6 sidebar brand moves into a nonselectable NavigationViewItemHeader in the menu scroll area; large branding cannot consume all menu height in short windows. Destination item Content remains a string.
+0.6.6 sidebar brand moves into a nonselectable NavigationViewItemHeader in the menu scroll area; large branding cannot consume all menu height in short windows. Destination headings use TextBlock.Text; dashboard selection uses its named item.

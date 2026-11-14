@@ -114,3 +114,5 @@
 0.6.6 sidebar brand moves into a nonselectable NavigationViewItemHeader in the menu scroll area; large branding cannot consume all menu height in short windows. Destination item Content remains a string.
 
 D-067 correction after native retry: apply ContentTemplate per destination, never replace implicit NavigationViewItem style (it replaces the native icon presenter). Use standard string NavigationViewItemHeader for brand; preserve native compact/expanded behavior. SDK2.6.5 generic.xaml inspected directly.
+
+D-067 final correction after second native retry: destination Content is wrapped TextBlock, explicit automation name preserves full label, Navigate reads label.Text; no custom ContentTemplate remains. This supersedes string-Content/template choice after actual icon regressions. Dashboard selects named item, never positional first menu entry now that brand header exists.
