@@ -82,3 +82,7 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 - I-033 IMPLEMENTED/native verification pending: programmatic connection from Settings rendered dashboard content but left title/sidebar on Settings. Shared SelectDashboard updates page/title/selected item for SSH and manual connection buttons. No server/WhatsApp state change.
 
 - I-032/I-033 final VERIFIED on portable0.6.3/sourcea3577810adff62dfa15be2e593f61c2df77a8728: native Settings→SSH dashboard correct heading/sidebar→Settings→logout/disconnected/expiry/action removed; app closed.21 offline C# delayed-response guard PASS and exact-source backend+Windows CI43542629785 SUCCESS. Broader accessibility/toast tests still partial.
+
+
+I-034 CLOSED WITH ACTUAL LAUNCHER EVIDENCE: inherited uppercase PSMODULEPATH beat explicit PSModulePath when helper was launched through Python; negative recovery harness stopped at acl, not intended decrypt rejection. Case-insensitive removal of overridden env keys fixes Windows selection. Repeat wrong-code/tamper rejects at decrypt/zero containers, positive independent cloud-kit restore through same launcher PASS. Initial failure retained in TEST_RESULTS.
+I-010 current bounded0.8 ops sample PASS/0services added/0removed; historical nonzero drift remains recorded. This does not prove continuous host invariance or justify touching unrelated services.

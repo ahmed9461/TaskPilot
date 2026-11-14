@@ -1,10 +1,20 @@
 import {
+  initOwner,
+  ownerPublic,
+  ownerPrivate,
+  defaultCodeFile,
+} from "./owner-recovery-files.mjs";
+import {
+  sealOwnerSnapshot,
+  openOwnerSnapshot,
+} from "./owner-recovery-crypto.mjs";
+import {
   recipientId,
   openEnvelope,
   openField,
   sealEnvelope,
 } from "./recovery-crypto.mjs";
-// Windows-only: no plaintext dump/master keys on disk, current-user DPAPI recovery escrow.
+// Windows-only: encrypted snapshots with DPAPI, VPS and independent owner recipients.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import {
@@ -18,6 +28,9 @@ import {
 import { execFile } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 const profileRecovery = process.argv[2] === "--recover-profile";
+const independentRecovery = process.argv[2] === "--recover-independent";
+const initIndependent = process.argv[2] === "--init-independent";
+const upgradeOwner = process.argv[2] === "--upgrade-owner-escrows";
 const rotateProtector = process.argv[2] === "--rotate-protector";
 const localRestore = process.argv[2] === "--restore";
 const upgradeEscrows = process.argv[2] === "--upgrade-escrows";
@@ -26,15 +39,37 @@ const root = resolve(
 );
 if (
   process.env.TASKPILOT_RECOVERY_ROOT &&
-  !/^E:\\TaskPilot-Recovery-[A-Za-z0-9_-]{1,40}$/i.test(root)
+  !(
+    independentRecovery
+      ? /^[A-Z]:\\TaskPilot-Recovery-[A-Za-z0-9_-]{1,40}$/i
+      : /^E:\\TaskPilot-Recovery-[A-Za-z0-9_-]{1,40}$/i
+  ).test(root)
 )
   throw Error("PRIVATE_RECOVERY_DIRECTORY_REQUIRED");
-if (process.env.TASKPILOT_RECOVERY_ROOT && !profileRecovery)
+if (
+  process.env.TASKPILOT_RECOVERY_ROOT &&
+  !profileRecovery &&
+  !independentRecovery
+)
   throw Error("PROFILE_RECOVERY_ROOT_ONLY");
 const image =
   "postgres@sha256:d4bb0a8c1b7bb2e29f976d099e7bfb9a5d8858cffe9e46b35cd302cd1f1f8168";
 const entropy = Buffer.from("TaskPilot-recovery-v1").toString("base64");
+let sshCalls = 0;
 function run(file, args, input, env = {}) {
+  if (file.toLowerCase() === "ssh.exe") {
+    if (independentRecovery)
+      throw Error("SSH_NOT_ALLOWED_IN_INDEPENDENT_RECOVERY");
+    sshCalls++;
+  }
+  // Windows selects only one of differently cased environment keys. Python and
+  // other launchers may normalize inherited keys to uppercase.
+  const overridden = new Set(Object.keys(env).map((key) => key.toLowerCase()));
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key]) => !overridden.has(key.toLowerCase()),
+    ),
+  );
   return new Promise((ok, no) => {
     const p = execFile(
       file,
@@ -44,7 +79,7 @@ function run(file, args, input, env = {}) {
         maxBuffer: 64 * 1024 * 1024,
         windowsHide: true,
         timeout: 120000,
-        env: { ...process.env, ...env },
+        env: { ...inherited, ...env },
       },
       (e, out) => (e ? no(Error("PRIVATE_OPERATION_FAILED")) : ok(out)),
     );
@@ -70,7 +105,8 @@ const ps = (script, input, env) =>
   );
 let dpapiCalls = 0;
 async function dpapi(mode, input) {
-  if (profileRecovery) throw Error("DPAPI_NOT_ALLOWED_IN_PROFILE_RECOVERY");
+  if (profileRecovery || independentRecovery)
+    throw Error("DPAPI_NOT_ALLOWED_IN_INDEPENDENT_RECOVERY");
   dpapiCalls++;
   const code = `Add-Type -AssemblyName System.Security; $b=[Convert]::FromBase64String([Console]::In.ReadToEnd()); $e=[Convert]::FromBase64String('${entropy}'); $v=[Security.Cryptography.ProtectedData]::${mode}($b,$e,[Security.Cryptography.DataProtectionScope]::CurrentUser); [Console]::Out.Write([Convert]::ToBase64String($v));`;
   return Buffer.from(
@@ -94,9 +130,29 @@ try {
     undefined,
     { TASKPILOT_PRIVATE_FOLDER: root },
   );
+  if (initIndependent) {
+    stage = "owner-init";
+    const protectFolder = async (path) => {
+      if (path !== "D:\\TaskPilot-Recovery-Key") throw Error();
+      await mkdir(path, { recursive: true });
+      await ps(
+        "$p=$env:TASKPILOT_CODE_FOLDER; $i=Get-Item -LiteralPath $p; if($i.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'REPARSE_POINT'}; $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value; & icacls.exe $p '/inheritance:r' '/grant:r' ('*'+$sid+':(OI)(CI)F') '*S-1-5-18:(OI)(CI)F' | Out-Null; if($LASTEXITCODE -ne 0){throw 'ACL_FAILED'}; $a=Get-Acl -LiteralPath $p; foreach($r in $a.Access){if($r.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -notin @($sid,'S-1-5-18')){throw 'UNEXPECTED_ACL'}}",
+        undefined,
+        { TASKPILOT_CODE_FOLDER: path },
+      );
+    };
+    console.log(JSON.stringify(await initOwner(root, protectFolder)));
+    process.exit(0);
+  }
   stage = "protected-key";
   let rsa;
-  if (!profileRecovery && !localRestore && !upgradeEscrows) {
+  if (
+    !profileRecovery &&
+    !independentRecovery &&
+    !localRestore &&
+    !upgradeEscrows &&
+    !upgradeOwner
+  ) {
     const registryPath = join(root, "recovery-active.json");
     let activeId = null;
     try {
@@ -234,12 +290,102 @@ try {
     );
     process.exit(0);
   }
+  if (upgradeOwner) {
+    stage = "owner-upgrade";
+    const publicKey = await ownerPublic(root);
+    if (!publicKey) throw Error();
+    const ownerKey = await ownerPrivate(root, defaultCodeFile);
+    const { readdir } = await import("node:fs/promises");
+    let upgraded = 0,
+      alreadyOwner = 0;
+    for (const manifest of (await readdir(root)).filter((f) =>
+      /^offhost-[0-9]+\.tpg\.manifest\.json$/.test(f),
+    )) {
+      const name = manifest.slice(0, -".manifest.json".length),
+        meta = JSON.parse(await readFile(join(root, manifest), "utf8")),
+        target = join(root, name + ".owner.json");
+      const dump = await readFile(join(root, name));
+      if (
+        meta.name !== name ||
+        createHash("sha256").update(dump).digest("hex") !== meta.sha256
+      )
+        throw Error();
+      try {
+        const packet = JSON.parse(await readFile(target, "utf8"));
+        const plain = openOwnerSnapshot(packet, ownerKey, meta.sha256);
+        plain.fill(0);
+        alreadyOwner++;
+        continue;
+      } catch (e) {
+        if (e.code !== "ENOENT") throw e;
+      }
+      const packet = JSON.parse(
+        await readFile(join(root, name + ".escrow.json"), "utf8"),
+      );
+      let protectedBytes;
+      try {
+        protectedBytes = await readFile(
+          join(
+            root,
+            packet.recipientKeyId
+              ? `recovery-${packet.recipientKeyId}.dpapi`
+              : "recovery-current-user.dpapi",
+          ),
+        );
+      } catch (e) {
+        if (e.code !== "ENOENT") throw e;
+        protectedBytes = await readFile(
+          join(root, "recovery-current-user.dpapi"),
+        );
+      }
+      const der = await dpapi("Unprotect", protectedBytes),
+        privateKey = createPrivateKey({
+          key: der,
+          type: "pkcs8",
+          format: "der",
+        });
+      der.fill(0);
+      const plain = openEnvelope(packet, privateKey);
+      try {
+        const captured = JSON.parse(plain.toString());
+        const d = createDecipheriv(
+          "aes-256-gcm",
+          Buffer.from(captured["backup-key"], "base64"),
+          dump.subarray(4, 16),
+        );
+        d.setAAD(Buffer.from("TPG1"));
+        d.setAuthTag(dump.subarray(16, 32));
+        Buffer.concat([d.update(dump.subarray(32)), d.final()]).fill(0);
+        await writeFile(
+          target,
+          JSON.stringify(sealOwnerSnapshot(plain, publicKey, meta.sha256)),
+          { flag: "wx" },
+        );
+        upgraded++;
+      } finally {
+        plain.fill(0);
+      }
+    }
+    console.log(
+      JSON.stringify({
+        ownerEscrowUpgrade: "PASS",
+        upgraded,
+        alreadyOwner,
+        dpapiCalls,
+        sshCalls,
+        originalDumpsUnchanged: true,
+        codeUploaded: false,
+      }),
+    );
+    process.exit(0);
+  }
   stage = "export";
   const { createPublicKey } = await import("node:crypto");
   const publicKey = rsa
     ? createPublicKey(rsa).export({ type: "spki", format: "pem" })
     : null;
-  const restoreOnly = process.argv[2] === "--restore" || profileRecovery;
+  const restoreOnly =
+    process.argv[2] === "--restore" || profileRecovery || independentRecovery;
   const backupOnly = process.argv[2] === "--backup-only";
   if (process.argv.length > 2 && !restoreOnly && !backupOnly) throw Error();
   let result;
@@ -291,6 +437,21 @@ try {
       }),
       { flag: "wx" },
     );
+    const ownerPublicKey = await ownerPublic(root);
+    if (ownerPublicKey) {
+      const plain = openEnvelope(result.escrow, rsa);
+      try {
+        await writeFile(
+          join(root, result.name + ".owner.json"),
+          JSON.stringify(
+            sealOwnerSnapshot(plain, ownerPublicKey, result.sha256),
+          ),
+          { flag: "wx" },
+        );
+      } finally {
+        plain.fill(0);
+      }
+    }
     if (backupOnly) {
       console.log(
         JSON.stringify({
@@ -316,7 +477,20 @@ try {
   };
   // Reload every local file; recovery below uses no server-side original key.
   let keys;
-  if (profileRecovery) {
+  if (independentRecovery) {
+    const codeFile = process.argv[4];
+    if (!codeFile) throw Error("RECOVERY_CODE_FILE_REQUIRED");
+    const key = await ownerPrivate(root, codeFile),
+      packet = JSON.parse(
+        await readFile(join(root, result.name + ".owner.json"), "utf8"),
+      );
+    const plain = openOwnerSnapshot(packet, key, result.sha256);
+    try {
+      keys = JSON.parse(plain.toString());
+    } finally {
+      plain.fill(0);
+    }
+  } else if (profileRecovery) {
     const envelope = await readFile(
       join(root, result.name + ".custodian.json"),
     );
@@ -465,6 +639,14 @@ try {
     `SELECT json_build_object('accounts',(SELECT count(*) FROM accounts),'assignments',(SELECT count(*) FROM assignments),'migrations',(SELECT count(*) FROM schema_migrations),'liveSources',(SELECT count(*) FROM source_messages s JOIN whatsapp_sessions w ON w.id=s.session_id WHERE w.provider='baileys'),'sent',(SELECT count(*) FROM reply_jobs WHERE status='SENT'),'sending',(SELECT count(*) FROM reply_jobs WHERE status='SENDING'),'aiRequests',(SELECT count(*) FROM ai_requests));`,
   );
   if (counts.migrations < 11 || counts.sending !== 0) throw Error();
+  let privacy = null;
+  if (counts.migrations >= 13) {
+    privacy = await sql(
+      "SELECT json_build_object('policyRows',(SELECT count(*) FROM retention_policy),'runs',(SELECT count(*) FROM privacy_runs),'forgottenSessions',(SELECT count(*) FROM whatsapp_sessions WHERE forgotten_at IS NOT NULL),'forgottenAuthRows',(SELECT count(*) FROM whatsapp_auth a JOIN whatsapp_sessions s ON s.id=a.session_id WHERE s.forgotten_at IS NOT NULL));",
+    );
+    if (privacy.policyRows !== 1 || privacy.forgottenAuthRows !== 0)
+      throw Error("RESTORED_PRIVACY_INVARIANT_FAILED");
+  }
   const rows = await sql(
     "SELECT COALESCE(json_agg(json_build_object('v',encrypted_payload,'aad','wa-auth:'||session_id||':'||category||':'||id_hash)),'[]'::json) FROM whatsapp_auth;",
   );
@@ -503,6 +685,7 @@ try {
     bytes: sealed.length,
     sha256: result.sha256,
     ...counts,
+    privacy,
     authRows: rows.length,
     credentials: credentials.length,
     encryptedAuthValid: true,
@@ -510,11 +693,15 @@ try {
     replayInserted: 0,
     providerConnections: 0,
     outboundMessages: 0,
-    dpapiScope: profileRecovery
-      ? "NOT_USED; independent surviving VPS custodian, no original field/backup keys read"
-      : "CurrentUser; alternate custodian requires the snapshot's matching custodian envelope",
+    dpapiScope: independentRecovery
+      ? "NOT_USED; independent owner key and separate recovery code, no VPS/DPAPI dependency"
+      : profileRecovery
+        ? "NOT_USED; independent surviving VPS custodian, no original field/backup keys read"
+        : "CurrentUser; alternate custodian requires the snapshot's matching custodian envelope",
     profileRecovery,
+    independentRecovery,
     dpapiCalls,
+    sshCalls,
     containerNetwork: "none",
     plaintextDumpOnDisk: false,
   };

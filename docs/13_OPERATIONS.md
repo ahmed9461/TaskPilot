@@ -81,3 +81,7 @@ Verified2026-11-14: new/old/naturally scheduled snapshots recovered in no-DPAPI 
 
 ## Scoped network acceptance and24h waiver
 Owner D-060 excludes24h test from active gates (not a PASS). Root staged `ops/network-fault.mjs --preflight` reads current0.7.0 release and refuses nonempty own IP filters, missing paired session, sendtrue, multiple live groups or unsettled work. `--apply` sets ONLYtaskpilot.service runtime IPAddressDeny=any/IPAddressAllow=localhost for90seconds, keeps local API/DB/host SSH working, records redacted private checkpoints under /var/lib/taskpilot/network-tests. Installs independent TaskPilot125s transient clear timer before mutation; normal finally clears/verifies original empty effective properties, cancels own timer. Empty own runtime property drop-ins can remain until reboot. No global firewall/host restart/actual message or AI request. Never use this operator on another unit or as a generic firewall tool. Actual90s disconnect+2s reconnect/same PID+identity/833valid auth/0API failures+unchanged counters verified; watchdog-kill path was configured, not independently exercised.
+
+
+## Independent encrypted recovery
+Use [the owner recovery runbook](15_INDEPENDENT_RECOVERY.md). Installed daily runner needs the four recovery helper modules; publish dependencies before replacing main atomically. Never copy code file into kit/cloud/output, never infer a live cutover from isolated PASS, never reset or start a second provider identity. Cloud kit refresh remains explicit; daily encrypted Windows snapshot is separate.
