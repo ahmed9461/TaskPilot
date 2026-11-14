@@ -333,7 +333,7 @@ public sealed partial class MainPage : Page
     private void Settings()
     {
         var alias = Field("اسم اتصال SSH المحفوظ", lastSshAlias ?? "New-VPS");
-        Body.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); page = "dashboard"; await Render(); })));
+        Body.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); SelectDashboard(); await Render(); })));
         if (sshConnection is not null)
             Body.Children.Add(Text("انتهاء الجلسة: " + sshConnection.ExpiresAt.ToLocalTime().ToString("HH:mm:ss")));
         if (api.Connected)
@@ -343,8 +343,14 @@ public sealed partial class MainPage : Page
         var token = Secret("رمز وصول المالك");
         var theme = new ComboBox { Header = "المظهر", ItemsSource = new[] { "النظام", "داكن", "فاتح" }, SelectedIndex = 0 };
         theme.SelectionChanged += (_, _) => RequestedTheme = theme.SelectedIndex switch { 1 => ElementTheme.Dark, 2 => ElementTheme.Light, _ => ElementTheme.Default };
-        Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); connectionState.Connected(null); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); page = "dashboard"; await Render(); })));
+        Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); connectionState.Connected(null); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); SelectDashboard(); await Render(); })));
         DesktopSettings();
+    }
+    private void SelectDashboard()
+    {
+        page = "dashboard";
+        Heading.Text = "لوحة التحكم";
+        Nav.SelectedItem = Nav.MenuItems[0];
     }
     private async Task ConnectSsh(string alias)
     {

@@ -77,3 +77,6 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 - I-032 OPEN/native0.6.2: after explicit SSH logout the expiry/logout action disappears and tunnel closes, yet InfoBar still says connected/synchronizing. Render settings/disconnected branch does not reset status; in-flight PollChanges also lacks session-revision guard. Fix disconnected presentation and reject obsolete async read/error results; preserve API revocation/no mutation retry.
 
 - I-032 fix IMPLEMENTED inWindows0.6.3: explicit disconnected banner+revision-bound polling success/error guards. Delayed-response/reconnect-error regression PASS; actual native acceptance pending.
+
+- I-032 native0.6.3/source45893d7 VERIFIED: startup disconnected, SSH connected, explicit logout no expiry/action+informational disconnected banner, later readback remained disconnected and fresh SSH reconnect succeeded. Delayed-result guard verified by isolated C# test, no native delayed HTTP injection.
+- I-033 IMPLEMENTED/native verification pending: programmatic connection from Settings rendered dashboard content but left title/sidebar on Settings. Shared SelectDashboard updates page/title/selected item for SSH and manual connection buttons. No server/WhatsApp state change.
