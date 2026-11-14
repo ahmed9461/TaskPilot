@@ -64,7 +64,7 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [x] Native0.6.6 source69f6757 bounded225%/344x244/keyboard/filter/mock-cancel/logout proof; prior failures retained. Narrator test removed by owner D-068; no further cosmetic acceptance work D-069. OS popup/click unverified and low-priority, not a release gate.
 
 ## Next
-1. Durable ingress under transient database failure; isolated reproduction/fix I-039.
+1. Deploy/verify isolated-tested API0.8.1 I-039/I-040; encrypted backup then only TaskPilot restart; protect actual identity/other services.
 2. Outbox/restart/idempotency/recovery functional acceptance with unrelated services protected.24h stays waived.
 3. Functional Windows/server workflow gaps and always-on independent backup; external recovery-code custody remains owner-managed.
 
@@ -98,4 +98,6 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 
 - [x] D-068 Narrator/screen-reader test WAIVED_BY_OWNER, stopped; not PASS.
 - [x] D-069 font-scaling test finished; further cosmetic tests removed from active priority/release gates.
-- [ ] I-039 transient DB failures must not quarantine valid durable ingress; isolated regression/fix in progress.
+- [x] I-039 isolated PostgreSQL precommit/postcommit-ACK regressions RED→GREEN, durable queue preserved/no duplicate work.
+- [x] I-040 isolated owned idle DB connection termination RED→GREEN; same child survives and uses new backend.
+- [ ] API0.8.1 exact-commit CI/scoped deploy/Windows→server acceptance/backup-restore.

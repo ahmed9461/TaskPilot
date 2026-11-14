@@ -12,7 +12,7 @@ import {
   type QuoteKey,
 } from "./socket.js";
 import { Vault, hash } from "../security.js";
-import { transaction, event } from "../db.js";
+import { transaction, event, isRetryableDatabaseError } from "../db.js";
 import { Fault, Service } from "../service.js";
 import { recordReceipt, receiptSummary } from "./receipts.js";
 import {
@@ -642,7 +642,7 @@ export class WhatsAppConnector implements WhatsAppTransport {
             throw error;
         }
         await c.query(
-          "UPDATE whatsapp_ingress SET state='DONE',encrypted_payload=NULL WHERE id=$1",
+          "UPDATE whatsapp_ingress SET state='DONE',encrypted_payload=NULL,last_error_code=NULL WHERE id=$1",
           [row.id],
         );
         return true;
@@ -650,7 +650,9 @@ export class WhatsAppConnector implements WhatsAppTransport {
     } catch (error) {
       if (claimed)
         await this.pool.query(
-          "UPDATE whatsapp_ingress SET attempts=attempts+1,last_error_code='INGRESS_PROCESSING_FAILED',state=CASE WHEN attempts>=2 THEN 'ERROR' ELSE 'PENDING' END WHERE id=$1 AND state='PENDING'",
+          isRetryableDatabaseError(error)
+            ? "UPDATE whatsapp_ingress SET last_error_code='INGRESS_DATABASE_RETRY' WHERE id=$1 AND state='PENDING'"
+            : "UPDATE whatsapp_ingress SET attempts=attempts+1,last_error_code='INGRESS_PROCESSING_FAILED',state=CASE WHEN attempts>=2 THEN 'ERROR' ELSE 'PENDING' END WHERE id=$1 AND state='PENDING'",
           [claimed],
         );
       throw error;

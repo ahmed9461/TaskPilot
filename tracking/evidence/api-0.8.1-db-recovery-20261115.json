@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-15",
+  "apiVersion": "0.8.1",
+  "status": "VERIFIED_ISOLATED_DEPLOYMENT_PENDING",
+  "issues": [
+    "I-039",
+    "I-040"
+  ],
+  "decisions": [
+    "D-070",
+    "D-071"
+  ],
+  "database": "taskpilot_reliability_081_test",
+  "migrations": 13,
+  "migrationChanges": 0,
+  "red": {
+    "precommitAndPostcommit": {
+      "passed": 0,
+      "failedIncludingParent": 3
+    },
+    "idleConnection": {
+      "childExit": 1,
+      "unhandledPoolError": true,
+      "databaseAdminTermination": true
+    }
+  },
+  "green": {
+    "nodeTypeScript": 22,
+    "nodeJavaScript": 5,
+    "postgresIncludingParents": 66,
+    "postgresParents": 7,
+    "postgresFailed": 0,
+    "postgresDurationMs": 36764.543361,
+    "build": "PASS",
+    "format": "PASS",
+    "repositoryGuard": "PASS",
+    "dependencyVulnerabilities": 0
+  },
+  "recovery": {
+    "beforeBusinessCommit": "PENDING ciphertext intact attempts0; then DONE one result",
+    "afterBusinessCommit": "PENDING attempts0; replay DONE no duplicate",
+    "idleConnection": "owned backend removed; same child survives/new backend PID",
+    "permanentPoison": "three-attempt quarantine unchanged",
+    "outboxUnknownDelivery": "no retry unchanged"
+  },
+  "scope": {
+    "productionDatabaseFaults": 0,
+    "providerSocketsInRegression": 0,
+    "whatsAppMessagesSent": 0,
+    "aiRequests": 0,
+    "otherServiceChanges": 0,
+    "firstHistoricalLostPacketCause": "UNCONFIRMED"
+  }
+}
