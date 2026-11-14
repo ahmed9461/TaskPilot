@@ -3,7 +3,7 @@
 API **0.8.0 DEPLOYED / VERIFIED**؛ Windows portable **0.6.4 VERIFIED** في حالات القبول الموصوفة أدناه. مشروع شخصي لمالك واحد، ZIP غير موقع مقبول D-037. سياسة الاحتفاظ والنسيان المحلي والاستعادة المستقلة منفذة ومختبرة. **24h WAIVED_BY_OWNER D-060**؛ لا تُشغّل أو تُصنّف PASS. ملفات TEST_RESULTS/CHANGELOG/ذاكرة المشروع تحتفظ بالأدلة والأخطاء التاريخية؛ هذا الملف هو الحالة الحالية.
 
 ## متابعة Windows0.6.5 — candidate،ليست بديلًا مقبولًا بصريًا بعد
-تفعيل التنبيه يحدد عنصر الإشعارات والعنوان والمحتوى معًا،ودورة التسجيل مفصولة عن OS باختبارات فشل/تفعيل متأخر. تعطيل آمن عند unsupported/elevated/رفض Windows؛normal Unregister،عدّاد فقط وصمت ومدةدقيقتين. NavigationView Auto وأزرار/عناوين ملتفة وصفوف إجراءات متدفقة وحقول قابلة للتصغير.33 offlineC# PASS (9notification+3geometry groups جديدة،28سيناريوهندسي)،WinUI build/publish0warnings/errors. Native API قبول/حفظ/محتوىعامPASS،وقياسWinUI مرتبط بالنافذة12حالةPASS؛لا تعني actualpopup/click/keyboard/OSscale. فحص مكونات منفصلة أولًا فشل وحُفظ،ثم صُحح إعداد الفحص وأعيد بنجاح.
+تفعيل التنبيه يحدد عنصر الإشعارات والعنوان والمحتوى معًا،ودورة التسجيل مفصولة عن OS باختبارات فشل/تفعيل متأخر. تعطيل آمن عند unsupported/elevated/رفض Windows؛normal Unregister،عدّاد فقط وصمت ومدةدقيقتين. NavigationView Auto وأزرار/عناوين ملتفة وصفوف إجراءات متدفقة وحقول قابلة للتصغير.34 offlineC# PASS (10notification+3geometry groups جديدة،28سيناريوهندسي)،WinUI build/publish0warnings/errors. Native API قبول/حفظ/محتوىعامPASS،وقياسWinUI مرتبط بالنافذة12حالةPASS؛لا تعني actualpopup/click/keyboard/OSscale. فحص مكونات منفصلة أولًا فشل وحُفظ،ثم صُحح إعداد الفحص وأعيد بنجاح.
 أداتا التحكم Windows فشلتا عند kernel assets filesystem error(os error3) قبلinventory،حتىبعدreset/retry؛القبول التفاعلي I-037 OPEN_BLOCKED_BY_TOOLING. لا مدخلات UI ولا تغييرات إعداداتWindows،ولا استبدال ZIP0.6.4. هذه هي الخطوة التالية عند استعادة الأداة.
 
 ## المصادر والتشغيل المحمي
@@ -41,3 +41,5 @@ ZIP0.6.4 في task outputs:94761294bytes/532files/CRC+resources+runtime-data gua
 2. wider provider late-delivery/network/reboot acceptance فقط مع حماية خدمات المضيف؛ لا reboot مشترك تلقائيًا ولا24h.
 3. حيازة رمز المالك خارج اللابتوب وتجربة جهاز جديد/تحويل مستقل؛ تحديث cloud متكرر على هدف دائم يحتاج وجهة وتشغيلًا مستقلاً. لا تُعتبر هذه منجزة بالحزمة الحالية.
 4. optional OpenRouter live/تقارير وتنبيهات أوسع/أكثر من جلسة حقيقية،ضمن قرار صريح للنطاق. لا retry تلقائي لحالة UNKNOWN_DELIVERY.
+
+Queued native activation now carries its opt-in generation into DispatcherQueue; dispatch rechecks current generation/enabled state. Deferred old click cannot navigate after opt-out/re-enable(10notification checks,34offlineC# PASS). Final candidate source/evidence recorded in latest TEST_RESULTS; actual OS click still unobserved.

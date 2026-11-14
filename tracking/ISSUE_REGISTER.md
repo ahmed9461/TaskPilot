@@ -93,3 +93,5 @@ I-036 narrow-window risk from forced expanded navigation/horizontal actions/fixe
 I-037 native UI acceptance BLOCKED_BY_TOOLING: both computer-use tools fail initialization with kernel asset filesystem error(os error3), including reset/retry; no app inventory/input available. Preserve0.6.4 tested artifact, separate native API/component probes from interaction proof. Repair/restart of Codex/host tooling is outside project UI automation scope.
 
 I-036 follow-up: initial detached WinUI component harness failed bounds and is retained; attached12case WinUI probe and28pure geometry scenarios now PASS. These do not close visible keyboard/resize/scaling acceptance. Native API probe generic receipt PASS/non-admin; no historical missing-popup cause proved.
+
+I-035 follow-up: generation fence also required AFTER UI dispatch delay, not merely before posting. Callback carries epoch to MainPage; disabled/re-enabled queued work is discarded. Delayed fake UI queue regression PASS(old0/fresh1);10notification checks/34offlineC#. Actual OS click still OPEN.

@@ -21,7 +21,7 @@ static class NotificationSessionChecks
         using (var session = new NotificationSession(normal))
         {
             var opens = 0;
-            session.OpenRequested += () => opens++;
+            session.OpenRequested += _ => opens++;
             session.Enable(true);
             session.Enable(true);
             Check(session.Enabled && opens == 1 && normal.Registers == 1 && normal.Subscribers == 1);
@@ -49,7 +49,7 @@ static class NotificationSessionChecks
         using (var session = new NotificationSession(lifecycle))
         {
             var opens = 0;
-            session.OpenRequested += () => opens++;
+            session.OpenRequested += _ => opens++;
             session.Enable(true);
             var late = lifecycle.Capture();
             session.Dispose();
@@ -73,7 +73,7 @@ static class NotificationSessionChecks
         using (var session = new NotificationSession(cleanupFailure))
         {
             var opens = 0;
-            session.OpenRequested += () => { opens++; throw new Exception("synthetic-ui-closing"); };
+            session.OpenRequested += _ => { opens++; throw new Exception("synthetic-ui-closing"); };
             session.Enable(true);
             var callback = cleanupFailure.Capture();
             callback();
@@ -81,7 +81,23 @@ static class NotificationSessionChecks
             callback();
             Check(opens == 1 && !session.Enabled && cleanupFailure.Subscribers == 0);
         }
-        Console.WriteLine("PASS: 9 notification session checks (unsupported/elevated, handler ordering, opt-in, permission, partial registration, show failure, stale activation, privacy bounds, cleanup); fake OS only.");
+        var queued = new FakePlatform();
+        using (var session = new NotificationSession(queued))
+        {
+            var dispatch = new Queue<Action>();
+            var opens = 0;
+            session.OpenRequested += epoch => dispatch.Enqueue(() => { if (session.IsCurrentActivation(epoch)) opens++; });
+            session.Enable(true);
+            queued.Capture()();
+            session.Enable(false);
+            session.Enable(true);
+            dispatch.Dequeue()();
+            Check(opens == 0);
+            queued.Capture()();
+            dispatch.Dequeue()();
+            Check(opens == 1);
+        }
+        Console.WriteLine("PASS: 10 notification session checks (unsupported/elevated, handler ordering, opt-in, permission, partial registration, show failure, stale activation, privacy bounds, cleanup, queued UI dispatch fence); fake OS only.");
     }
     sealed class FakePlatform : INotificationPlatform
     {

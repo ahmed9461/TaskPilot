@@ -132,9 +132,9 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         InitializeComponent();
-        desktop.OpenRequested += () => DispatcherQueue.TryEnqueue(async () =>
+        desktop.OpenRequested += epoch => DispatcherQueue.TryEnqueue(async () =>
         {
-            if (shuttingDown) return;
+            if (shuttingDown || !desktop.IsCurrentActivation(epoch)) return;
             App.CurrentWindow?.Activate();
             if (!ReferenceEquals(Nav.SelectedItem, NotificationsNav))
             {

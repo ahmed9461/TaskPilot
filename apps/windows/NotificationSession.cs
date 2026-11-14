@@ -20,7 +20,8 @@ public sealed class NotificationSession(INotificationPlatform platform) : IDispo
     private long generation;
     public bool Enabled { get; private set; }
     public string Status { get; private set; } = Disabled;
-    public event Action? OpenRequested;
+    public event Action<long>? OpenRequested;
+    public bool IsCurrentActivation(long epoch) => Enabled && Volatile.Read(ref generation) == epoch;
     public void Enable(bool enabled)
     {
         if (!enabled) { Dispose(); return; }
@@ -41,7 +42,7 @@ public sealed class NotificationSession(INotificationPlatform platform) : IDispo
             invocation = () =>
             {
                 if (Volatile.Read(ref generation) != epoch) return;
-                try { OpenRequested?.Invoke(); }
+                try { OpenRequested?.Invoke(epoch); }
                 catch { /* A closing UI must not break a native notification callback. */ }
             };
             platform.Invoked += invocation;

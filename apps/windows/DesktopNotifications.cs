@@ -8,13 +8,14 @@ public sealed class DesktopNotifications : IDisposable
     private readonly NotificationSession session = new(new WindowsNotificationPlatform());
     public bool Enabled => session.Enabled;
     public string Status => session.Status;
-    public event Action? OpenRequested
+    public event Action<long>? OpenRequested
     {
         add => session.OpenRequested += value;
         remove => session.OpenRequested -= value;
     }
     public void Enable(bool enabled) => session.Enable(enabled);
     public uint Show(int count) => session.Show(count);
+    public bool IsCurrentActivation(long epoch) => session.IsCurrentActivation(epoch);
     public void Dispose() => session.Dispose();
 }
 
