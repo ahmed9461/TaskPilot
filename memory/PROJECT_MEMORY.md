@@ -1,6 +1,6 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
-**آخر تحديث:** 2026-11-14. الحالة التشغيلية الأحدث في tracking/PROJECT_STATE.md؛ نقاط التحقق القديمة أدناه تاريخية. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
+**آخر تحديث:** 2026-11-15. الحالة التشغيلية الأحدث في tracking/PROJECT_STATE.md؛ نقاط التحقق القديمة أدناه تاريخية. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
 
 ## الهدف الدائم
 إدارة حسابات العمل والمهام الواردة من مجموعات واتساب مع سجل مستقل لكل حساب/مهمة ومصدر رسالة، وردود بعد الموافقة، وواجهة Windows، وخدمة مستمرة على New-VPS.
@@ -194,3 +194,7 @@ Final candidate ZIP 94770110bytes/532files/CRC+resource+runtime-data guard PASS/
 54 real-pilot security HTTP cases PASS; no actual WhatsApp/AI message or business change. Postchecks exact actual identity/auth833/selected group1/source5/SENT1/sendfalse unchanged, fixture cleanup verified. All own native probe processes exited; root TaskPilot API0.8 source1bd7344 and installed recovery runner b876096 unchanged.
 
 Final exact-code hosted checks: dfebeb1 CI43633370508 and8585562 CI43633806414 backend/windows SUCCESS (9c CI43632489470 also SUCCESS). Candidate source dfebeb1/34offlineC#/12native component cases/SDK receipt remains partial native evidence; OS interaction I-037 not promoted. Source-code/runtime/file guards passed, own probes closed and temporary security session revoked; API/live identity/recovery runner untouched.
+
+
+## 2026-11-15 actual Windows interaction follow-up
+I-037 recovered: Computer Use now inventories/controls/captures own app. Exact0.6.5 dfebeb1 native SSH/dashboard, actual Tab/Enter/Escape/Shift+Tab, resize1233→1032→822→598/max1659, adaptive navigation/two-row session actions, mock draft cancellation/server0 and logout/revoked1/active0/own process+tunnel0 PASS. Candidate ZIP hash unchanged/no rebuild.0.6.4 delivery retained;0.6.5 is partially accepted candidate, actual popup/click/full screen-reader/OSscale/config/filter still open. Generic toast accepted; Shell read-only state2 BUSY is a current clue only, never historical root-cause proof or complete modern SDK policy. No OS settings changed. Exact actual identity private postcheck PASS/auth833/source5/SENT1/sendfalse/accounts4/tasks4; no WhatsApp/AI sends, key/service/DB deployment changes. Aggregate evidence tracking/evidence/windows-0.6.5-native-20261115.json; no screenshots/raw AX/identifiers saved.24h stays owner-waived. Backup scheduler next2026-11-15T03:15+03:00 was not yet due; do not invent another natural-trigger PASS.

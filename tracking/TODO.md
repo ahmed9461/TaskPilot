@@ -1,4 +1,4 @@
-# خطة التنفيذ والتتبع — 2026-11-14
+# خطة التنفيذ والتتبع — 2026-11-15
 Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
 
 ## P0 — القرارات والأمان
@@ -60,7 +60,8 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [x] Repeatable encrypted recovery kit builder/entry hashes/private cloud copy+download hash+fresh-dir isolated restore. Installed daily runner manual trigger and its owner-envelope restore PASS.
 
 - [x] Windows0.6.5 candidate: notification lifecycle/fault/stale callbacks/normal shutdown and adaptive controls;34offlineC#/28geometry+12attachedWinUI component/nativeSDK receipt PASS.
-- [ ] Native0.6.5 actual popup/click/navigation/keyboard/resize/scaling; blocked by computer-use kernel startup I-037, not a project PASS.0.6.4 delivery retained.
+- [x] Native0.6.5 exact dfebeb1: SSH/dashboard, actual Tab/Shift+Tab/Enter/Escape, expanded/compact/minimal navigation and narrow598px two-row actions, canceled mock draft/server count0, logout/revoked-client/closed-window+own-tunnel proof. I-037 tooling recovered2026-11-15.
+- [ ] Native0.6.5 actual notification popup/click and full screen-reader/OSscale/config/filter acceptance. Local generic notification accepted; Shell BUSY sampled, popup/click NOT_OBSERVED. Keep0.6.4 delivery and0.6.5 candidate identities distinct.
 
 ## Next
 1. Remaining Windows accessibility/scaling/full session-group/filter cases and actual notification popup/click.

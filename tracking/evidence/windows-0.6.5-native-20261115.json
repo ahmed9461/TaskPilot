@@ -1,0 +1,131 @@
+{
+  "date": "2026-11-15",
+  "timezone": "Asia/Riyadh",
+  "scope": "Observed Windows interaction on existing candidate; no product rebuild or server deployment",
+  "windows": {
+    "version": "0.6.5",
+    "functionalSource": "dfebeb1c03955adb36ef3b5f032d147ed039972c",
+    "artifactSha256": "17b3363a7fb8ebefd6f4279a2ff857acee02d83f55b4f827528226c2d0e3fae8",
+    "artifactBytes": 94770110,
+    "artifactEntries": 532,
+    "status": "CANDIDATE_PARTIAL_NATIVE_ACCEPTANCE"
+  },
+  "api": {
+    "version": "0.8.0",
+    "deployedSource": "1bd734426b18d6cebc80b56618a6afaf8afd4623"
+  },
+  "tooling": {
+    "issue": "I-037",
+    "status": "RESOLVED_TOOLING",
+    "historicalFailure": "kernel assets filesystem error (os error 3)",
+    "currentInventoryInputScreenshots": "PASS"
+  },
+  "observed": [
+    {
+      "case": "SSH connect and dashboard",
+      "result": "PASS",
+      "accounts": 4,
+      "openAssignments": 4
+    },
+    {
+      "case": "Actual settings keyboard focus and local test notification",
+      "result": "PASS",
+      "keys": [
+        "Tab",
+        "Enter",
+        "Escape"
+      ],
+      "themePreserved": "System",
+      "sensitiveFieldsEntered": false
+    },
+    {
+      "case": "Actual resize using own native window menu",
+      "result": "PASS",
+      "approxScreenshotWidthsPx": [
+        1233,
+        1032,
+        822,
+        598,
+        1659
+      ],
+      "navigationModes": [
+        "expanded",
+        "compact",
+        "minimal"
+      ],
+      "osScaleChanged": false
+    },
+    {
+      "case": "Narrow session actions",
+      "result": "PASS",
+      "widthPx": 598,
+      "actionRows": 2,
+      "personalSessionMutated": false
+    },
+    {
+      "case": "Mock-session draft canceled by Escape after Tab/Shift+Tab",
+      "result": "PASS",
+      "saved": false,
+      "matchingSessionsOnServer": 0
+    },
+    {
+      "case": "Local generic notification test",
+      "result": "SDK_ACCEPTED",
+      "visiblePopup": "NOT_OBSERVED",
+      "actualNotificationClick": "NOT_OBSERVED"
+    },
+    {
+      "case": "Native logout",
+      "result": "PASS",
+      "disconnectedBanner": true,
+      "expiryAndLogoutRemoved": true,
+      "matchingClientRevoked": 1,
+      "activeClientSessionsAfter": 0
+    },
+    {
+      "case": "Own-window and tunnel cleanup",
+      "result": "PASS",
+      "taskPilotProcesses": 0,
+      "ownedTunnels": 0
+    }
+  ],
+  "notificationDiagnostic": {
+    "method": "read-only SHQueryUserNotificationState during native testing",
+    "hresult": 0,
+    "state": 2,
+    "name": "QUNS_BUSY",
+    "taskPilotBannerOverrides": "inspected values absent/default",
+    "osSettingsChanged": false,
+    "interpretation": "Current possible display-suppression clue only; not proof of the historical missing-popup cause or complete modern App SDK notification policy",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/api/shellapi/ne-shellapi-query_user_notification_state",
+      "https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shqueryusernotificationstate"
+    ]
+  },
+  "postcheck": {
+    "status": "PASS",
+    "actualPairedIdentityUnchanged": true,
+    "encryptedAuthValid": true,
+    "authRows": 833,
+    "pairedSessions": 1,
+    "monitoredGroups": 1,
+    "liveSources": 5,
+    "liveSentReplies": 1,
+    "sendingEnabled": false,
+    "accounts": 4,
+    "assignments": 4,
+    "previousSyntheticPrivacyFixtureCleaned": true,
+    "newWhatsAppMessagesByTests": 0,
+    "newAiRequestsByTests": 0,
+    "serverServiceKeyChanges": false
+  },
+  "remaining": [
+    "Visible OS popup and actual notification activation",
+    "Full screen-reader, OS scaling, session/group configuration and filter matrix",
+    "Wider provider/network/late-delivery acceptance",
+    "External owner recovery-code custody, new-device and production disaster-cutover acceptance",
+    "Always-on independent backup target and recurring cloud refresh"
+  ],
+  "endurance24h": "WAIVED_BY_OWNER_D-060_NOT_PASS",
+  "evidenceHandling": "Aggregate report only; no screenshots, raw AX, keys, QR, phone/group identifiers, tokens, session URLs or backups persisted"
+}

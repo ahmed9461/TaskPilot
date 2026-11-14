@@ -51,3 +51,6 @@ Windows0.6.5 candidate:9notification lifecycle/fault/stale-callback and3action-f
 
 
 Bounded real-pilot HTTP security check: dotnet run --project apps/windows-tests/TaskPilot.ClientChecks.csproj -c Release -- --security-acceptance New-VPS. Strict alias;54requests (<120/min), no valid reauth obtained, no preview or business mutation, only own temporary client revoked. Checks auth/error/header/privacy/query/body/origin boundaries and unchanged dashboard/queues; not rate-limit stress or full penetration. Postcheck exact private paired identity proof retained.
+
+
+2026-11-15 actual Windows0.6.5 dfebeb1 interaction: tooling I-037 recovered; SSH/dashboard/visible keyboard focus/resize/adaptive navigation/narrow session actions/mock cancel/logout and server cleanup PASS. Generic notification accepted, visible popup/click NOT_OBSERVED. Full screen-reader/OSscale/config/filter remains open. Exact aggregate evidence in tracking/evidence/windows-0.6.5-native-20261115.json; prior API/component evidence is not substituted for native activation.

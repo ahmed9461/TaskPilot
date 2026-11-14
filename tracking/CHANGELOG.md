@@ -249,3 +249,11 @@ Final candidate ZIP 94770110bytes/532files/CRC+resource+runtime-data guard PASS/
 54 real-pilot security HTTP cases PASS; no actual WhatsApp/AI message or business change. Postchecks exact actual identity/auth833/selected group1/source5/SENT1/sendfalse unchanged, fixture cleanup verified. All own native probe processes exited; root TaskPilot API0.8 source1bd7344 and installed recovery runner b876096 unchanged.
 
 Final exact-code hosted checks: dfebeb1 CI43633370508 and8585562 CI43633806414 backend/windows SUCCESS (9c CI43632489470 also SUCCESS). Candidate source dfebeb1/34offlineC#/12native component cases/SDK receipt remains partial native evidence; OS interaction I-037 not promoted. Source-code/runtime/file guards passed, own probes closed and temporary security session revoked; API/live identity/recovery runner untouched.
+
+
+## 2026-11-15 Windows0.6.5 native acceptance follow-up
+- Computer-use tooling recovered I-037; no product code, OS settings, deployment or key changes.
+- Exact existing dfebeb1 candidate: native SSH/dashboard, actual keyboard focus, adaptive resize/narrow598px two-row actions, canceled mock draft and logout verified.
+- Server confirms canceled draft0/client revoked1/active0; own app/tunnel0; actual identity/auth833/source5/SENT1/sendfalse preserved.
+- Generic Windows notification accepted; visible popup/click remain NOT_OBSERVED. Legacy Shell BUSY is a current clue only, not historical root-cause proof. Full screen-reader/OSscale/config/filter open.
+- Candidate ZIP hash reverified/no rebuild;0.6.4 retained. Safe aggregate evidence added; no screenshots/raw AX/keys or private identifiers persisted.24h remains owner-waived.
