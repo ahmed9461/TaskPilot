@@ -2,7 +2,7 @@
  <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
   <NavigationView x:Name="Nav" PaneDisplayMode="Auto" IsBackButtonVisible="Collapsed" SelectionChanged="Navigate" OpenPaneLength="232" AlwaysShowHeader="False">
    <NavigationView.MenuItems>
-    <NavigationViewItemHeader AutomationProperties.Name="TaskPilot"><NavigationViewItem.Content><TextBlock Text="TaskPilot" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
+    <NavigationViewItemHeader Content="TaskPilot"/>
     <NavigationViewItem x:Name="DashboardNav" AutomationProperties.Name="لوحة التحكم" Tag="dashboard" Icon="Home" IsSelected="True"><NavigationViewItem.Content><TextBlock Text="لوحة التحكم" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
     <NavigationViewItem AutomationProperties.Name="صندوق المراجعة" Tag="inbox" Icon="Mail"><NavigationViewItem.Content><TextBlock Text="صندوق المراجعة" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>
     <NavigationViewItem AutomationProperties.Name="الحسابات" Tag="accounts" Icon="People"><NavigationViewItem.Content><TextBlock Text="الحسابات" TextWrapping="Wrap"/></NavigationViewItem.Content></NavigationViewItem>

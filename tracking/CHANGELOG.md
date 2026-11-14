@@ -265,3 +265,5 @@ Final exact-code hosted checks: dfebeb1 CI43633370508 and8585562 CI43633806414 b
 0.6.6 native follow-up: retain default navigation style/icons while applying wrapped content per destination; use native string brand header. First candidate passed component checks but failed actual visual style; not promoted.
 
 0.6.6 second native follow-up: replace custom ContentTemplate with wrapped TextBlock content/explicit accessibility names; retain readable heading and named dashboard selection. Prior style-only correction did not restore icons; original failed evidence retained.
+
+0.6.6 build correction: restore exact standard brand-header element after destination rewrite; XAML XML parse verified before republishing.
