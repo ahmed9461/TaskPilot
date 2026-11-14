@@ -1,5 +1,8 @@
 # الحالة الحالية — 2026-11-15 (Asia/Riyadh)
 
+## Windows0.6.6 accessibility correction — IN_PROGRESS
+Actual Windows text225% exposed clipped navigation/filter headers and unreachable body at344x244px (I-038). Text100 restored, DND original/current on; no actual popup/click observed.0.6.6 whole-page scrolling/wrapped labels/heading semantics implemented; initial build0warnings/errors and34offlineC# PASS; exact-source publish/native retry pending. API0.8/same identity/sendingfalse unchanged. Prior0.6.5 acceptance below retains its exact boundaries.
+
 API **0.8.0 DEPLOYED / VERIFIED**؛ Windows portable **0.6.4 VERIFIED** في حالات القبول الموصوفة أدناه. مشروع شخصي لمالك واحد، ZIP غير موقع مقبول D-037. سياسة الاحتفاظ والنسيان المحلي والاستعادة المستقلة منفذة ومختبرة. **24h WAIVED_BY_OWNER D-060**؛ لا تُشغّل أو تُصنّف PASS. ملفات TEST_RESULTS/CHANGELOG/ذاكرة المشروع تحتفظ بالأدلة والأخطاء التاريخية؛ هذا الملف هو الحالة الحالية.
 
 ## متابعة Windows0.6.5 — candidate مع قبول تفاعلي جزئي

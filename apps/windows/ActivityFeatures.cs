@@ -33,7 +33,7 @@ public sealed partial class MainPage
         var changing = false;
         toggle.Toggled += (_, _) => { if (changing) return; desktop.Enable(toggle.IsOn); changing = true; toggle.IsOn = desktop.Enabled; changing = false; status.Text = desktop.Status; };
         Body.Children.Add(Stack(Text("الإشعارات", 24), Text("تعرض عدد التحديثات فقط دون أسماء أو بيانات حسابات. لا يوجد استقبال على Windows بعد إغلاق التطبيق؛ السجل يبقى على الخادم."), toggle, status,
-            Button("إشعار اختباري عام", () => { if (!desktop.Enabled) throw new InvalidOperationException("فعّل إشعارات Windows لهذه الجلسة أولًا."); var accepted = desktop.Show(1); status.Text = accepted > 0 ? "قبل Windows الإشعار الاختباري؛ ظهوره يعتمد على إعدادات النظام." : desktop.Status; return Task.CompletedTask; })));
+            Button("إشعار اختباري عام", () => { if (!desktop.Enabled) throw new InvalidOperationException("فعّل إشعارات Windows لهذه الجلسة أولًا."); var accepted = desktop.Show(1); status.Text = accepted > 0 ? "قبل Windows الإشعار الاختباري؛ ظهوره يعتمد على إعدادات النظام." : desktop.Status; return Task.CompletedTask; }), Text("إذا لم يظهر التنبيه، راجع وضع ممنوع الإزعاج ومركز إشعارات Windows. يبقى سجل الإشعارات متاحًا داخل التطبيق.")));
     }
     private static string ActivityLabel(string code) => code switch
     {

@@ -1,8 +1,12 @@
 <Page x:Class="TaskPilot_Windows.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" FlowDirection="RightToLeft">
+ <Page.Resources>
+  <DataTemplate x:Key="WrappedNavigationLabel"><TextBlock Text="{Binding}" TextWrapping="Wrap"/></DataTemplate>
+  <Style TargetType="NavigationViewItem"><Setter Property="ContentTemplate" Value="{StaticResource WrappedNavigationLabel}"/></Style>
+ </Page.Resources>
  <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
   <NavigationView x:Name="Nav" PaneDisplayMode="Auto" IsBackButtonVisible="Collapsed" SelectionChanged="Navigate" OpenPaneLength="232" AlwaysShowHeader="False">
-   <NavigationView.PaneHeader><StackPanel Margin="20,24" Spacing="6"><TextBlock Text="TaskPilot" FontSize="28" FontWeight="SemiBold" FlowDirection="LeftToRight"/><TextBlock Text="مساحة إدارة العمل" Opacity="0.65"/></StackPanel></NavigationView.PaneHeader>
    <NavigationView.MenuItems>
+    <NavigationViewItemHeader><StackPanel Margin="0,12" Spacing="6"><TextBlock Text="TaskPilot" FontSize="28" FontWeight="SemiBold" FlowDirection="LeftToRight" TextWrapping="Wrap"/><TextBlock Text="مساحة إدارة العمل" Opacity="0.65" TextWrapping="Wrap"/></StackPanel></NavigationViewItemHeader>
     <NavigationViewItem Content="لوحة التحكم" Tag="dashboard" Icon="Home" IsSelected="True"/>
     <NavigationViewItem Content="صندوق المراجعة" Tag="inbox" Icon="Mail"/>
     <NavigationViewItem Content="الحسابات" Tag="accounts" Icon="People"/>
@@ -16,12 +20,15 @@
     <NavigationViewItem Content="المراقبة" Tag="operations" Icon="View"/>
     <NavigationViewItem Content="الخصوصية والاحتفاظ" Tag="privacy" Icon="Delete"/>
    </NavigationView.MenuItems>
-   <Grid Padding="32,24" RowSpacing="20">
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <StackPanel Spacing="6"><TextBlock x:Name="Heading" Text="لوحة التحكم" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="نسخة شخصية تجريبية" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/></StackPanel>
-    <InfoBar Grid.Row="1" x:Name="Connection" IsOpen="True" IsClosable="False" Severity="Informational" Title="الاتصال" Message="أدخل بيانات الاتصال من الإعدادات للبدء."><InfoBar.ActionButton><Button x:Name="ReconnectButton" Content="إعادة الاتصال" Click="Reconnect_Click" Visibility="Collapsed"/></InfoBar.ActionButton></InfoBar>
-    <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="Body" Spacing="14" Padding="0,0,0,24"/></ScrollViewer>
-    <ProgressRing x:Name="BusyIndicator" Grid.Row="2" Width="26" Height="26" VerticalAlignment="Top" HorizontalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed"/>
+   <Grid Padding="32,24">
+    <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled">
+     <StackPanel Spacing="20">
+      <StackPanel Spacing="6"><TextBlock x:Name="Heading" Text="لوحة التحكم" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.HeadingLevel="1"/><TextBlock Text="نسخة شخصية تجريبية" TextWrapping="Wrap" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/></StackPanel>
+      <InfoBar x:Name="Connection" IsOpen="True" IsClosable="False" Severity="Informational" Title="الاتصال" Message="أدخل بيانات الاتصال من الإعدادات للبدء."><InfoBar.ActionButton><Button x:Name="ReconnectButton" Content="إعادة الاتصال" Click="Reconnect_Click" Visibility="Collapsed"/></InfoBar.ActionButton></InfoBar>
+      <StackPanel x:Name="Body" Spacing="14" Padding="0,0,0,24"/>
+     </StackPanel>
+    </ScrollViewer>
+    <ProgressRing x:Name="BusyIndicator" Width="26" Height="26" VerticalAlignment="Top" HorizontalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed"/>
    </Grid>
   </NavigationView>
  </Grid>

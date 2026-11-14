@@ -1,5 +1,8 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
+## Windows0.6.6 accessibility correction — IN_PROGRESS
+Actual Windows text225% exposed clipped navigation/filter headers and unreachable body at344x244px (I-038). Text100 restored, DND original/current on; no actual popup/click observed.0.6.6 whole-page scrolling/wrapped labels/heading semantics implemented; initial build0warnings/errors and34offlineC# PASS; exact-source publish/native retry pending. API0.8/same identity/sendingfalse unchanged. Prior0.6.5 acceptance below retains its exact boundaries.
+
 اقرأ AGENTS/README/PROJECT_STATE/TODO/DECISION_LOG/project memory أولًا. الحالة الحالية في PROJECT_STATE؛ الأدلة القديمة تاريخية. D-051/057/063 تصريح الاختبارات الوهمية دون العودة المتكررة؛ لا يشمل خدمات أخرى أو مجموعات حقيقية إضافية.24h WAIVED_BY_OWNER D-060، لا تعاود تشغيله أو تسجله PASS.
 
 ## Baseline

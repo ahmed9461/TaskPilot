@@ -42,5 +42,5 @@ if($result.enabled -and (!$result.accepted -or !$result.stored -or !$result.gene
     productVersion=(Get-Item -LiteralPath $app).VersionInfo.ProductVersion
     clientCanariesBypassed=$true
     visiblePopup='NOT_OBSERVED'
-    keyboardAndResize='NOT_RUN_TOOL_UNAVAILABLE'
+    keyboardAndResize='NOT_RUN_BY_COMPONENT_PROBE'
 } | ConvertTo-Json -Depth 5 -Compress

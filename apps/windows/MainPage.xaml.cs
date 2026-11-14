@@ -297,6 +297,9 @@ public sealed partial class MainPage : Page
             return;
         pendingChanges = false;
         hasDraft = false;
+        // Explicit navigation/filter refresh starts at the top of the whole page.
+        // RefreshFromChanges restores its captured offset after automatic refresh.
+        ContentScroll.ChangeView(null, 0, null, true);
         Body.Children.Clear();
         if (page == "settings" || !api.Connected)
         {

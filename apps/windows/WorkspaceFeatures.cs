@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using System.Text.Json.Nodes;
 
@@ -57,13 +58,19 @@ public sealed partial class MainPage
             else if (control is NumberBox number)
                 number.ValueChanged += (_, _) => hasDraft = true;
     }
+    private static Expander FilterPanel(string title, UIElement content)
+    {
+        var panel = new Expander { Header = Text(title), Content = content, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+        AutomationProperties.SetName(panel, title);
+        return panel;
+    }
     private void AccountFilters()
     {
         var search = Field("الاسم أو المستخدم", Filter("accounts", "search"));
         var ns = Field("النظام", Filter("accounts", "namespace"));
         var archived = Choice("الأرشفة", [("all", "الكل"), ("active", "نشط"), ("archived", "مؤرشف")], Filter("accounts", "archived"));
         TrackDraft(search, ns, archived);
-        Body.Children.Add(Stack(new Expander { Header = "البحث والتصفية", Content = Stack(search, ns, archived, Button("تطبيق التصفية", async () => { filters["accounts"] = new() { ["search"] = search.Text, ["namespace"] = ns.Text, ["archived"] = Selected(archived) }; offsets["accounts"] = 0; await Render(); })) }, Button("تصدير الصفحة CSV", () => ExportPage("accounts"))));
+        Body.Children.Add(Stack(FilterPanel("البحث والتصفية", Stack(search, ns, archived, Button("تطبيق التصفية", async () => { filters["accounts"] = new() { ["search"] = search.Text, ["namespace"] = ns.Text, ["archived"] = Selected(archived) }; offsets["accounts"] = 0; await Render(); }))), Button("تصدير الصفحة CSV", () => ExportPage("accounts"))));
     }
     private async Task AssignmentFilters()
     {
@@ -76,7 +83,7 @@ public sealed partial class MainPage
         var tasks = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), Filter(r, "taskTypeId"));
         var priority = Choice("الحد الأدنى للأولوية", [("", "الكل"), ("50", "عالية: 50"), ("80", "حرجة: 80")], Filter(r, "minPriority"));
         TrackDraft(search, period, status, sessions, groups, tasks, priority);
-        Body.Children.Add(Stack(new Expander { Header = "البحث وتصفية المهام", Content = Stack(search, period, status, sessions, groups, tasks, priority, Button("تطبيق التصفية", async () => { filters[r] = new() { ["search"] = search.Text, ["periodKey"] = period.Text, ["status"] = Selected(status), ["sessionId"] = Selected(sessions), ["groupId"] = Selected(groups), ["taskTypeId"] = Selected(tasks), ["minPriority"] = Selected(priority) }; offsets[r] = 0; await Render(); })) }, Button("تصدير الصفحة CSV", () => ExportPage(r))));
+        Body.Children.Add(Stack(FilterPanel("البحث وتصفية المهام", Stack(search, period, status, sessions, groups, tasks, priority, Button("تطبيق التصفية", async () => { filters[r] = new() { ["search"] = search.Text, ["periodKey"] = period.Text, ["status"] = Selected(status), ["sessionId"] = Selected(sessions), ["groupId"] = Selected(groups), ["taskTypeId"] = Selected(tasks), ["minPriority"] = Selected(priority) }; offsets[r] = 0; await Render(); }))), Button("تصدير الصفحة CSV", () => ExportPage(r))));
     }
     private async Task ExportPage(string resource)
     {

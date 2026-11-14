@@ -257,3 +257,7 @@ Final exact-code hosted checks: dfebeb1 CI43633370508 and8585562 CI43633806414 b
 - Server confirms canceled draft0/client revoked1/active0; own app/tunnel0; actual identity/auth833/source5/SENT1/sendfalse preserved.
 - Generic Windows notification accepted; visible popup/click remain NOT_OBSERVED. Legacy Shell BUSY is a current clue only, not historical root-cause proof. Full screen-reader/OSscale/config/filter open.
 - Candidate ZIP hash reverified/no rebuild;0.6.4 retained. Safe aggregate evidence added; no screenshots/raw AX/keys or private identifiers persisted.24h remains owner-waived.
+
+## 0.6.6 candidate — 2026-11-15
+- Correct actual225% narrow/short-window accessibility defect: whole-page scrolling, wrapped navigation/filter/brand labels and semantic page heading. Preserve string navigation labels and automatic-refresh scroll recovery.
+- Add DND/notification-center guidance; component probe no longer mislabels current interaction tooling as unavailable. Native retry pending; original defect and notification visibility limits retained.
