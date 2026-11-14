@@ -205,21 +205,21 @@ public sealed partial class MainPage : Page
             return;
         }
         polling = true;
+        var revision = connectionState.Revision;
         try
         {
             if (sshConnection is not null && !sshConnection.IsTunnelAlive)
                 throw new HttpRequestException("SSH_TUNNEL_FAILED");
             var n = await api.Send("GET", "/v1/changes?cursor=" + changes.Cursor);
-            if (shuttingDown)
+            if (shuttingDown || !connectionState.IsCurrent(revision))
                 return;
             var notificationState = await api.Send("GET", "/v1/notifications/state");
-            if (shuttingDown)
+            if (shuttingDown || !connectionState.TrySucceeded(revision))
                 return;
             var batch = changes.Consume(n);
             UpdateUnread(notificationState);
             if (batch.AttentionItems > 0)
                 desktop.Show(batch.AttentionItems);
-            connectionState.Succeeded();
             ReconnectButton.Visibility = Visibility.Collapsed;
             Connection.Severity = InfoBarSeverity.Success;
             Connection.Title = "متصل بالخادم";
@@ -230,7 +230,7 @@ public sealed partial class MainPage : Page
             else if (pendingChanges)
                 Connection.Message = "توجد تغييرات جديدة؛ اضغط تحديث بعد الانتهاء من التحرير.";
         }
-        catch (Exception error) { connectionState.Failed(error); if (!shuttingDown) ShowConnectionProblem(); }
+        catch (Exception error) { if (!shuttingDown && connectionState.TryFailed(revision, error)) ShowConnectionProblem(); }
         finally { polling = false; }
     }
 
@@ -269,6 +269,13 @@ public sealed partial class MainPage : Page
         Body.Children.Clear();
         if (page == "settings" || !api.Connected)
         {
+            if (!api.Connected)
+            {
+                Connection.Severity = InfoBarSeverity.Informational;
+                Connection.Title = "غير متصل بالخادم";
+                Connection.Message = "اتصل من الإعدادات لبدء المزامنة.";
+                ReconnectButton.Visibility = Visibility.Collapsed;
+            }
             Settings();
             return;
         }
@@ -336,7 +343,7 @@ public sealed partial class MainPage : Page
         var token = Secret("رمز وصول المالك");
         var theme = new ComboBox { Header = "المظهر", ItemsSource = new[] { "النظام", "داكن", "فاتح" }, SelectedIndex = 0 };
         theme.SelectionChanged += (_, _) => RequestedTheme = theme.SelectedIndex switch { 1 => ElementTheme.Dark, 2 => ElementTheme.Light, _ => ElementTheme.Default };
-        Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; connectionState.Connected(null); ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); page = "dashboard"; await Render(); })));
+        Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); connectionState.Connected(null); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); page = "dashboard"; await Render(); })));
         DesktopSettings();
     }
     private async Task ConnectSsh(string alias)

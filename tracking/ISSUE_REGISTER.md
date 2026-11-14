@@ -75,3 +75,5 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 - I-027 current boundary: per-snapshot recipients and alternate VPS custodian now restore old/new/natural-scheduled copies without DPAPI. Requires surviving VPS/rootSSH and copied files; simultaneous-domain loss remains OPEN. Natural03:15 daily trigger and restore PASS. I-029 Arabic native fix verified; visible toast/click still NOT_OBSERVED. I-010 external-service drift remains OPEN/untouched.
 
 - I-032 OPEN/native0.6.2: after explicit SSH logout the expiry/logout action disappears and tunnel closes, yet InfoBar still says connected/synchronizing. Render settings/disconnected branch does not reset status; in-flight PollChanges also lacks session-revision guard. Fix disconnected presentation and reject obsolete async read/error results; preserve API revocation/no mutation retry.
+
+- I-032 fix IMPLEMENTED inWindows0.6.3: explicit disconnected banner+revision-bound polling success/error guards. Delayed-response/reconnect-error regression PASS; actual native acceptance pending.

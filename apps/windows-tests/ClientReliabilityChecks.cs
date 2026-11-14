@@ -69,7 +69,40 @@ static class ClientReliabilityChecks
         Check(state.CanPoll(), "Explicit reconnect did not recover");
         state.Disconnect();
         Check(!state.CanPoll() && state.ExpiresAt is null, "Logout retained active session state");
-        Console.WriteLine("PASS: 7 reliability checks (expiry, no mutation retry, read backoff, revoke, reauth separation, recovery, explicit reconnect); simulated time/transport only.");
+        await DelayedPollDoesNotRestoreOldSession(clock);
+        Console.WriteLine("PASS: 8 reliability checks (expiry, no mutation retry, read backoff, revoke, reauth separation, recovery, explicit reconnect, obsolete polling); simulated time/transport only.");
+    }
+    static async Task DelayedPollDoesNotRestoreOldSession(TimeProvider clock)
+    {
+        var state = new ClientConnectionState(clock);
+        var handler = new DelayedHandler();
+        using var api = new ApiClient(handler, clock);
+        api.Configure("http://127.0.0.1:8240", "synthetic-test-token-00000000000000");
+        state.Connected(null);
+        var oldRevision = state.Revision;
+        var pending = api.Send("GET", "/v1/changes?cursor=0");
+        await handler.Started.Task;
+        api.Disconnect();
+        state.Disconnect();
+        handler.Release.SetResult();
+        await pending;
+        Check(!state.TrySucceeded(oldRevision) && state.Phase == ConnectionPhase.Disconnected && !state.CanPoll(), "Late poll restored logged-out session");
+        state.Connected(null);
+        Check(!state.TrySucceeded(oldRevision) && !state.TryFailed(oldRevision, new ApiFailure("PERMISSION_DENIED", 401)) && state.Phase == ConnectionPhase.Connected && state.Failures == 0, "Old result or error changed new connection");
+        var current = state.Revision;
+        Check(state.TryFailed(current, new HttpRequestException()) && state.Phase == ConnectionPhase.Interrupted, "Current transient failure ignored");
+        Check(state.TrySucceeded(current) && state.Phase == ConnectionPhase.Connected && state.Failures == 0, "Current polling recovery ignored");
+    }
+    sealed class DelayedHandler : HttpMessageHandler
+    {
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Started.SetResult();
+            await Release.Task.WaitAsync(cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}", Encoding.UTF8, "application/json") };
+        }
     }
     sealed class ManualClock : TimeProvider
     {

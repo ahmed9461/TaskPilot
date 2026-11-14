@@ -10,6 +10,20 @@ public sealed class ClientConnectionState(TimeProvider? clock = null)
 {
     private readonly TimeProvider clock = clock ?? TimeProvider.System;
     public ConnectionPhase Phase { get; private set; } = ConnectionPhase.Disconnected;
+    public long Revision { get; private set; }
+    public bool IsCurrent(long revision) => revision == Revision && Phase is ConnectionPhase.Connected or ConnectionPhase.Interrupted;
+    public bool TrySucceeded(long revision)
+    {
+        if (!IsCurrent(revision)) return false;
+        Succeeded();
+        return true;
+    }
+    public bool TryFailed(long revision, Exception error)
+    {
+        if (!IsCurrent(revision)) return false;
+        Failed(error);
+        return true;
+    }
     public DateTimeOffset? ExpiresAt
     {
         get; private set;
@@ -24,6 +38,7 @@ public sealed class ClientConnectionState(TimeProvider? clock = null)
     }
     public void Connected(DateTimeOffset? expiresAt)
     {
+        Revision++;
         ExpiresAt = expiresAt;
         Succeeded();
     }
@@ -35,6 +50,7 @@ public sealed class ClientConnectionState(TimeProvider? clock = null)
     }
     public void Disconnect()
     {
+        Revision++;
         Phase = ConnectionPhase.Disconnected;
         ExpiresAt = null;
         Failures = 0;
