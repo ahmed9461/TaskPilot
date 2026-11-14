@@ -4,6 +4,8 @@ import {
   readFile,
   writeFile,
   mkdir,
+  readdir,
+  realpath,
   lstat,
   chown,
   chmod,
@@ -27,6 +29,11 @@ try {
     !["--apply", "--resume"].includes(process.argv[2])
   )
     throw Error();
+  if (
+    (await realpath(process.cwd())) !==
+    (await realpath("/opt/taskpilot/current"))
+  )
+    throw Error("ACTIVE_RELEASE_REQUIRED");
   const env = Object.fromEntries(
     (await readFile("/etc/taskpilot/pilot.env", "utf8"))
       .split("\n")
@@ -75,6 +82,17 @@ try {
     mode: 0o700,
   });
   journalPath = `/var/lib/taskpilot/key-rotations/${id}.json`;
+  if (applying) {
+    for (const name of await readdir("/var/lib/taskpilot/key-rotations")) {
+      if (/^rotation-[0-9]+\.json$/.test(name)) {
+        const prior = JSON.parse(
+          await readFile("/var/lib/taskpilot/key-rotations/" + name, "utf8"),
+        );
+        if (prior.phase !== "COMPLETE")
+          throw Error("RESUME_PENDING_ROTATION_FIRST");
+      }
+    }
+  }
   let journal;
   if (process.argv[2] === "--resume")
     journal = JSON.parse(await readFile(journalPath, "utf8"));
@@ -130,13 +148,15 @@ try {
       bridge,
       metadata,
     };
-    const initial = await open(journalPath, "wx", 0o600);
+    const prepared = journalPath + ".prepare.tmp";
+    const initial = await open(prepared, "wx", 0o600);
     try {
       await initial.writeFile(JSON.stringify(journal));
       await initial.sync();
     } finally {
       await initial.close();
     }
+    await rename(prepared, journalPath);
     const parent = await open("/var/lib/taskpilot/key-rotations", "r");
     try {
       await parent.sync();
@@ -151,6 +171,16 @@ try {
     !journal.metadata
   )
     throw Error();
+  const latest = (
+    await pool.query(
+      "SELECT COALESCE(max(key_version),1)::int v FROM key_rotation_runs",
+    )
+  ).rows[0].v;
+  const activeVersion = new Vault(
+    (await readFile("/etc/taskpilot/encryption-key", "utf8")).trim(),
+  ).keyVersion;
+  if (latest > journal.keyVersion || activeVersion > journal.keyVersion)
+    throw Error("OLDER_ROTATION_CANNOT_BE_RESUMED");
   async function checkpoint() {
     const temp = journalPath + ".tmp";
     const h = await open(temp, "w", 0o600);
@@ -173,17 +203,20 @@ try {
     const path = `/etc/taskpilot/${name}`,
       tmp = path + "." + id,
       meta = journal.metadata[name];
+    let exists = false;
     try {
-      const h = await open(tmp, "wx", meta.mode);
-      try {
-        await h.writeFile(value + "\n");
-        await h.sync();
-      } finally {
-        await h.close();
-      }
+      const st = await lstat(tmp);
+      if (!st.isFile() || st.isSymbolicLink() || st.uid !== 0) throw Error();
+      exists = true;
     } catch (e) {
-      if (e.code !== "EEXIST" || (await readFile(tmp, "utf8")).trim() !== value)
-        throw e;
+      if (e.code !== "ENOENT") throw e;
+    }
+    const h = await open(tmp, exists ? "w" : "wx", meta.mode);
+    try {
+      await h.writeFile(value + "\n");
+      await h.sync();
+    } finally {
+      await h.close();
     }
     await chown(tmp, meta.uid, meta.gid);
     await chmod(tmp, meta.mode);
@@ -201,8 +234,8 @@ try {
       await dir.close();
     }
   }
-  unit("stop");
   stopped = true;
+  unit("stop");
   // Recheck after all provider/API writers have stopped; no new ingress may be missed silently.
   const pending = (
     await pool.query(
@@ -229,8 +262,9 @@ try {
     }
     const result = await rewrapFields(
       c,
-      new Vault(journal.previous["encryption-key"]),
+      new Vault(journal.bridge),
       new Vault(journal.next["encryption-key"]),
+      true,
     );
     await c.query(
       "UPDATE client_sessions SET revoked_at=COALESCE(revoked_at,now()),reauth_hash=NULL,reauth_expires_at=NULL",

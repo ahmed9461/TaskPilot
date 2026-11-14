@@ -14,6 +14,7 @@ import { execFile } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 const profileRecovery = process.argv[2] === "--recover-profile";
 const rotateProtector = process.argv[2] === "--rotate-protector";
+const localRestore = process.argv[2] === "--restore";
 const root = resolve(
   process.env.TASKPILOT_RECOVERY_ROOT ?? "E:\\TaskPilot-Backups",
 );
@@ -89,7 +90,7 @@ try {
   );
   stage = "protected-key";
   let rsa;
-  if (!profileRecovery) {
+  if (!profileRecovery && !localRestore) {
     const registryPath = join(root, "recovery-active.json");
     let activeId = null;
     try {
@@ -117,6 +118,8 @@ try {
       });
       bytes.fill(0);
     }
+    if (activeId && recipientId(rsa) !== activeId)
+      throw Error("RECOVERY_REGISTRY_KEY_MISMATCH");
     if (rotateProtector) {
       const fresh = generateKeyPairSync("rsa", {
           modulusLength: 3072,

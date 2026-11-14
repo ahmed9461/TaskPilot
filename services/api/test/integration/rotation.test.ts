@@ -142,11 +142,38 @@ test("transactional encryption rotation with rollback and all AAD domains", asyn
       ]);
     },
   );
+  const bridge = new Vault(
+    JSON.stringify({
+      format: "taskpilot-keyring-v1",
+      active: 2,
+      keys: { 1: oldKey, 2: newKey },
+    }),
+  );
+  await t.test(
+    "resume accepts mixed legacy and new writes after precommit failure",
+    async () => {
+      await pool.query(
+        "UPDATE whatsapp_auth SET encrypted_payload=$1,key_version=2",
+        [bridge.seal(vectors[4]!.value, vectors[4]!.aad)],
+      );
+      await assert.rejects(() =>
+        transaction(pool, (c) => rewrapFields(c, bridge, next)),
+      );
+      await assert.rejects(() =>
+        transaction(pool, async (c) => {
+          await rewrapFields(c, bridge, next, true);
+          throw Error("resume transaction interrupted");
+        }),
+      );
+      for (const v of vectors)
+        assert.equal(bridge.open(await ciphertext(v), v.aad), v.value);
+    },
+  );
   await t.test(
     "committed rotation preserves content and identity, retires old key and writes key versions",
     async () => {
       await transaction(pool, async (c) => {
-        const result = await rewrapFields(c, old, next);
+        const result = await rewrapFields(c, bridge, next, true);
         assert.equal(
           Object.values(result.counts).reduce((a, b) => a + b, 0),
           5,

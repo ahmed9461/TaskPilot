@@ -7,17 +7,22 @@ import { Service } from "../dist/services/api/src/service.js";
 const url = process.env.TASKPILOT_TEST_DATABASE_URL,
   seconds = Number(process.argv[2] ?? 1800),
   report = process.argv[3];
-let pool;
+let pool,
+  state,
+  started,
+  reportValidated = false,
+  stage = "initialization";
 try {
   if (
     !url ||
-    new URL(url).pathname !== "/taskpilot_endurance_070_test" ||
+    !/^\/taskpilot_endurance_0[0-9]{2}_test$/.test(new URL(url).pathname) ||
     !Number.isInteger(seconds) ||
     seconds < 60 ||
     seconds > 7200 ||
     !/^\/var\/lib\/taskpilot\/soaks\/[a-z0-9_-]+\.json$/.test(report ?? "")
   )
     throw Error();
+  reportValidated = true;
   pool = new pg.Pool({
     connectionString: url,
     max: 2,
@@ -55,8 +60,9 @@ try {
       }),
     ),
     service = new Service(pool, vault),
-    started = Date.now();
-  const state = {
+    startedAt = Date.now();
+  started = startedAt;
+  state = {
     status: "RUNNING",
     seconds,
     elapsedSeconds: 0,
@@ -78,6 +84,7 @@ try {
     JSON.stringify({ load: "STARTED", seconds, dedicatedDatabase: true }),
   );
   await save();
+  stage = "ingest";
   while (Date.now() - started < seconds * 1000) {
     const i = state.rounds,
       group = groups[Math.floor(i / 8) % 2];
@@ -106,9 +113,10 @@ try {
       ),
     );
   }
+  stage = "final-counts";
   const counts = (
     await pool.query(
-      "SELECT (SELECT count(*)::int FROM accounts) accounts,(SELECT count(*)::int FROM assignments) assignments,(SELECT count(*)::int FROM source_messages) sources,(SELECT count(*)::int FROM reply_jobs) replies,(SELECT count(*)::int FROM account_credentials WHERE key_version=2) encryptedCredentials",
+      'SELECT (SELECT count(*)::int FROM accounts) accounts,(SELECT count(*)::int FROM assignments) assignments,(SELECT count(*)::int FROM source_messages) sources,(SELECT count(*)::int FROM reply_jobs) replies,(SELECT count(*)::int FROM account_credentials WHERE key_version=2) "encryptedCredentials"',
     )
   ).rows[0];
   if (
@@ -119,6 +127,7 @@ try {
     counts.encryptedCredentials !== 8
   )
     throw Error();
+  stage = "credential-aead";
   const rows = (
     await pool.query("SELECT account_id,ciphertext FROM account_credentials")
   ).rows;
@@ -137,7 +146,17 @@ try {
   await save();
   console.log(JSON.stringify(state));
 } catch {
-  console.error("ISOLATED_ENDURANCE_FAILED");
+  if (state && reportValidated) {
+    state.status = "FAIL";
+    state.errors++;
+    state.failureStage = stage;
+    state.elapsedSeconds = Math.floor((Date.now() - started) / 1000);
+    await writeFile(report + ".tmp", JSON.stringify(state, null, 2), {
+      mode: 0o600,
+    });
+    await rename(report + ".tmp", report);
+  }
+  console.error("ISOLATED_ENDURANCE_FAILED:" + stage);
   process.exitCode = 1;
 } finally {
   await pool?.end();

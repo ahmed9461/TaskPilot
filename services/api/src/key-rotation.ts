@@ -5,8 +5,12 @@ export async function rewrapFields(
   db: pg.PoolClient,
   previous: Vault,
   next: Vault,
+  allowBridgeResume = false,
 ) {
-  if (next.keyVersion <= previous.keyVersion)
+  if (
+    next.keyVersion < previous.keyVersion ||
+    (next.keyVersion === previous.keyVersion && !allowBridgeResume)
+  )
     throw Error("KEY_VERSION_MUST_ADVANCE");
   const descriptors = [
     {

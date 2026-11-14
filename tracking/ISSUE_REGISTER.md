@@ -66,3 +66,5 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 - I-0292026-11-14: credential flag/evidence combos exposed English implementation enums and generic error for unproven error claims.0.6.2 preserves API enums behind Arabic labels, explains rejection; native verification pending.
 
 - I-029 native0.6.2 VERIFIED: Arabic kind/evidence choices map to correct API enums. Unproven error rejected with explicit Arabic guidance, manual fictitious confirmed flag stored; no real credential checked. Generic toast accepted; visible shell popup/activation remains NOT_OBSERVED, no OS setting changed.
+
+- I-0302026-11-14: first30-minute isolated endurance driver ended nonzero at final assertion: PostgreSQL folded unquoted encryptedCredentials alias, while JS expected camel case. Independently observed8accounts/16assignments/871PROCESSED sources/0replies/8credentials key_version2. No actual business failure observed, but full run remains FAIL (final AEAD verification not reached and ephemeral test key gone). Quote alias, persist sanitized failure stage, rerun fresh database071; preserve original070 database/report. Live1-hour observer unaffected.
