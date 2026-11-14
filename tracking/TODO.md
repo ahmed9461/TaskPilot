@@ -1,17 +1,19 @@
 # خطة التنفيذ والتتبع — 2026-11-14
-Checked means verified within stated scope. Current API0.7.0/Windows0.6.3 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
+Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
 
 ## P0 — القرارات والأمان
 - [x] P0-001 requirements/memory/decisions/tracking.
 - [x] P0-002 personal provider/QR/selected-group receive/quoted-send/restart; unofficial sustained risk remains.
-- [ ] P0-003 full retention/auth forgetting/identity replacement/independent third recovery-domain policy.
+- [x] P0-003 reviewed retention/local auth forgetting/immutable historical identity/new-UUID replacement policy and independent owner recovery; native synthetic+isolated proof.
+- [x] P0-003c owner-encrypted third recipient/old+new+cloud-readback+scheduled restore DPAPI0/SSH0; wrong-code/tamper reject.
+- [ ] P0-003d external physical custody of owner code/new user or machine/production disaster cutover; not inferred from local code file.
 - [x] P0-003a actual project field/backup/API/reauth/Windows-protector rotation; old clients revoked,839 fields/same identity preserved; crash/mixed-key resume verified.
-- [x] P0-003b per-snapshot old/new encrypted recovery and profile-mode DPAPI0 verified WITH surviving VPS custodian/root SSH. Simultaneous-domain loss/fresh-user/total-laptop-loss not verified.
+- [x] P0-003b per-snapshot old/new encrypted recovery and profile-mode DPAPI0 verified WITH surviving VPS custodian/root SSH. Third recipient now covers simultaneous cryptographic-domain loss when kit+code survive; fresh-user/total-physical-laptop-loss still unverified.
 - [x] P0-004 namespace/account/task/period/source contracts.
 - [ ] P0-005 broader personal security review; SSH sessions/reauth/recovery verified, enterprise identity outside scope.
 
 ## P1 — Backend
-- [x] P1-001 API/12 immutable checksum migrations/CI.
+- [x] P1-001 API/13 immutable checksum migrations/CI.
 - [x] P1-002 mock rules/priority/source isolation/selected live group binding+receive.
 - [x] P1-003 encrypted review/dedupe/minimization/actual live+native path.
 - [x] P1-004 independent accounts/tasks/multiple sources/live identity merge.
@@ -20,7 +22,7 @@ Checked means verified within stated scope. Current API0.7.0/Windows0.6.3 person
 - [x] P1-007 scoped versioned templates/preview/reauth/outbox/live quoted reply/idempotent approval; sending restoredfalse.
 - [x] P1-008 recorded verified/manual vs unverified flags/API+native fictitious acceptance.
 - [x] P1-009 archive/restore/scoped purge/stale+uncertainty guards; native task/pair deletion/global cancel, no real-source purge.
-- [x] P1-010 redacted audit/same-host+Windows encrypted restore incl real auth/source/SENT/replay; daily natural03:15 trigger and restored output verified. Profile independence conditional as P0-003b.
+- [x] P1-010 redacted audit/same-host+Windows encrypted restore incl real auth/source/SENT/replay; daily natural03:15 trigger and restored output verified. Profile mode as P0-003b; owner-only mode as P0-003c.
 - [x] Baileys encrypted auth/ingress/lease/epoch/filters/quarantine/provider isolation/same-identity restart.
 - [x] Selected-group sanitized diagnostic ledger/SDK metadata fix/offline append recovery; first lost-packet cause remains unknown I-025.
 
@@ -39,11 +41,11 @@ Checked means verified within stated scope. Current API0.7.0/Windows0.6.3 person
 - [ ] P3-001 full sustained provider/network/late-delivery/reboot/accessibility acceptance.
 - [x] P3-001a quiet live3600s/239samples/0failure-disconnection-PIDchanges-errors-pending-gaps.
 - [x] P3-001b isolated1800s/874unique+874replay/8accounts/16tasks/8valid encrypted credentials/0errors-provider-outbound. Original070 harness FAIL retained; fresh071 PASS.
-- [x] P3-001c21 Node/50 isolated PG incl5parents/21 offline C#/34 Windows→VPS/exact-code hosted CI PASS.
-- [x] P3-002 API0.7.0 deployed/own privilege+restart+data+startup+identity verified; global EXTERNAL_SERVICE_DRIFT nonzero/unrelated service untouched.
+- [x] P3-001c24 Node/62 isolated PG incl6parents/21 offline C#/fresh34 Windows→SSH→API0.8/exact-code hosted CI PASS.
+- [x] P3-002 API0.8.0 deployed/own privilege+restart+data+startup+identity verified; current bounded other-service delta0/0 PASS, historical I-010 drift retained/unrelated services untouched.
 - [ ] P3-003 multi-live beyond initial1 (multi-mock verified).
 - [x] P3-004 manual AI runtime/API/native catalog/usage/reservations; DeepSeek live+replay verified previously, no inference this increment. OpenRouter live acceptance OPEN.
-- [ ] P3-005 broader reports/alerts/third recovery domain; safe CSV/ops/offhost/daily trigger/conditional profile mode done.
+- [ ] P3-005 broader reports/alerts/always-on independent backup; safe CSV/ops/offhost/daily trigger/profile+owner+private-cloud copy done, cloud refresh manual.
 - [x] P3-006 bounded exact-version readiness/authenticated smoke.
 
 - [x] P3-001d24h test WAIVED_BY_OWNER D-060; not a measured PASS or remaining release gate.
@@ -53,11 +55,14 @@ Checked means verified within stated scope. Current API0.7.0/Windows0.6.3 person
 - [x] I-032 corrected stale native logout banner and revision-bound obsolete polling;21 offline C# and exact portable0.6.3 native acceptance PASS.
 - [x] I-033 correct dashboard title/sidebar after programmatic connection; final native0.6.3 SSH-from-Settings/navigation/logout PASS.
 
+- [x] Native0.6.4 retention save/preview/phrase/SSHreauth/history; stopped synthetic forgetting/history preservation/read-only tombstone/server proof; actual identity untouched.
+- [x] Repeatable encrypted recovery kit builder/entry hashes/private cloud copy+download hash+fresh-dir isolated restore. Installed daily runner manual trigger and its owner-envelope restore PASS.
+
 ## Next
-1. Reviewed retention/auth forgetting/identity replacement policy and remaining native accessibility/toast activation.
-2. Wider provider/network/late delivery and scoped host-reboot acceptance only with other services protected.
-3. Owner-held third recovery domain; optional OpenRouter/broader reporting.
-Current API9bf0130, native Windowsa357781, recovery runner efd2195. One test group/connectiontrue/sendingfalse. Installer/updater optional, signing not a gate. Do not reset CONNECTED identity or retry UNKNOWN_DELIVERY automatically.
+1. Remaining Windows accessibility/scaling/full session-group/filter cases and actual notification popup/click.
+2. Wider provider network/late delivery and scoped reboot acceptance with all other services protected; never run shared VPS reboot automatically.24h stays owner-waived.
+3. External owner code custody/new-device/full cutover proof and always-on backup destination; optional OpenRouter/broader reporting.
+API/native source1bd7344; installed recovery runner b876096. One actual group/connectiontrue/sendingfalse. Installer/updater optional/signing not a gate. Never reset CONNECTED identity or auto-retry UNKNOWN_DELIVERY.
 
 ## Historical checkpoints (superseded by current checklist)
 

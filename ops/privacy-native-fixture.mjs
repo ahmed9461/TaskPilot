@@ -8,7 +8,11 @@ try {
   if (
     process.getuid?.() !== 0 ||
     process.argv.length !== 3 ||
-    !["--seed-synthetic", "--verify-synthetic"].includes(process.argv[2])
+    ![
+      "--seed-synthetic",
+      "--verify-synthetic",
+      "--verify-cleaned-synthetic",
+    ].includes(process.argv[2])
   )
     throw Error();
   const release = await realpath("/opt/taskpilot/current");
@@ -220,6 +224,7 @@ try {
       }),
     );
   } else {
+    const cleaned = process.argv[2] === "--verify-cleaned-synthetic";
     const { ids, before } = JSON.parse(await readFile(marker, "utf8"));
     const r = (
       await pool.query(
@@ -228,23 +233,26 @@ try {
       )
     ).rows[0];
     if (
-      r.accounts !== 1 ||
-      r.assignments !== 1 ||
-      r.sources !== 2 ||
+      r.accounts !== (cleaned ? 0 : 1) ||
+      r.assignments !== (cleaned ? 0 : 1) ||
+      r.sources !== (cleaned ? 0 : 2) ||
       r.auth !== 0 ||
       r.quotes !== 0 ||
       r.ingressraw !== 0 ||
       r.sessionstatus !== "FORGOTTEN" ||
-      r.replystatus !== "CANCELED" ||
-      r.reviewstate !== "IGNORED" ||
-      !r.reviewminimized ||
+      r.replystatus !== (cleaned ? null : "CANCELED") ||
+      r.reviewstate !== (cleaned ? null : "IGNORED") ||
+      (!cleaned && !r.reviewminimized) ||
       JSON.stringify(before) !== JSON.stringify(await ownerProof())
     )
       throw Error();
     console.log(
       JSON.stringify({
         privacyNative: "PASS",
-        selectedHistoryPreserved: true,
+        selectedHistoryPreserved: cleaned
+          ? "VERIFIED_BEFORE_SCOPED_CLEANUP"
+          : true,
+        scopedSyntheticCleanupVerified: cleaned,
         selectedAuthRemoved: true,
         quotesAndQueuedRawRemoved: true,
         approvedReplyCanceled: true,
