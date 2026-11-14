@@ -1,4 +1,9 @@
-import { recipientId, openEnvelope, openField } from "./recovery-crypto.mjs";
+import {
+  recipientId,
+  openEnvelope,
+  openField,
+  sealEnvelope,
+} from "./recovery-crypto.mjs";
 // Windows-only: no plaintext dump/master keys on disk, current-user DPAPI recovery escrow.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
@@ -15,6 +20,7 @@ import { setTimeout as delay } from "node:timers/promises";
 const profileRecovery = process.argv[2] === "--recover-profile";
 const rotateProtector = process.argv[2] === "--rotate-protector";
 const localRestore = process.argv[2] === "--restore";
+const upgradeEscrows = process.argv[2] === "--upgrade-escrows";
 const root = resolve(
   process.env.TASKPILOT_RECOVERY_ROOT ?? "E:\\TaskPilot-Backups",
 );
@@ -90,7 +96,7 @@ try {
   );
   stage = "protected-key";
   let rsa;
-  if (!profileRecovery && !localRestore) {
+  if (!profileRecovery && !localRestore && !upgradeEscrows) {
     const registryPath = join(root, "recovery-active.json");
     let activeId = null;
     try {
@@ -146,6 +152,87 @@ try {
       );
       process.exit(0);
     }
+  }
+  if (upgradeEscrows) {
+    stage = "legacy-escrow-upgrade";
+    const { readdir } = await import("node:fs/promises");
+    const command =
+      "node --input-type=module -e \"import {readFileSync} from 'node:fs';import {createPublicKey} from 'node:crypto';process.stdout.write(createPublicKey(readFileSync('/etc/taskpilot/recovery-custodian.pem')).export({type:'spki',format:'pem'}));\"";
+    const publicKey = (
+      await run("ssh.exe", [
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "New-VPS",
+        command,
+      ])
+    ).toString();
+    let upgraded = 0,
+      alreadyDual = 0;
+    for (const file of (await readdir(root)).filter((f) =>
+      /^offhost-[0-9]+\.tpg\.manifest\.json$/.test(f),
+    )) {
+      const name = file.slice(0, -".manifest.json".length),
+        target = join(root, name + ".custodian.json");
+      try {
+        const existing = JSON.parse(await readFile(target, "utf8"));
+        if (existing.recipientKeyId !== recipientId(publicKey))
+          throw Error("OTHER_CUSTODIAN_REQUIRES_REVIEW");
+        alreadyDual++;
+        continue;
+      } catch (e) {
+        if (e.code !== "ENOENT") throw e;
+      }
+      const escrow = JSON.parse(
+        await readFile(join(root, name + ".escrow.json"), "utf8"),
+      );
+      if (
+        escrow.recipientKeyId &&
+        !/^[a-f0-9]{64}$/.test(escrow.recipientKeyId)
+      )
+        throw Error();
+      let protectedKey;
+      try {
+        protectedKey = await readFile(
+          escrow.recipientKeyId
+            ? join(root, `recovery-${escrow.recipientKeyId}.dpapi`)
+            : join(root, "recovery-current-user.dpapi"),
+        );
+      } catch (e) {
+        if (e.code !== "ENOENT" || !escrow.recipientKeyId) throw e;
+        protectedKey = await readFile(
+          join(root, "recovery-current-user.dpapi"),
+        );
+      }
+      const bytes = await dpapi("Unprotect", protectedKey),
+        key = createPrivateKey({ key: bytes, type: "pkcs8", format: "der" });
+      bytes.fill(0);
+      const plain = openEnvelope(escrow, key);
+      try {
+        await writeFile(
+          target,
+          JSON.stringify(
+            sealEnvelope(plain, publicKey, "TaskPilot-custodian-v1"),
+          ),
+          { flag: "wx" },
+        );
+      } finally {
+        plain.fill(0);
+      }
+      upgraded++;
+    }
+    console.log(
+      JSON.stringify({
+        legacyEscrowUpgrade: "PASS",
+        upgraded,
+        alreadyDual,
+        oldSnapshotsUnchanged: true,
+        plainMasterKeysOnDisk: false,
+        dpapiCalls,
+      }),
+    );
+    process.exit(0);
   }
   stage = "export";
   const { createPublicKey } = await import("node:crypto");
@@ -425,7 +512,7 @@ try {
     outboundMessages: 0,
     dpapiScope: profileRecovery
       ? "NOT_USED; independent surviving VPS custodian, no original field/backup keys read"
-      : "CurrentUser; alternate custodian recovery also available",
+      : "CurrentUser; alternate custodian requires the snapshot's matching custodian envelope",
     profileRecovery,
     dpapiCalls,
     containerNetwork: "none",
