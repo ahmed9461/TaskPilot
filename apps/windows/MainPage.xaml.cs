@@ -34,6 +34,8 @@ public sealed partial class MainPage : Page
         "PAIRING_QR_EXPIRED" => "انتهى رمز الربط. حدّث الجلسات واطلب الرمز الحالي.",
         "WHATSAPP_NOT_CONNECTED" or "WHATSAPP_CONNECT_FAILED" => "جلسة واتساب غير متصلة. راجع حالتها قبل المحاولة.",
         "WHATSAPP_SESSION_IN_USE" => "الجلسة قيد الاستخدام في عملية أخرى.",
+        "SESSION_FORGOTTEN" => "نُسيت مصادقة هذه الجلسة. أنشئ إعداد جلسة جديدًا للربط؛ يبقى التاريخ السابق محفوظًا.",
+        "STOP_SESSION_BEFORE_FORGETTING" => "أوقف اتصال الجلسة أولًا قبل معاينة نسيان مصادقتها.",
         "WHATSAPP_GROUP_NOT_DISCOVERED" => "اقرأ المجموعات المتاحة من الجلسة ثم اختر المجموعة المطلوبة.",
         "REAUTH_REQUIRED" => "انتهى التحقق أو استُخدم. أعد فتح معاينة العملية للتحقق من جديد.",
         "PERMISSION_DENIED" or "SESSION_EXPIRED" => "انتهت جلسة الاتصال أو أُلغيت. أعد الاتصال للمتابعة.",
@@ -327,6 +329,9 @@ public sealed partial class MainPage : Page
                 break;
             case "operations":
                 await Operations();
+                break;
+            case "privacy":
+                await PrivacySettings();
                 break;
         }
     }

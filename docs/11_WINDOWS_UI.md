@@ -49,3 +49,5 @@ D-037 (2026-11-13): personal single-owner Windows app; signing is not required. 
 
 ## Windows0.6.3 session presentation
 بعد اكتمال تسجيل الخروج يظهر «غير متصل بالخادم»، وتختفي مدة الجلسة وإجراء الخروج. كل اتصال صريح لهrevision؛ نتائج أو أخطاء قراءة بدأت قبل الخروج/تبديل الاتصال لا تحدّث الشريط أو الشارة أو سجل التغييرات. لا تعاد عمليات التعديل تلقائيًا. الاتصال من الإعدادات يحدد لوحة التحكم وعنوانها وشريط التنقل معًا. القبول الأصلي بالـSSH مثبت في التتبع؛ سباق القراءة المتأخرة مثبت بنقل وهمي متحكم به.
+
+Windows0.6.4 adds privacy/retention navigation, editable bounded days, per-batch counts/phrase/SSH reauth, minimal recent run history. NumberBox changes now protect drafts from background render. Session forget button disabled while connection requested; preview states local/device/backup boundaries and retained history, exact UUID confirmation+reauth. Forgotten sessions show read-only card/new session required. Native acceptance pending at candidate stage.

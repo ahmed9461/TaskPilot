@@ -149,11 +149,22 @@ export class WhatsAppConnector implements WhatsAppTransport {
       const row = await transaction(this.pool, async (c) => {
         const row = (
           await c.query(
-            "UPDATE whatsapp_sessions SET connect_requested=true,receiving_since=COALESCE(receiving_since,now()),status='CONNECTING',last_error_code=NULL,version=version+1 WHERE id=$1 AND provider='baileys' RETURNING receiving_since",
+            "UPDATE whatsapp_sessions SET connect_requested=true,receiving_since=COALESCE(receiving_since,now()),status='CONNECTING',last_error_code=NULL,version=version+1 WHERE id=$1 AND provider='baileys' AND forgotten_at IS NULL RETURNING receiving_since",
             [id],
           )
         ).rows[0];
-        if (!row) throw new Fault("LIVE_SESSION_REQUIRED", 400);
+        if (!row) {
+          if (
+            (
+              await c.query(
+                "SELECT forgotten_at FROM whatsapp_sessions WHERE id=$1",
+                [id],
+              )
+            ).rows[0]?.forgotten_at
+          )
+            throw new Fault("SESSION_FORGOTTEN");
+          throw new Fault("LIVE_SESSION_REQUIRED", 400);
+        }
         await event(c, "WHATSAPP_CONNECT_REQUESTED", id);
         return row;
       });
@@ -440,7 +451,7 @@ export class WhatsAppConnector implements WhatsAppTransport {
     if (!this.connectionEnabled) return;
     const rows = (
       await this.pool.query(
-        "SELECT id FROM whatsapp_sessions WHERE provider='baileys' AND connect_requested=true",
+        "SELECT id FROM whatsapp_sessions WHERE provider='baileys' AND connect_requested=true AND forgotten_at IS NULL",
       )
     ).rows;
     if (!rows.length) return;

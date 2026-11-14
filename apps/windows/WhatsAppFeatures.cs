@@ -15,7 +15,7 @@ public sealed partial class MainPage
     {
         "MOCK" => "محاكاة", "STOPPED" => "متوقفة", "CONNECTING" => "جارٍ الاتصال",
         "QR_AVAILABLE" => "رمز الربط متاح", "CONNECTED" => "متصلة", "RECONNECTING" => "جارٍ استعادة الاتصال",
-        "REAUTH_REQUIRED" => "تحتاج إعادة ربط", "ERROR" => "متوقفة بسبب خطأ", _ => code
+        "REAUTH_REQUIRED" => "تحتاج إعادة ربط", "FORGOTTEN" => "منسية محليًا", "ERROR" => "متوقفة بسبب خطأ", _ => code
     };
     private async Task WhatsAppSessions()
     {
@@ -45,12 +45,15 @@ public sealed partial class MainPage
             var n = row!;
             if (V(n, "provider") == "mock") { Card(V(n, "label"), "محاكاة • " + V(n, "id")); continue; }
             var id = V(n, "id");
+            if (V(n, "forgotten_at") != "") { Card(V(n, "label"), "منسية محليًا • يبقى التاريخ محفوظًا؛ الربط الجديد يحتاج إعداد جلسة جديدًا.\n" + id); continue; }
             var connect = Button("بدء الاتصال أو الربط", () => ConnectWhatsApp(id));
             connect.IsEnabled = allowed && n["connect_requested"]?.GetValue<bool>() != true;
             var qr = Button("عرض رمز الربط مؤقتًا", () => WhatsAppQr(id));
             qr.IsEnabled = allowed && V(n, "status") == "QR_AVAILABLE";
             var groups = Button("اختيار مجموعة للاستقبال", () => BindWhatsAppGroup(id));
             groups.IsEnabled = allowed && V(n, "status") == "CONNECTED";
+            var forget = Button("نسيان مصادقة الجلسة", () => ForgetSession(id));
+            forget.IsEnabled = n["connect_requested"]?.GetValue<bool>() != true;
             Card(V(n, "label"), SessionState(V(n, "status")) + " • Baileys\n" + id + (V(n, "last_error_code") == "" ? "" : "\n" + V(n, "last_error_code")), connect, qr, groups,
                 Button("إيقاف الاتصال", async () =>
                 {
@@ -59,7 +62,7 @@ public sealed partial class MainPage
                     try { await api.Send("POST", $"/v1/sessions/{id}/disconnect", new { }, await Reauth(reauth.Password)); }
                     finally { reauth.Password = ""; }
                     await Render();
-                }));
+                }), forget);
         }
     }
     private async Task ToggleGroup(JsonNode n, bool enabled)

@@ -14,6 +14,7 @@
     <NavigationViewItem Content="سجل النشاط" Tag="audit" Icon="List"/>
     <NavigationViewItem Content="الذكاء الاصطناعي" Tag="ai" Icon="Help"/>
     <NavigationViewItem Content="المراقبة" Tag="operations" Icon="View"/>
+    <NavigationViewItem Content="الخصوصية والاحتفاظ" Tag="privacy" Icon="Delete"/>
    </NavigationView.MenuItems>
    <Grid Padding="32,24" RowSpacing="20">
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>

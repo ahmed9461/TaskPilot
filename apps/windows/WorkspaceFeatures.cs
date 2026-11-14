@@ -54,6 +54,8 @@ public sealed partial class MainPage
                 text.TextChanged += (_, _) => hasDraft = true;
             else if (control is ComboBox choice)
                 choice.SelectionChanged += (_, _) => hasDraft = true;
+            else if (control is NumberBox number)
+                number.ValueChanged += (_, _) => hasDraft = true;
     }
     private void AccountFilters()
     {

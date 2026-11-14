@@ -54,16 +54,15 @@ export class PgAuthStore {
   ) {
     if (entries.length > 2000) throw new Error("AUTH_BATCH_TOO_LARGE");
     await transaction(this.pool, async (c) => {
-      if (this.epoch) {
-        const row = (
-          await c.query(
-            "SELECT auth_epoch FROM whatsapp_sessions WHERE id=$1 FOR SHARE",
-            [this.sessionId],
-          )
-        ).rows[0];
-        if (row?.auth_epoch !== this.epoch)
-          throw new Error("AUTH_LEASE_CHANGED");
-      }
+      const row = (
+        await c.query(
+          "SELECT auth_epoch,forgotten_at FROM whatsapp_sessions WHERE id=$1 FOR SHARE",
+          [this.sessionId],
+        )
+      ).rows[0];
+      if (row?.forgotten_at) throw new Error("SESSION_FORGOTTEN");
+      if (this.epoch && row?.auth_epoch !== this.epoch)
+        throw new Error("AUTH_LEASE_CHANGED");
       for (const e of entries) {
         const key = this.key(e.category, e.id);
         if (e.value === null) {

@@ -1,5 +1,6 @@
 import { accountDetails } from "./account-details.js";
 import { AiRuntime } from "./ai-runtime.js";
+import { PrivacyService } from "./privacy.js";
 import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { z } from "zod";
@@ -69,6 +70,7 @@ export async function createApp(
     requestTimeout: 20000,
   });
   const service = new Service(pool, new Vault(config.encryptionKey));
+  const privacy = new PrivacyService(pool, service);
   app.decorateRequest("clientSessionId", null);
   await app.register(rateLimit, { max: 120, timeWindow: "1 minute" });
   app.setErrorHandler((err, _req, res) => {
@@ -127,7 +129,7 @@ export async function createApp(
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.7.0",
+    version: "0.8.0",
     provider: "mock",
   }));
   app.get("/ready", async () => {
@@ -194,7 +196,7 @@ export async function createApp(
     async () =>
       (
         await pool.query(
-          "SELECT id,label,provider,status,version,connect_requested,receiving_since,connected_at,last_error_code,created_at FROM whatsapp_sessions ORDER BY created_at LIMIT 100",
+          "SELECT id,label,provider,status,version,connect_requested,receiving_since,connected_at,last_error_code,forgotten_at,created_at FROM whatsapp_sessions ORDER BY created_at LIMIT 100",
         )
       ).rows,
   );
@@ -247,6 +249,40 @@ export async function createApp(
         provider: "baileys",
       },
   );
+  app.get("/v1/privacy/retention", () => privacy.getPolicy());
+  app.get(
+    "/v1/privacy/runs",
+    async () =>
+      (
+        await pool.query(
+          "SELECT id,kind,session_id,counts,created_at FROM privacy_runs ORDER BY created_at DESC,id DESC LIMIT 20",
+        )
+      ).rows,
+  );
+  app.patch("/v1/privacy/retention", async (req) => {
+    await reauth(req);
+    return privacy.updatePolicy(req.body);
+  });
+  app.post("/v1/privacy/retention-preview", async (req) => {
+    z.object({}).strict().parse(req.body);
+    return privacy.retentionPreview();
+  });
+  const privacyConfirmation = z
+    .object({ approvalToken: z.string().min(32).max(256), confirmation: text })
+    .strict();
+  app.post("/v1/privacy/retention-execute", async (req) => {
+    await reauth(req);
+    const p = privacyConfirmation.parse(req.body);
+    return privacy.retentionExecute(p.approvalToken, p.confirmation);
+  });
+  app.post("/v1/sessions/:id/forget-preview", (req) =>
+    privacy.forgetPreview(uuidParam.parse(req.params).id),
+  );
+  app.post("/v1/privacy/forget-session", async (req) => {
+    await reauth(req);
+    const p = privacyConfirmation.parse(req.body);
+    return privacy.forgetExecute(p.approvalToken, p.confirmation);
+  });
   app.post("/v1/sessions/:id/connect", async (req) => {
     await reauth(req);
     const sessionId = uuidParam.parse(req.params).id;
@@ -362,6 +398,14 @@ export async function createApp(
         throw new Fault("WHATSAPP_GROUP_NOT_DISCOVERED", 409);
     }
     const created = await transaction(pool, async (c) => {
+      const current = (
+        await c.query(
+          "SELECT forgotten_at FROM whatsapp_sessions WHERE id=$1 FOR SHARE",
+          [p.sessionId],
+        )
+      ).rows[0];
+      if (!current) throw new Fault("NOT_FOUND", 404);
+      if (current.forgotten_at) throw new Fault("SESSION_FORGOTTEN");
       const row = (
         await c.query(
           "INSERT INTO groups(id,session_id,external_group_id,title,task_type_id,namespace,period_key) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *",
@@ -397,6 +441,15 @@ export async function createApp(
     ).rows[0];
     if (owner?.provider === "baileys") await reauth(req);
     const changed = await transaction(pool, async (c) => {
+      if (owner) {
+        const current = (
+          await c.query(
+            "SELECT forgotten_at FROM whatsapp_sessions WHERE id=$1 FOR SHARE",
+            [owner.id],
+          )
+        ).rows[0];
+        if (current?.forgotten_at) throw new Fault("SESSION_FORGOTTEN");
+      }
       const row = (
         await c.query(
           "UPDATE groups SET receive_after=CASE WHEN $2 AND NOT enabled THEN now() ELSE receive_after END,enabled=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
