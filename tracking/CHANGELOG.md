@@ -1,6 +1,7 @@
 # سجل التغيير
 
 ## [API0.8.1] — 2026-11-15
+- Fixed release health metadata after guarded candidate deployment rejected a stale version and rolled back safely. package.json now supplies the version for source and compiled API; both routes tested.29Node PASS; no readiness bypass.
 - Fixed valid ingress becoming ERROR after3 transient PostgreSQL failures, including ACK timeout after the business transaction committed. Retry preserves encrypted PENDING work, then deduplicates and clears raw payload/error on DONE.
 - Preserved original transaction exception when rollback fails and discarded broken pooled clients. Idle PostgreSQL disconnect no longer terminates the worker; pg removes the client and the next query reconnects without logging credentials.
 - Added real isolated PostgreSQL RED→GREEN recovery tests and transaction/error-classification checks.27Node/66PG PASS; deployment/CI pending at this checkpoint. No migration or outbound retry policy changes.

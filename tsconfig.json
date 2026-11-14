@@ -9,7 +9,11 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": ".",
-    "sourceMap": true
+    "sourceMap": true,
+    "resolveJsonModule": true
   },
-  "include": ["services/**/*.ts", "packages/**/*.ts"]
+  "include": [
+    "services/**/*.ts",
+    "packages/**/*.ts"
+  ]
 }

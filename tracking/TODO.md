@@ -52,7 +52,7 @@ Checked means verified within stated scope. Current API0.8.0/Windows0.6.4 person
 - [x] P3-001d24h test WAIVED_BY_OWNER D-060; not a measured PASS or remaining release gate.
 
 - [x] P3-001e90s own-cgroup network block/automatic reconnect2s/same PID+identity/0 API failures/unchanged live data; no live queued-message claim.
-- [x] Native mock session/type/group creation+scoped disable/Tab-Return/End-Return/Escape and server proof. Full configuration/accessibility remains partial.
+- [x] Native mock session/type/group creation+scoped disable/Tab-Return/End-Return/Escape and server proof. Remaining functional configuration cases are tracked separately; no cosmetic/accessibility gate D-068/069.
 - [x] I-032 corrected stale native logout banner and revision-bound obsolete polling;21 offline C# and exact portable0.6.3 native acceptance PASS.
 - [x] I-033 correct dashboard title/sidebar after programmatic connection; final native0.6.3 SSH-from-Settings/navigation/logout PASS.
 

@@ -1,3 +1,4 @@
+import release from "../../../package.json" with { type: "json" };
 import { accountDetails } from "./account-details.js";
 import { AiRuntime } from "./ai-runtime.js";
 import { PrivacyService } from "./privacy.js";
@@ -129,7 +130,7 @@ export async function createApp(
   }
   app.get("/health", async () => ({
     status: "ok",
-    version: "0.8.0",
+    version: release.version,
     provider: "mock",
   }));
   app.get("/ready", async () => {

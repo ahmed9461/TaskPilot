@@ -25,7 +25,7 @@
     }
   },
   "green": {
-    "nodeTypeScript": 22,
+    "nodeTypeScript": 24,
     "nodeJavaScript": 5,
     "postgresIncludingParents": 66,
     "postgresParents": 7,
@@ -50,5 +50,22 @@
     "aiRequests": 0,
     "otherServiceChanges": 0,
     "firstHistoricalLostPacketCause": "UNCONFIRMED"
+  },
+  "healthVersion": {
+    "redSourceFailed": true,
+    "redBuiltFailed": true,
+    "greenSource": "0.8.1",
+    "greenBuilt": "0.8.1",
+    "singleSource": "package.json"
+  },
+  "firstDeployment": {
+    "source": "f0af9409be87dd0be40c3207212819cd4ed17d13",
+    "ciRun": 43651611399,
+    "ci": "SUCCESS",
+    "deployment": "REJECTED_STALE_HEALTH_VERSION",
+    "automaticRollback": "PASS_1bd7344_0.8.0",
+    "sameActualIdentity": "PASS",
+    "backupBytes": 327715,
+    "isolatedRestore": "PASS_13_MIGRATIONS_AUTH833"
   }
 }
