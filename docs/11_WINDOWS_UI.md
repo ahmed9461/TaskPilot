@@ -46,3 +46,6 @@ D-037 (2026-11-13): personal single-owner Windows app; signing is not required. 
 تفاصيل الحساب0.5: زر مستقل من بطاقة الحساب، أقسام المهام/مصادر الرسائل/بلاغات الاعتماد/نشاط السجلات الحالية،50 سجلًا للصفحة مع السابق/التالي. لا يكشف الاعتماد أو النص الخام. تتضح صلة كل مصدر بالمجموعة والجلسة، والبلاغ واقعة مسجلة لا فحص جديد. الرجوع يبقي فلاتر قائمة الحسابات.
 
 0.5.1 native fixes: automatic same-page change refresh restores scroll after layout; explicit navigation/filter/mutation refresh remains explicit. Review/template multiline controls set AcceptsReturn before Text to avoid WinUI coercion of saved line breaks. Review still hides raw text after30 seconds. Native mock-only reconciliation FAILED, multiline reveal/resolve and scoped2-row CSV Save As/reauth verified; broader accessibility/source-switch/live-send matrix remains open.
+
+## Windows0.6.3 session presentation
+بعد اكتمال تسجيل الخروج يظهر «غير متصل بالخادم»، وتختفي مدة الجلسة وإجراء الخروج. كل اتصال صريح لهrevision؛ نتائج أو أخطاء قراءة بدأت قبل الخروج/تبديل الاتصال لا تحدّث الشريط أو الشارة أو سجل التغييرات. لا تعاد عمليات التعديل تلقائيًا. الاتصال من الإعدادات يحدد لوحة التحكم وعنوانها وشريط التنقل معًا. القبول الأصلي بالـSSH مثبت في التتبع؛ سباق القراءة المتأخرة مثبت بنقل وهمي متحكم به.

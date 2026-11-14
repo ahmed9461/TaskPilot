@@ -1,5 +1,5 @@
 # خطة التنفيذ والتتبع — 2026-11-14
-Checked means verified within stated scope. Current API0.7.0/Windows0.6.2 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
+Checked means verified within stated scope. Current API0.7.0/Windows0.6.3 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
 
 ## P0 — القرارات والأمان
 - [x] P0-001 requirements/memory/decisions/tracking.
@@ -39,7 +39,7 @@ Checked means verified within stated scope. Current API0.7.0/Windows0.6.2 person
 - [ ] P3-001 full sustained provider/network/late-delivery/reboot/accessibility acceptance.
 - [x] P3-001a quiet live3600s/239samples/0failure-disconnection-PIDchanges-errors-pending-gaps.
 - [x] P3-001b isolated1800s/874unique+874replay/8accounts/16tasks/8valid encrypted credentials/0errors-provider-outbound. Original070 harness FAIL retained; fresh071 PASS.
-- [x] P3-001c21 Node/50 isolated PG incl5parents/20 offline C#/34 Windows→VPS/exact-code hosted CI PASS.
+- [x] P3-001c21 Node/50 isolated PG incl5parents/21 offline C#/34 Windows→VPS/exact-code hosted CI PASS.
 - [x] P3-002 API0.7.0 deployed/own privilege+restart+data+startup+identity verified; global EXTERNAL_SERVICE_DRIFT nonzero/unrelated service untouched.
 - [ ] P3-003 multi-live beyond initial1 (multi-mock verified).
 - [x] P3-004 manual AI runtime/API/native catalog/usage/reservations; DeepSeek live+replay verified previously, no inference this increment. OpenRouter live acceptance OPEN.
@@ -50,13 +50,14 @@ Checked means verified within stated scope. Current API0.7.0/Windows0.6.2 person
 
 - [x] P3-001e90s own-cgroup network block/automatic reconnect2s/same PID+identity/0 API failures/unchanged live data; no live queued-message claim.
 - [x] Native mock session/type/group creation+scoped disable/Tab-Return/End-Return/Escape and server proof. Full configuration/accessibility remains partial.
-- [ ] I-032 correct stale connected banner after native logout; reject obsolete in-flight polling results.
+- [x] I-032 corrected stale native logout banner and revision-bound obsolete polling;21 offline C# and exact portable0.6.3 native acceptance PASS.
+- [x] I-033 correct dashboard title/sidebar after programmatic connection; final native0.6.3 SSH-from-Settings/navigation/logout PASS.
 
 ## Next
-1. Provider/network/late delivery and controlled host-reboot acceptance, keeping other services protected.
-2. Remaining native configuration/accessibility/visible notification activation.
-3. Reviewed retention/auth forgetting/identity replacement and owner-held third recovery domain; optional OpenRouter/broader reporting.
-Current API9bf0130, native Windows99916b1, recovery runner efd2195. One test group/connectiontrue/sendingfalse. Installer/updater optional, signing not a gate. Do not reset CONNECTED identity or retry UNKNOWN_DELIVERY automatically.
+1. Reviewed retention/auth forgetting/identity replacement policy and remaining native accessibility/toast activation.
+2. Wider provider/network/late delivery and scoped host-reboot acceptance only with other services protected.
+3. Owner-held third recovery domain; optional OpenRouter/broader reporting.
+Current API9bf0130, native Windowsa357781, recovery runner efd2195. One test group/connectiontrue/sendingfalse. Installer/updater optional, signing not a gate. Do not reset CONNECTED identity or retry UNKNOWN_DELIVERY automatically.
 
 ## Historical checkpoints (superseded by current checklist)
 

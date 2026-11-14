@@ -38,3 +38,5 @@
 
 ## قبول مبدئي لكل مرحلة
 لا توصف feature بـ VERIFIED حتى يوجد اختبار آلي أو يدوي موثق نتيجته ودليل يمكن مراجعته. لا يوصف New-VPS بـ DEPLOYED حتى تثبت الخدمة على المضيف المستهدف وتمر اختبارات الدخان وتسجيل التشغيل.
+
+2026-11-14:24h test WAIVED_BY_OWNER(D-060), not PASS.90s own-service network fault plus native configuration/keyboard/explicit logout/navigation and obsolete async read regression covered as bounded evidence in TEST_RESULTS. Keep visible toast/click/full accessibility/provider late-delivery and host-reboot gates separate.

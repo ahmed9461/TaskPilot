@@ -80,3 +80,5 @@ I-024 final native template acceptance: two-line save/reopen/render/restore in p
 
 - I-032 native0.6.3/source45893d7 VERIFIED: startup disconnected, SSH connected, explicit logout no expiry/action+informational disconnected banner, later readback remained disconnected and fresh SSH reconnect succeeded. Delayed-result guard verified by isolated C# test, no native delayed HTTP injection.
 - I-033 IMPLEMENTED/native verification pending: programmatic connection from Settings rendered dashboard content but left title/sidebar on Settings. Shared SelectDashboard updates page/title/selected item for SSH and manual connection buttons. No server/WhatsApp state change.
+
+- I-032/I-033 final VERIFIED on portable0.6.3/sourcea3577810adff62dfa15be2e593f61c2df77a8728: native Settings→SSH dashboard correct heading/sidebar→Settings→logout/disconnected/expiry/action removed; app closed.21 offline C# delayed-response guard PASS and exact-source backend+Windows CI43542629785 SUCCESS. Broader accessibility/toast tests still partial.
