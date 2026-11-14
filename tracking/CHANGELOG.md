@@ -261,3 +261,5 @@ Final exact-code hosted checks: dfebeb1 CI43633370508 and8585562 CI43633806414 b
 ## 0.6.6 candidate — 2026-11-15
 - Correct actual225% narrow/short-window accessibility defect: whole-page scrolling, wrapped navigation/filter/brand labels and semantic page heading. Preserve string navigation labels and automatic-refresh scroll recovery.
 - Add DND/notification-center guidance; component probe no longer mislabels current interaction tooling as unavailable. Native retry pending; original defect and notification visibility limits retained.
+
+0.6.6 native follow-up: retain default navigation style/icons while applying wrapped content per destination; use native string brand header. First candidate passed component checks but failed actual visual style; not promoted.
