@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [API0.8.5 / Windows0.6.9 candidate] — 2026-11-15
+- Full versioned atomic editing of existing rules; readable source/preview even when sending disabled; pending-only cancellation and human-readable outbox.
+- Root-only SSH sending preview/apply/discard with temporary session/single-use reauth/typed phrase/stale guard/admin lock/atomic env/HUP ACK/fail-closed fallback; no HTTP mutation, no automatic send/retry.
+-38Node/100isolatedPG/34offlineC# PASS. Native/deploy/desktop pending; owner setup later, actual sendingfalse.
+
 ## [Independent app recovery] — 2026-11-15
 - Add explicit --verify-app independent recovery on verified local Docker context, network-none shared namespace/read-only app/no logs/private stdin key. Real HTTP startup/auth/masked reads and fake business workflow verified without original API keys/profile/SSH or real providers.
 - Harden own-container timeout cleanup, TCP readiness and sanitized stage diagnostics. Add fail-closed topology/key-transfer and cleanup regression checks;33Node PASS. Full encrypted kit optionally includes public compiled app, hashes every entry; actual fresh extracted-kit restore PASS. Daily runner/backup destination/cloud copy unchanged.

@@ -6,6 +6,7 @@ import { startMockWorker } from "./outbox.js";
 import { MockTransport } from "./transport.js";
 import { Vault } from "./security.js";
 import { WhatsAppConnector } from "./whatsapp/connector.js";
+import { SendingPolicyReloader } from "./sending-policy.js";
 const secret = async (name: string) => {
   const path = process.env[`${name}_FILE`];
   if (!path) throw new Error(`MISSING_${name}_FILE`);
@@ -21,7 +22,20 @@ const ai = new AiRuntime(pool, new Vault(encryptionKey));
 await ai.recoverInterrupted();
 const whatsapp = new WhatsAppConnector(pool, new Vault(encryptionKey), {
   connectionEnabled: process.env.WHATSAPP_CONNECTION_ENABLED === "true",
-  sendingEnabled: process.env.WHATSAPP_SENDING_ENABLED === "true",
+  sendingEnabled: false,
+});
+const sendingPolicy = new SendingPolicyReloader(
+  whatsapp.connectionEnabled,
+  () =>
+    readFile(
+      process.env.TASKPILOT_SENDING_POLICY_FILE ?? "/etc/taskpilot/pilot.env",
+      "utf8",
+    ),
+  (enabled) => whatsapp.setSendingEnabled(enabled),
+);
+await sendingPolicy.reload();
+process.on("SIGHUP", () => {
+  void sendingPolicy.reload();
 });
 const app = await createApp(
   pool,
@@ -30,6 +44,7 @@ const app = await createApp(
     reauthSecret: await secret("TASKPILOT_REAUTH_SECRET"),
     encryptionKey,
     mockEnabled: process.env.TASKPILOT_MOCK_ENABLED === "true",
+    sendingPolicyReady: () => sendingPolicy.ready,
   },
   whatsapp,
   ai,

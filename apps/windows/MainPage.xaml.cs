@@ -32,6 +32,12 @@ public sealed partial class MainPage : Page
         "CONFLICT" or "STALE_PREVIEW" => "تغيرت البيانات. حدّث القائمة وأنشئ معاينة جديدة.",
         "LIVE_WHATSAPP_NOT_AUTHORIZED" => "الاتصال الحقيقي معطّل على الخادم بانتظار موافقتك المنفصلة.",
         "LIVE_SENDING_NOT_AUTHORIZED" => "الإرسال الحقيقي معطّل. لم يُعتمد الرد.",
+        "REPLY_NOT_PENDING" => "الرد لم يعد منتظرًا؛ حدّث السجل لمعرفة نتيجته. لا يُلغى إرسال بدأ بالفعل.",
+        "SENDING_POLICY_NOT_SAFE" => "يتطلب التفعيل جلسة متصلة ومجموعة مفعّلة، دون ردود منتظرة أو قيد الإرسال أو مجهولة التسليم. راجع سجل الردود أولًا.",
+        "SENDING_POLICY_STALE" or "SENDING_POLICY_BUSY" => "تغيرت إعدادات الإرسال أو انتهت المعاينة. افتح معاينة جديدة.",
+        "SENDING_POLICY_DISABLED_AFTER_FAILURE" => "تعذر تثبيت التغيير؛ عُطّل الإرسال احترازيًا. حدّث الحالة قبل المتابعة.",
+        "SENDING_POLICY_SERVICE_STOPPED" => "تعذر التحقق من تعطيل الإرسال؛ أُوقفت خدمة TaskPilot احترازيًا. يلزم فحص الخادم قبل استئنافها.",
+        "SENDING_POLICY_UNAVAILABLE" => "تعذر التحقق من إعداد الإرسال. حدّث الاتصال والحالة قبل المحاولة؛ لا تفترض نجاح التغيير.",
         "PAIRING_QR_EXPIRED" => "انتهى رمز الربط. حدّث الجلسات واطلب الرمز الحالي.",
         "WHATSAPP_NOT_CONNECTED" or "WHATSAPP_CONNECT_FAILED" => "جلسة واتساب غير متصلة. راجع حالتها قبل المحاولة.",
         "WHATSAPP_SESSION_IN_USE" => "الجلسة قيد الاستخدام في عملية أخرى.",
@@ -324,6 +330,7 @@ public sealed partial class MainPage : Page
                 Connection.Message = "اتصل من الإعدادات لبدء المزامنة.";
                 ReconnectButton.Visibility = Visibility.Collapsed;
             }
+            if (api.Connected) await SendingSettings();
             Settings();
             return;
         }
@@ -558,8 +565,13 @@ public sealed partial class MainPage : Page
         });
         var reauth = ReauthField();
         var real = V(p,"provider") == "baileys";
-        if (real && !liveSendingEnabled) throw new InvalidOperationException("الإرسال الحقيقي معطّل على الخادم. لم يُعتمد أي رد.");
-        if (!await Dialog(real ? "إقرار إرسال رد واتساب حقيقي" : "إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text($"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionId")}\nالرسالة: {V(p, "externalMessageId")}\n" + (real ? "سيُرسل النص إلى رسالة المصدر في واتساب بعد الإقرار." : "موصل mock؛ لا إرسال واتساب حقيقي.")), reauth), real ? "إرسال الرد الحقيقي" : "إقرار المحاكاة"))
+        var target = $"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionLabel")}\nاستلام المصدر: {V(p, "receivedAt")}";
+        if (real && !liveSendingEnabled)
+        {
+            await Dialog("معاينة الرد — الإرسال معطّل", Stack(Text(V(p, "body"), 20), Text(target), Text("هذه معاينة فقط؛ لم يُعتمد الرد ولم يُدرج في طابور الإرسال.")), "إغلاق");
+            return;
+        }
+        if (!await Dialog(real ? "إقرار إرسال رد واتساب حقيقي" : "إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text(target + "\n" + (real ? "سيُرسل النص إلى رسالة المصدر في واتساب بعد الإقرار." : "موصل mock؛ لا إرسال واتساب حقيقي.")), reauth), real ? "إرسال الرد الحقيقي" : "إقرار المحاكاة"))
             return;
         await api.Send("POST", "/v1/reply-jobs/approve", new
         {
@@ -568,6 +580,7 @@ public sealed partial class MainPage : Page
         }, await Reauth(reauth.Password));
         reauth.Password = "";
         await Render();
+        Connection.Message = "أُدرج طلب الرد في الطابور؛ تابع نتيجته في سجل الردود.";
     }
     private async Task Inbox()
     {
@@ -689,11 +702,22 @@ public sealed partial class MainPage : Page
         Body.Children.Add(Text("سجل الردود", 24));
         foreach (var n in (await api.Send("GET", "/v1/reply-jobs")).AsArray())
         {
+            var detail = $"{V(n, "display_name")} • {V(n, "task_name")}\nالمجموعة: {V(n, "group_title")} • الجلسة: {V(n, "session_label")}\n{V(n, "body")}";
             if (V(n, "status") == "UNKNOWN_DELIVERY")
-                Card("تسليم يحتاج تحققًا", V(n, "body"), Button("حسم حالة التسليم", () => Reconcile(n!)));
+                Card("تسليم يحتاج تحققًا", detail, Button("حسم حالة التسليم", () => Reconcile(n!)));
+            else if (V(n, "status") == "APPROVED")
+                Card("معتمد وينتظر الإرسال", detail, Button("إلغاء الرد المنتظر", () => CancelReply(n!)));
             else
-                Card(StateLabel(V(n, "status")), V(n, "body") + "\n" + V(n, "provider_message_id"));
+                Card(StateLabel(V(n, "status")), detail);
         }
+    }
+    private async Task CancelReply(JsonNode job)
+    {
+        var reauth = ReauthField();
+        if (!await Dialog("إلغاء الرد المنتظر", Stack(Text(V(job, "body")), Text("يُلغى فقط إذا لم يبدأ إرساله. تبقى حالة المهمة وسجلها كما هما."), reauth), "إلغاء الرد")) return;
+        await api.Send("POST", "/v1/reply-jobs/" + V(job, "id") + "/cancel", new { }, await Reauth(reauth.Password));
+        reauth.Password = "";
+        await Render();
     }
     private async Task Reconcile(JsonNode job)
     {

@@ -42,6 +42,7 @@ export interface AppConfig {
   reauthSecret: string;
   encryptionKey: string;
   mockEnabled: boolean;
+  sendingPolicyReady?: () => boolean;
 }
 const uuidParam = z.object({ id });
 declare module "fastify" {
@@ -138,6 +139,13 @@ export async function createApp(
     status: "ok",
     version: release.version,
     provider: "mock",
+    ...(config.sendingPolicyReady
+      ? {
+          livePolicyControl: true,
+          sendingPolicyReady: config.sendingPolicyReady(),
+          liveSendingEnabled: whatsapp?.sendingEnabled ?? false,
+        }
+      : {}),
   }));
   app.get("/ready", async () => {
     await pool.query("SELECT 1");
@@ -168,6 +176,18 @@ export async function createApp(
       .parse(req.body);
     return ai.analyze(uuidParam.parse(req.params).id, body.idempotencyKey);
   });
+  app.get("/v1/whatsapp/sending-policy", async () => ({
+    enabled: whatsapp?.sendingEnabled ?? false,
+    controlAvailable:
+      !!config.sendingPolicyReady && config.sendingPolicyReady(),
+    connectionEnabled: whatsapp?.connectionEnabled ?? false,
+    ...(
+      await pool.query(`SELECT
+      (SELECT count(*)::int FROM whatsapp_sessions WHERE provider='baileys' AND connect_requested AND status='CONNECTED') connected,
+      (SELECT count(*)::int FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE s.provider='baileys' AND g.enabled) groups,
+      (SELECT count(*)::int FROM reply_jobs r JOIN whatsapp_sessions s ON s.id=r.session_id WHERE s.provider='baileys' AND r.status IN ('APPROVED','SENDING','UNKNOWN_DELIVERY')) unsettled`)
+    ).rows[0],
+  }));
   app.get("/v1/me", async () => ({
     id: "owner",
     role: "owner",
@@ -823,7 +843,10 @@ export async function createApp(
     async () =>
       (
         await pool.query(
-          "SELECT * FROM reply_jobs ORDER BY approved_at DESC LIMIT 500",
+          `SELECT r.*,ac.display_name,t.name task_name,g.title group_title,ws.label session_label FROM reply_jobs r
+           JOIN assignments a ON a.id=r.assignment_id JOIN accounts ac ON ac.id=a.account_id JOIN task_types t ON t.id=a.task_type_id
+           JOIN source_messages s ON s.id=r.source_message_id JOIN groups g ON g.id=s.group_id JOIN whatsapp_sessions ws ON ws.id=r.session_id
+           ORDER BY r.approved_at DESC,r.id DESC LIMIT 500`,
         )
       ).rows,
   );
@@ -846,6 +869,11 @@ export async function createApp(
       p.idempotencyKey,
       whatsapp?.sendingEnabled === true,
     );
+  });
+  app.post("/v1/reply-jobs/:id/cancel", async (req) => {
+    await reauth(req);
+    z.object({}).strict().parse(req.body);
+    return service.cancelReply(uuidParam.parse(req.params).id);
   });
   app.post("/v1/reply-jobs/:id/reconcile", async (req) => {
     await reauth(req);

@@ -56,7 +56,7 @@ public sealed partial class MainPage
         var sources = assignment["sources"]!.AsArray();
         if (sources.Count == 0)
             throw new InvalidOperationException("لا توجد رسالة مصدر لهذا التكليف.");
-        var source = new ComboBox { Header = "رسالة المصدر", ItemsSource = sources.Select(n => $"{V(n, "sessionId")} / {V(n, "groupId")} / {V(n, "externalMessageId")}").ToArray(), SelectedIndex = 0, MaxWidth = 440 };
+        var source = new ComboBox { Header = "رسالة المصدر", ItemsSource = sources.Select((n, i) => $"{i + 1}. {V(n, "groupTitle")} • {V(n, "sessionLabel")} • {V(n, "receivedAt")}").ToArray(), SelectedIndex = 0, MaxWidth = 440 };
         var template = new ComboBox { Header = "القالب المتاح لهذه المهمة والمجموعة" };
         var hint = Text("");
         var matching = new List<JsonNode>();

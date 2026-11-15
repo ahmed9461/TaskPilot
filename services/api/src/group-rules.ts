@@ -14,8 +14,19 @@ const ruleInput = z
   })
   .strict();
 const updateInput = z
-  .object({ version: z.number().int().positive(), enabled: z.boolean() })
+  .object({
+    version: z.number().int().positive(),
+    enabled: z.boolean().optional(),
+    taskTypeId: id.optional(),
+    keywords: ruleInput.shape.keywords.optional(),
+    priority: ruleInput.shape.priority.optional(),
+  })
   .strict();
+const validUpdate = (u: z.infer<typeof updateInput>) =>
+  u.enabled !== undefined ||
+  u.taskTypeId !== undefined ||
+  u.keywords !== undefined ||
+  u.priority !== undefined;
 const batchInput = z
   .object({
     groupVersion: z.number().int().positive(),
@@ -23,6 +34,7 @@ const batchInput = z
     create: ruleInput.optional(),
   })
   .strict()
+  .refine((p) => p.updates.every(validUpdate))
   .refine((p) => p.updates.length > 0 || p.create !== undefined)
   .refine((p) => new Set(p.updates.map((u) => u.id)).size === p.updates.length);
 
@@ -86,7 +98,7 @@ export async function saveGroupRules(
     if (group.version !== p.groupVersion) throw new Fault("CONFLICT");
     const current = (
       await c.query(
-        "SELECT id,version,enabled FROM group_rules WHERE group_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR UPDATE",
+        "SELECT id,version,enabled,task_type_id,keywords,priority FROM group_rules WHERE group_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR UPDATE",
         [groupId, p.updates.map((u) => u.id)],
       )
     ).rows;
@@ -98,10 +110,23 @@ export async function saveGroupRules(
       throw new Fault("CONFLICT");
     let changed = 0;
     for (const u of p.updates) {
-      if (byId.get(u.id)!.enabled === u.enabled) continue;
+      const old = byId.get(u.id)!;
+      const next = {
+        enabled: u.enabled ?? old.enabled,
+        taskTypeId: u.taskTypeId ?? old.task_type_id,
+        keywords: u.keywords ?? old.keywords,
+        priority: u.priority ?? old.priority,
+      };
+      if (
+        old.enabled === next.enabled &&
+        old.task_type_id === next.taskTypeId &&
+        old.priority === next.priority &&
+        JSON.stringify(old.keywords) === JSON.stringify(next.keywords)
+      )
+        continue;
       await c.query(
-        "UPDATE group_rules SET enabled=$2,version=version+1 WHERE id=$1",
-        [u.id, u.enabled],
+        "UPDATE group_rules SET enabled=$2,task_type_id=$3,keywords=$4,priority=$5,version=version+1 WHERE id=$1",
+        [u.id, next.enabled, next.taskTypeId, next.keywords, next.priority],
       );
       await event(c, "GROUP_RULE_UPDATED", u.id);
       changed++;
@@ -144,7 +169,7 @@ export async function updateGroupRule(
   ruleId: string,
   input: unknown,
 ) {
-  const p = updateInput.parse(input);
+  const p = updateInput.refine(validUpdate).parse(input);
   return transaction(pool, async (c) => {
     const owner = (
       await c.query("SELECT group_id FROM group_rules WHERE id=$1", [ruleId])
@@ -153,8 +178,15 @@ export async function updateGroupRule(
     await lockGroup(c, owner.group_id, true);
     const row = (
       await c.query(
-        "UPDATE group_rules SET enabled=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
-        [ruleId, p.enabled, p.version],
+        "UPDATE group_rules SET enabled=COALESCE($2,enabled),task_type_id=COALESCE($4,task_type_id),keywords=COALESCE($5,keywords),priority=COALESCE($6,priority),version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
+        [
+          ruleId,
+          p.enabled ?? null,
+          p.version,
+          p.taskTypeId ?? null,
+          p.keywords ?? null,
+          p.priority ?? null,
+        ],
       )
     ).rows[0];
     if (!row) throw new Fault("CONFLICT");

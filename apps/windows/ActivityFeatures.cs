@@ -48,6 +48,7 @@ public sealed partial class MainPage
         "CREDENTIAL_ERROR_VERIFIED" => "سُجل خطأ اعتماد مثبت",
         "ACCOUNT_CREDENTIALS_UNVERIFIED" => "اعتماد غير متحقق",
         "REPLY_APPROVED" => "اعتُمد رد",
+        "REPLY_CANCELED" => "أُلغي رد منتظر",
         "REPLY_SENT" => "سُجل إرسال رد",
         "REPLY_DELIVERY_UNKNOWN" => "تسليم يحتاج تحققًا",
         "REPLY_RECONCILED_SENT" => "حُسم التسليم: وصل",

@@ -22,6 +22,7 @@ test("atomic group rule editor preserves all-or-nothing configuration", async (t
     mockEnabled: true,
   };
   const app = await createApp(pool, config);
+  let fixtureClient = 1;
   t.after(async () => {
     await app.close();
     await pool.end();
@@ -34,6 +35,7 @@ test("atomic group rule editor preserves all-or-nothing configuration", async (t
   ) {
     return app.inject({
       method,
+      remoteAddress: `127.0.0.${fixtureClient}`,
       url: path,
       headers: {
         "content-type": "application/json",
@@ -64,6 +66,7 @@ test("atomic group rule editor preserves all-or-nothing configuration", async (t
     name: "Synthetic B",
   });
   async function seed() {
+    fixtureClient++;
     const s = await api("POST", "/v1/sessions", {
       label: "Synthetic rule editor",
     });
@@ -201,6 +204,93 @@ test("atomic group rule editor preserves all-or-nothing configuration", async (t
       });
       assert.equal(unchanged.changed, 0);
       assert.deepEqual(await snapshot(g.id), after);
+    },
+  );
+
+  await t.test(
+    "existing rule task, keywords and priority update atomically and route future messages only",
+    async () => {
+      const { s, g, first, second } = await seed();
+      const message = {
+        sessionId: s.id,
+        groupId: g.id,
+        externalMessageId: randomUUID(),
+        text: "name: Synthetic rule edit\nuser: synthetic-edit-085\nalpha",
+      };
+      const old = await api("POST", "/v1/mock/messages", message);
+      const before = await snapshot(g.id);
+      const update = {
+        id: first.id,
+        version: first.version,
+        enabled: true,
+        taskTypeId: b.id,
+        keywords: ["  changed  "],
+        priority: 90,
+      };
+      for (const bad of [
+        { ...update, keywords: [" "] },
+        { ...update, taskTypeId: randomUUID() },
+        { ...update, priority: 101 },
+        { id: first.id, version: first.version },
+      ]) {
+        const result = await request("POST", `/v1/groups/${g.id}/rules`, {
+          groupVersion: before.editor.group.version,
+          updates: [toggle(second, false), bad],
+        });
+        assert.ok([400, 409].includes(result.statusCode));
+        assert.deepEqual(await snapshot(g.id), before);
+      }
+      const saved = await api("POST", `/v1/groups/${g.id}/rules`, {
+        groupVersion: before.editor.group.version,
+        updates: [update, toggle(second, false)],
+      });
+      assert.equal(saved.changed, 2);
+      assert.equal(saved.group.version, before.editor.group.version + 1);
+      const row = saved.rules.find((r: any) => r.id === first.id);
+      assert.equal(row.task_type_id, b.id);
+      assert.equal(row.priority, 90);
+      assert.deepEqual(row.keywords, ["changed"]);
+      const stable = await snapshot(g.id);
+      const same = await api("POST", `/v1/groups/${g.id}/rules`, {
+        groupVersion: saved.group.version,
+        updates: [{ ...update, version: row.version }],
+      });
+      assert.equal(same.changed, 0);
+      assert.deepEqual(await snapshot(g.id), stable);
+      const next = await api("POST", "/v1/mock/messages", {
+        ...message,
+        externalMessageId: randomUUID(),
+        text: message.text.replace("alpha", "changed"),
+      });
+      assert.notEqual(next.assignmentId, old.assignmentId);
+      const assignments = (
+        await pool.query(
+          "SELECT id,task_type_id,priority FROM assignments WHERE id=ANY($1::uuid[])",
+          [[old.assignmentId, next.assignmentId]],
+        )
+      ).rows;
+      assert.equal(
+        assignments.find((r) => r.id === old.assignmentId).task_type_id,
+        a.id,
+      );
+      assert.equal(
+        assignments.find((r) => r.id === next.assignmentId).task_type_id,
+        b.id,
+      );
+      assert.equal(
+        assignments.find((r) => r.id === next.assignmentId).priority,
+        90,
+      );
+      assert.equal(
+        (
+          await api("PATCH", `/v1/group-rules/${first.id}`, {
+            version: row.version,
+            keywords: ["legacy-edit"],
+            priority: 75,
+          })
+        ).priority,
+        75,
+      );
     },
   );
 

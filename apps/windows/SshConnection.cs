@@ -116,6 +116,42 @@ public sealed class SshConnection : IAsyncDisposable
             throw new HttpRequestException("SSH_TUNNEL_FAILED");
         return (await Issue(alias, sessionId))["grant"]!.GetValue<string>();
     }
+    public async Task<JsonNode> SendingPolicy(string action, bool? enabled = null, string? token = null, string? confirmation = null)
+    {
+        if (ExpiresAt <= DateTimeOffset.UtcNow) throw new ApiFailure("SESSION_EXPIRED", 401);
+        if (!IsTunnelAlive) throw new HttpRequestException("SSH_TUNNEL_FAILED");
+        var payload = new JsonObject { ["action"] = action, ["clientToken"] = Token };
+        if (enabled is not null) payload["enabled"] = enabled.Value;
+        if (token is not null) payload["token"] = token;
+        if (confirmation is not null) { payload["confirmation"] = confirmation; payload["reauth"] = await Reauthorize(); }
+        var info = Info(alias);
+        info.RedirectStandardInput = true;
+        info.ArgumentList.Add(alias);
+        info.ArgumentList.Add("node /opt/taskpilot/current/ops/sending-policy.mjs");
+        using var process = Process.Start(info) ?? throw new InvalidOperationException("SSH_UNAVAILABLE");
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(45));
+        var output = process.StandardOutput.ReadToEndAsync(deadline.Token);
+        var error = process.StandardError.ReadToEndAsync(deadline.Token);
+        try
+        {
+            await process.StandardInput.WriteAsync(payload.ToJsonString().AsMemory(), deadline.Token);
+            process.StandardInput.Close();
+            await process.WaitForExitAsync(deadline.Token);
+            await error;
+            var raw = await output;
+            if (raw.Length > 65536) throw new InvalidOperationException();
+            var result = JsonNode.Parse(raw) ?? throw new InvalidOperationException();
+            if (process.ExitCode != 0)
+            {
+                var code = result["code"]?.ToString() ?? "SENDING_POLICY_UNAVAILABLE";
+                if (!Regex.IsMatch(code, "^(SENDING_POLICY_[A-Z_]+|SESSION_EXPIRED|REAUTH_REQUIRED)$")) code = "SENDING_POLICY_UNAVAILABLE";
+                throw new ApiFailure(code, 409);
+            }
+            return result;
+        }
+        catch (ApiFailure) { throw; }
+        catch { if (!process.HasExited) process.Kill(true); throw new InvalidOperationException("SENDING_POLICY_UNAVAILABLE"); }
+    }
     public async ValueTask DisposeAsync()
     {
         if (Volatile.Read(ref stopped) != 0)

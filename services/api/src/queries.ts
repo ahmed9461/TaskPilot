@@ -78,7 +78,7 @@ export async function queryResource(
     resource === "accounts"
       ? "ac.id,ac.namespace,ac.username_normalized,ac.display_name,ac.archived_at,ac.version,ac.created_at"
       : resource === "assignments"
-        ? `a.*,ac.namespace,ac.display_name,ac.username_normalized,t.name task_name,COALESCE((SELECT json_agg(json_build_object('id',s.id,'sessionId',s.session_id,'groupId',s.group_id,'externalMessageId',s.external_message_id)) FROM assignment_sources x JOIN source_messages s ON s.id=x.source_message_id WHERE x.assignment_id=a.id),'[]') sources`
+        ? `a.*,ac.namespace,ac.display_name,ac.username_normalized,t.name task_name,COALESCE((SELECT json_agg(json_build_object('id',s.id,'sessionId',s.session_id,'groupId',s.group_id,'externalMessageId',s.external_message_id,'groupTitle',g.title,'sessionLabel',ws.label,'receivedAt',s.received_at) ORDER BY s.received_at,s.id) FROM assignment_sources x JOIN source_messages s ON s.id=x.source_message_id JOIN groups g ON g.id=s.group_id JOIN whatsapp_sessions ws ON ws.id=s.session_id WHERE x.assignment_id=a.id),'[]') sources`
         : "s.id,s.session_id,s.group_id,s.external_message_id,s.state,s.version,s.received_at,s.routing_task_type_id,s.routing_ambiguous,g.namespace,g.title group_title";
   const condition = where.length ? " WHERE " + where.join(" AND ") : "";
   const order =

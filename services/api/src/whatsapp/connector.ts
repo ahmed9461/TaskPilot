@@ -75,6 +75,9 @@ export class WhatsAppConnector implements WhatsAppTransport {
   get sendingEnabled() {
     return this.policy.sendingEnabled;
   }
+  setSendingEnabled(enabled: boolean) {
+    this.policy.sendingEnabled = this.connectionEnabled && enabled;
+  }
   capabilities() {
     return {
       implemented: true,

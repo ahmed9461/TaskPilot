@@ -34,7 +34,11 @@ try {
   const version = JSON.parse(
     await readFile(release + "/package.json", "utf8"),
   ).version;
-  if (!["0.8.3", "0.8.4"].includes(version)) throw Error();
+  if (
+    !["0.8.3", "0.8.4"].includes(version) &&
+    !(version === "0.8.5" && mode === "--verify")
+  )
+    throw Error();
   const envFile = async (path) =>
     Object.fromEntries(
       (await readFile(path, "utf8"))

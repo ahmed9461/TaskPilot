@@ -393,7 +393,7 @@ export class Service {
       const row = (
         await c.query(
           `SELECT a.id,a.version,a.status,s.id source_id,s.session_id,s.external_message_id,g.id group_id,g.title,g.enabled,g.version group_version,
-        t.body,t.id template_id,t.version template_version,t.enabled template_enabled,t.group_id template_group_id,t.task_type_id template_task_id,a.task_type_id,ac.display_name,ac.archived_at,tt.name task_name,ws.provider
+        t.body,t.id template_id,t.version template_version,t.enabled template_enabled,t.group_id template_group_id,t.task_type_id template_task_id,a.task_type_id,ac.display_name,ac.archived_at,tt.name task_name,ws.provider,ws.label session_label,s.received_at
         FROM assignments a JOIN accounts ac ON ac.id=a.account_id JOIN task_types tt ON tt.id=a.task_type_id
         JOIN assignment_sources axs ON axs.assignment_id=a.id JOIN source_messages s ON s.id=axs.source_message_id
         JOIN groups g ON g.id=s.group_id JOIN whatsapp_sessions ws ON ws.id=s.session_id CROSS JOIN reply_templates t
@@ -428,6 +428,8 @@ export class Service {
         sessionId: row.session_id,
         groupId: row.group_id,
         groupTitle: row.title,
+        sessionLabel: row.session_label,
+        receivedAt: row.received_at,
         externalMessageId: row.external_message_id,
         provider: row.provider,
         expiresInSeconds: 300,
@@ -503,6 +505,36 @@ export class Service {
       );
       await event(c, "REPLY_APPROVED", job.id);
       return job;
+    });
+  }
+  async cancelReply(jobId: string) {
+    return transaction(this.pool, async (c) => {
+      const account = (
+        await c.query(
+          "SELECT ac.id FROM accounts ac JOIN assignments a ON a.account_id=ac.id JOIN reply_jobs r ON r.assignment_id=a.id WHERE r.id=$1 FOR UPDATE OF ac",
+          [jobId],
+        )
+      ).rows[0];
+      if (!account) throw new Fault("NOT_FOUND", 404);
+      const job = (
+        await c.query("SELECT * FROM reply_jobs WHERE id=$1 FOR UPDATE", [
+          jobId,
+        ])
+      ).rows[0];
+      if (!job) throw new Fault("NOT_FOUND", 404);
+      if (job.status === "CANCELED") return job;
+      if (job.status !== "APPROVED") throw new Fault("REPLY_NOT_PENDING");
+      const updated = (
+        await c.query(
+          "UPDATE reply_jobs SET status='CANCELED' WHERE id=$1 RETURNING *",
+          [jobId],
+        )
+      ).rows[0];
+      await c.query("UPDATE accounts SET version=version+1 WHERE id=$1", [
+        account.id,
+      ]);
+      await event(c, "REPLY_CANCELED", jobId);
+      return updated;
     });
   }
   async deletionPreview(ids: string[] | undefined, all: boolean) {

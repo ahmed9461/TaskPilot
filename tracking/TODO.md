@@ -1,5 +1,11 @@
 # خطة التنفيذ والتتبع — 2026-11-15
 
+## أولوية العمل الحالية D-083
+- [ ] F-083a تعديل المهمة والكلمات والأولوية للقواعد القائمة دون إعادة إنشاء: IMPLEMENTED، اختبارAPI المعزول PASS؛ القبول الأصلي والنشر OPEN.
+- [ ] F-083b عرض معاينة الرد مع إرسال معطل دون اعتماد: IMPLEMENTED، اختبارAPI المعزول PASS؛ القبول الأصلي والنشر OPEN.
+- [ ] F-083c إلغاء الرد المنتظر وإعداد الإرسال من التطبيق: الإلغاء المعزول/سباق العامل/إعادة التحقق PASS؛ تحكمSSH/root/HUP قيد التنفيذ والاختبار والنشر. يبقى إرسال المالكfalse.
+- إعداد مجموعات العمل وقواعدها OWNER_SETUP_LATER؛ المالك مشغول وسيجريه بنفسه. لا تُملأ المساحة الشخصية ببيانات الاختبار.
+
 - [x] D-082 clean personal handoff: reviewed/rehearsed cleanup applied, mock=false, API08417baf55/Windows068544748e published/native verified/Desktop updated;35Node/86PG/two hosted CI runs SUCCESS. Owner app left connected on Groups page.
 
 - [x] Personal desktop placement D-081: exact067 package installed per-user, shortcut verified, installed native app connected and left open for owner.
