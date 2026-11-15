@@ -102,7 +102,7 @@ public sealed partial class MainPage
     {
         var n = await api.Send("GET", "/v1/operations");
         var counts = n["counts"]!;
-        Card("حالة التشغيل التجريبي", TransportSummary);
+        Card("حالة التشغيل", TransportSummary);
         foreach (var (key, title) in new[] { ("review", "رسائل تحتاج مراجعة"), ("unread", "إشعارات غير مقروءة"), ("approvedReplies", "ردود معتمدة"), ("sendingReplies", "قيد الإرسال"), ("unknownReplies", "تسليم يحتاج تحققًا"), ("failedReplies", "ردود فشلت"), ("enabledGroups", "مجموعات مفعّلة"), ("pendingIngress", "رسائل واتساب معلّقة"), ("failedIngress", "رسائل وارد معزولة بسبب فشل المعالجة"), ("connectedSessions", "جلسات واتساب متصلة") })
             Card(V(counts, key), title);
         Card("عمر قوائم الانتظار", $"أقدم مراجعة: {V(n, "oldestReviewSeconds")} ثانية • أقدم رد معتمد: {V(n, "oldestApprovedSeconds")} ثانية");

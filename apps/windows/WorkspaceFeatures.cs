@@ -127,7 +127,7 @@ public sealed partial class MainPage
         var editor = await api.Send("GET", "/v1/groups/" + V(group, "id") + "/rule-editor");
         var snapshot = editor["group"]!;
         var readOnly = snapshot["readOnly"]!.GetValue<bool>();
-        var panel = Stack(Text("تُحفظ التغييرات معًا. الكلمات تخص نوع المهمة؛ عند تعادل أعلى أولوية لمهمتين تُطلب المراجعة."));
+        var panel = Stack(Text("تُحفظ التغييرات معًا. تكفي مطابقة أي كلمة من كلمات القاعدة. تفوز القاعدة ذات الأولوية الأعلى؛ عند تعادلها لمهمتين تُطلب المراجعة، وعند عدم المطابقة تُستخدم المهمة الافتراضية للمجموعة."));
         var toggles = new List<(JsonNode Row, CheckBox Toggle)>();
         foreach (var row in editor["rules"]!.AsArray())
         {

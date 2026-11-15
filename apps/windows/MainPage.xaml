@@ -19,7 +19,7 @@
    <Grid Padding="32,24">
     <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled">
      <StackPanel Spacing="20">
-      <StackPanel Spacing="6"><TextBlock x:Name="Heading" Text="لوحة التحكم" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.HeadingLevel="1"/><TextBlock Text="نسخة شخصية تجريبية" TextWrapping="Wrap" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/></StackPanel>
+      <StackPanel Spacing="6"><TextBlock x:Name="Heading" Text="لوحة التحكم" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.HeadingLevel="1"/><TextBlock Text="TaskPilot • النسخة الشخصية" TextWrapping="Wrap" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/></StackPanel>
       <InfoBar x:Name="Connection" IsOpen="True" IsClosable="False" Severity="Informational" Title="الاتصال" Message="أدخل بيانات الاتصال من الإعدادات للبدء."><InfoBar.ActionButton><Button x:Name="ReconnectButton" Content="إعادة الاتصال" Click="Reconnect_Click" Visibility="Collapsed"/></InfoBar.ActionButton></InfoBar>
       <StackPanel x:Name="Body" Spacing="14" Padding="0,0,0,24"/>
      </StackPanel>

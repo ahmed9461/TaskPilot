@@ -332,6 +332,95 @@ test("atomic group rule editor preserves all-or-nothing configuration", async (t
   );
 
   await t.test(
+    "changing the default task affects new sources only and invalidates stale configuration",
+    async () => {
+      const { s, g, first } = await seed();
+      const before = await editor(g.id);
+      const message = {
+        sessionId: s.id,
+        groupId: g.id,
+        externalMessageId: randomUUID(),
+        text: "name: Synthetic default task\ruser: synthetic-default-084",
+      };
+      const old = await api("POST", "/v1/mock/messages", message);
+      assert.equal(
+        (
+          await pool.query("SELECT task_type_id FROM assignments WHERE id=$1", [
+            old.assignmentId,
+          ])
+        ).rows[0].task_type_id,
+        a.id,
+      );
+      const saved = await api("PATCH", `/v1/groups/${g.id}`, {
+        version: before.group.version,
+        taskTypeId: b.id,
+      });
+      assert.equal(saved.enabled, before.group.enabled ?? true);
+      assert.equal(saved.task_type_id, b.id);
+      assert.equal(
+        (
+          await request("PATCH", `/v1/groups/${g.id}`, {
+            version: before.group.version,
+            taskTypeId: a.id,
+          })
+        ).statusCode,
+        409,
+      );
+      assert.equal(
+        (
+          await request("PATCH", `/v1/groups/${g.id}`, {
+            version: saved.version,
+          })
+        ).statusCode,
+        400,
+      );
+      assert.equal(
+        (
+          await request("PATCH", `/v1/groups/${g.id}`, {
+            version: saved.version,
+            taskTypeId: randomUUID(),
+          })
+        ).statusCode,
+        409,
+      );
+      assert.equal(
+        (
+          await request("POST", `/v1/groups/${g.id}/rules`, {
+            groupVersion: before.group.version,
+            updates: [{ id: first.id, version: first.version, enabled: false }],
+          })
+        ).statusCode,
+        409,
+      );
+      const next = await api("POST", "/v1/mock/messages", {
+        ...message,
+        externalMessageId: randomUUID(),
+      });
+      assert.notEqual(next.assignmentId, old.assignmentId);
+      assert.equal(
+        (
+          await pool.query("SELECT task_type_id FROM assignments WHERE id=$1", [
+            next.assignmentId,
+          ])
+        ).rows[0].task_type_id,
+        b.id,
+      );
+      assert.equal(
+        (
+          await pool.query("SELECT task_type_id FROM assignments WHERE id=$1", [
+            old.assignmentId,
+          ])
+        ).rows[0].task_type_id,
+        a.id,
+      );
+      assert.equal(
+        (await api("GET", `/v1/groups/${g.id}/rule-editor`)).group.version,
+        saved.version,
+      );
+    },
+  );
+
+  await t.test(
     "WinUI CR input materializes once and credentials cannot choose the task",
     async () => {
       const { s, g } = await seed();

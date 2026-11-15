@@ -172,6 +172,7 @@ export async function createApp(
     id: "owner",
     role: "owner",
     provider: "mock",
+    mockEnabled: config.mockEnabled,
     liveSendingEnabled: whatsapp?.sendingEnabled ?? false,
     liveConnectionEnabled: whatsapp?.connectionEnabled ?? false,
   }));
@@ -437,8 +438,16 @@ export async function createApp(
   app.patch("/v1/groups/:id", async (req) => {
     const { id: groupId } = uuidParam.parse(req.params);
     const p = z
-      .object({ version: z.number().int().positive(), enabled: z.boolean() })
+      .object({
+        version: z.number().int().positive(),
+        enabled: z.boolean().optional(),
+        taskTypeId: id.optional(),
+      })
       .strict()
+      .refine(
+        (value) =>
+          value.enabled !== undefined || value.taskTypeId !== undefined,
+      )
       .parse(req.body);
     const owner = (
       await pool.query(
@@ -459,8 +468,8 @@ export async function createApp(
       }
       const row = (
         await c.query(
-          "UPDATE groups SET receive_after=CASE WHEN $2 AND NOT enabled THEN now() ELSE receive_after END,enabled=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
-          [groupId, p.enabled, p.version],
+          "UPDATE groups SET receive_after=CASE WHEN $2::boolean AND NOT enabled THEN now() ELSE receive_after END,enabled=COALESCE($2::boolean,enabled),task_type_id=COALESCE($4::uuid,task_type_id),version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
+          [groupId, p.enabled ?? null, p.version, p.taskTypeId ?? null],
         )
       ).rows[0];
       if (!row) throw new Fault("CONFLICT");

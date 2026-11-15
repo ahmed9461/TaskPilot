@@ -328,6 +328,7 @@ public sealed partial class MainPage : Page
             return;
         }
         var identity = await api.Send("GET", "/v1/me");
+        mockToolsEnabled = identity["mockEnabled"]?.GetValue<bool>() == true;
         liveSendingEnabled = identity["liveSendingEnabled"]?.GetValue<bool>() == true;
         liveConnectionEnabled = identity["liveConnectionEnabled"]?.GetValue<bool>() == true;
         var notificationState = await api.Send("GET", "/v1/notifications/state");
@@ -448,7 +449,7 @@ public sealed partial class MainPage : Page
     }
     private async Task AccountForm(JsonNode? n)
     {
-        var ns = Field("النظام", n is null ? "synthetic" : V(n, "namespace"));
+        var ns = Field("مساحة الحسابات", n is null ? "work" : V(n, "namespace"));
         var user = Field("المستخدم", V(n, "username_normalized"));
         ns.IsEnabled = user.IsEnabled = n is null;
         var name = Field("الاسم", V(n, "display_name"));
@@ -570,7 +571,7 @@ public sealed partial class MainPage : Page
     }
     private async Task Inbox()
     {
-        Body.Children.Add(Button("إدخال رسالة اختبار وهمية", async () =>
+        if (mockToolsEnabled) Body.Children.Add(Button("إدخال رسالة اختبار وهمية", async () =>
         {
             var mockIds = (await api.Send("GET", "/v1/sessions")).AsArray().Where(n=>V(n,"provider")=="mock").Select(n=>V(n,"id")).ToHashSet();
             var groups = new JsonArray((await api.Send("GET", "/v1/groups")).AsArray().Where(n=>mockIds.Contains(V(n,"session_id"))).Select(n=>n!.DeepClone()).ToArray());
@@ -639,8 +640,16 @@ public sealed partial class MainPage : Page
     private async Task Sessions() => await WhatsAppSessions();
     private async Task Groups()
     {
-        Body.Children.Add(Button("إضافة نوع مهمة", async () => { var code = Field("رمز النوع"); var name = Field("الاسم"); if (await Dialog("نوع مهمة", Stack(code, name))) { await api.Send("POST", "/v1/task-types", new { code = code.Text, name = name.Text }); await Render(); } }));
-        Body.Children.Add(Button("ربط مجموعة محاكاة", async () =>
+        Body.Children.Add(Text("ابدأ بإضافة أنواع المهام، ثم اربط مجموعة واتساب وحدد مهمتها الافتراضية. من زر القواعد تختار الكلمات والأولوية لكل مهمة."));
+        Body.Children.Add(Button("إضافة نوع مهمة", async () => { var code = Field("رمز المهمة (اسم قصير فريد)"); var name = Field("اسم المهمة"); if (await Dialog("نوع مهمة", Stack(code, name))) { await api.Send("POST", "/v1/task-types", new { code = code.Text, name = name.Text }); await Render(); } }));
+        Body.Children.Add(Button("إضافة مجموعة واتساب", async () =>
+        {
+            var sessions = (await api.Send("GET", "/v1/sessions")).AsArray().Where(n => V(n, "provider") == "baileys" && V(n, "status") == "CONNECTED" && V(n, "forgotten_at") == "").ToArray();
+            if (sessions.Length == 0) throw new InvalidOperationException("افتح الجلسات واربط واتساب أولًا، ثم عد لإضافة المجموعة.");
+            if (sessions.Length != 1) throw new InvalidOperationException("اختر الجلسة المطلوبة من صفحة الجلسات ثم اضغط اختيار مجموعة للاستقبال.");
+            await BindWhatsAppGroup(V(sessions[0], "id"));
+        }));
+        if (mockToolsEnabled) Body.Children.Add(Button("ربط مجموعة محاكاة", async () =>
         {
             var sessions = new JsonArray((await api.Send("GET", "/v1/sessions")).AsArray().Where(n => V(n,"provider") == "mock").Select(n=>n!.DeepClone()).ToArray());
             var tasks = (await api.Send("GET", "/v1/task-types")).AsArray();
@@ -666,11 +675,12 @@ public sealed partial class MainPage : Page
                 await Render();
             }
         }));
+        var taskNames = (await api.Send("GET", "/v1/task-types")).AsArray().ToDictionary(n => V(n, "id"), n => V(n, "name"));
         foreach (var r in (await api.Send("GET", "/v1/groups")).AsArray())
         {
             var n = r!;
             var enabled = n["enabled"]!.GetValue<bool>();
-            Card(V(n, "title"), $"{V(n, "namespace")} • {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button("القواعد", () => Rules(n)), Button(enabled ? "إيقاف" : "تفعيل", () => ToggleGroup(n, !enabled)));
+            Card(V(n, "title"), $"المهمة الافتراضية: {taskNames.GetValueOrDefault(V(n, "task_type_id"), "غير متاحة")}\nمساحة الحسابات: {V(n, "namespace")} • الفترة: {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button("المهمة الافتراضية", () => GroupDefaultTask(n)), Button("القواعد", () => Rules(n)), Button(enabled ? "إيقاف" : "تفعيل", () => ToggleGroup(n, !enabled)));
         }
     }
     private async Task Replies()

@@ -113,7 +113,7 @@ try {
     ownerBefore = await owner();
   assert.equal(before.unsettled, 0);
   assert.equal(before.pending, 0);
-  assert.ok(before.accounts > 0 && before.tasks > 0 && ownerBefore.auth > 0);
+  assert.ok(before.accounts >= 0 && before.tasks >= 0 && ownerBefore.auth > 0);
   const forbiddenAi = () => {
     aiCalls++;
     throw Error("RECOVERY_AI_FORBIDDEN");
@@ -178,7 +178,10 @@ try {
   await api("GET", "/ready", undefined, false, false, 401);
   assert.equal((await api("GET", "/ready")).status, "ready");
   await api("GET", "/v1/dashboard");
-  assert.ok((await api("GET", "/v1/accounts?limit=1")).length === 1);
+  assert.equal(
+    (await api("GET", "/v1/accounts?limit=1")).length,
+    Math.min(1, before.accounts),
+  );
 
   stage = "restored-business-workflow";
   const suffix = randomUUID(),

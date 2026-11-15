@@ -1,5 +1,7 @@
 # خطة التنفيذ والتتبع — 2026-11-15
 
+- [ ] D-082 clean personal handoff: reviewed cleanup/apply, mock=false, API084/Windows068 deploy/native acceptance/updated Desktop shortcut; local35Node/86PG/rehearsals PASS.
+
 - [x] Personal desktop placement D-081: exact067 package installed per-user, shortcut verified, installed native app connected and left open for owner.
 Checked means verified within stated scope. Current API0.8.3/Windows0.6.7 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
 
