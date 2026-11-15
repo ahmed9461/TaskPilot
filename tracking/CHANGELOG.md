@@ -1,5 +1,9 @@
 # سجل التغيير
 
+## [Independent app recovery] — 2026-11-15
+- Add explicit --verify-app independent recovery on verified local Docker context, network-none shared namespace/read-only app/no logs/private stdin key. Real HTTP startup/auth/masked reads and fake business workflow verified without original API keys/profile/SSH or real providers.
+- Harden own-container timeout cleanup, TCP readiness and sanitized stage diagnostics. Add fail-closed topology/key-transfer and cleanup regression checks;33Node PASS. Full encrypted kit optionally includes public compiled app, hashes every entry; actual fresh extracted-kit restore PASS. Daily runner/backup destination/cloud copy unchanged.
+
 ## [API0.8.3 / Windows0.6.7 accepted] — 2026-11-15
 - Deployed4477d34/CI43661156807 bothSUCCESS. Native multiline parsing/routing, atomic rule controls, filters and completion after reopen verified.34Windows→SSH→API checks and own restart/privileges/identity PASS;42other services unchanged atdeploy.
 - Exact tested unsigned ZIP0677082fcf packaged without rebuild; own test data cleaned. Current backup strategy retained; fresh encrypted packet awaiting independent restore.

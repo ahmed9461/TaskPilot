@@ -30,7 +30,7 @@ Checked means verified within stated scope. Current API0.8.3/Windows0.6.7 person
 ## P2 — Windows
 - [x] P2-001 portable resources/startup/ArabicRTL/SSH/unsigned packaging.
 - [ ] P2-002 full native session/group configuration matrix; actual QR/binding observed partly.
-- [ ] P2-003 remaining functional configuration/filter cases; native account/task/source/history/flags/53-account pagination verified.
+- [x] P2-003 bounded functional account/task filters, inline/atomic rules, cancel/reopen, task completion/restart; source/history/flags/53-account pagination verified. No full combinatorial UI-matrix claim.
 - [x] P2-004 review reveal/30-second hide/reauth/resolve/raw clear.
 - [x] P2-005 synthetic CSV/reconciliation/source-B mock approval/task deletion/selected pair/global cancel native acceptance; actual quoted live reply retained. Uncertain delivery never auto-retried.
 - [x] P2-006 scoped template editing/disable/filter/multiline save+reopen; source A→B selects B-only preview/mock reply verified, sent snapshot immutable.
@@ -110,4 +110,5 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] I-043 native066 partial-save reproduced; atomic editor/dialog validation implemented;84PG/29Node/WinUI067 build PASS.
 - [x] Atomic rule sourceCI/deployAPI082; native067 invalid/valid/cancel/reopen/mock group enable workflows.
 - [x] API0834477d34 CI43661156807/deploy + same-input native routing/account and task filters/status/app restart, scoped067 cleanup and exact tested ZIP.
-- [ ] Existing encrypted packet independent restore including isolated app/business workflow; no new backup destination D-076.
+- [x] Existing latest encrypted packet independent DB+API/business workflow; direct and fresh full-kit extract PASS, DPAPI0/SSH0/no real provider. No new backup destination D-076.
+- [ ] Recovery-source hosted CI; live API stays4477d34 and accepted Windows0677082fcf, daily runner staysb876096.

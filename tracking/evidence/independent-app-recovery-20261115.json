@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-15",
+  "decision": "D-079",
+  "apiVersion": "0.8.3",
+  "apiSource": "4477d34e75f6d10df060316f88d5eb583388c34f",
+  "scope": "two final-code independent application drills; direct and freshly extracted full kit; same Windows user, not fresh machine or production cutover",
+  "snapshot": {
+    "bytes": 332407,
+    "sha256": "619cb56775089988b3a4f337ac4202531a21b85e99044c90464fcd75b326c7b9",
+    "accounts": 4,
+    "assignments": 4,
+    "migrations": 13,
+    "liveSources": 5,
+    "sent": 1,
+    "sending": 0,
+    "authRows": 833,
+    "credentials": 1,
+    "encryptedFieldDomainsValidated": {
+      "auth": 833,
+      "credentials": 1,
+      "review": 1,
+      "sourceQuote": 4,
+      "ingress": 0
+    },
+    "privacy": {
+      "policyRows": 1,
+      "runs": 2,
+      "forgottenSessions": 1,
+      "forgottenAuthRows": 0
+    },
+    "replayInserted": 0,
+    "dpapiCalls": 0,
+    "sshCalls": 0,
+    "providerConnections": 0,
+    "outboundMessages": 0,
+    "plaintextDumpOnDisk": false
+  },
+  "application": {
+    "application": "PASS",
+    "apiVersion": "0.8.3",
+    "migrations": 13,
+    "restoredAccounts": 4,
+    "restoredTasks": 4,
+    "restoredAuth": 833,
+    "actualIdentityCiphertextUnchanged": true,
+    "apiListen": "isolated loopback only",
+    "networkInterfaces": "loopback only",
+    "httpAuth": "PASS",
+    "maskedReads": "PASS",
+    "mockIngestion": "PASS",
+    "duplicateInserted": 0,
+    "completionWithoutAutomaticReply": true,
+    "mockReplies": 1,
+    "approvalReplayExtraReplies": 0,
+    "providerConnections": 0,
+    "externalMessages": 0,
+    "aiCalls": 0,
+    "schemaWrites": 0,
+    "originalApiKeysUsed": false,
+    "originalWindowsProfileUsed": false
+  },
+  "kit": {
+    "bytes": 19006390,
+    "sha256": "0ebed2d405f76838bc54e18ada42b50664fb004ca542e6ffa46c2dc77e5be894",
+    "files": 4990,
+    "snapshots": 1,
+    "applicationBundleIncluded": true,
+    "entryHashesVerified": true,
+    "extractedFreshDirectoryRestore": "PASS",
+    "recoveryCodeIncluded": false,
+    "plaintextMasterKeysIncluded": false,
+    "cloudUpload": "NOT_RUN"
+  },
+  "images": {
+    "postgres": "sha256:d4bb0a8c1b7bb2e29f976d099e7bfb9a5d8858cffe9e46b35cd302cd1f1f8168",
+    "node": "sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5"
+  },
+  "publicAppArchiveSha256": "73ffacce96ada68281d4226d1fc84ad71d9b27cee86e8d4c9b57aec898ecd6d2",
+  "helperSha256": {
+    "scripts/offhost-backup.mjs": "eb83fb13742a162efc9c1ca49079fcbe5f2ae7f98e0fa80b89a573be4a0a1d55",
+    "scripts/recovery-app.mjs": "af5e61ee62ea61e76a1d9190e888ef3c9cad484604e65b64f0c7ee93aeb65e22",
+    "scripts/build-independent-kit.mjs": "369b873369041acdc8ba88ea9e41be38efb3fe0cb24cb67f18c534c263f958a4",
+    "ops/recovery-api-check.mjs": "c76cc0af346a978c2b75f5eb4a3a2f5127bf31dba17d3161065df8d8b93339d4"
+  },
+  "safetyChecks": {
+    "rejectReachablePublishedUnownedStoppedDatabase": "PASS",
+    "timeoutCleanupAndPrivateInputWipe": "PASS",
+    "livePilotUnaffected": "PASS",
+    "ownContainersRemaining": 0,
+    "dockerInitialStoppedRestored": true,
+    "dailyRunnerReplaced": false,
+    "newBackupDestination": false
+  },
+  "failuresRetained": [
+    "initial app stage unavailable; later probe wrong ingress.status corrected to state",
+    "consumed-token replay expected200 incorrectly; strict409 then fresh preview/same key correctly returns prior job",
+    "two early isolated-container failures with no captured inner cause; TCP readiness added, no confirmed causal attribution",
+    "synthetic bootstrap probe8samples reached finalTCP; prematureUnix-only readiness NOT_OBSERVED",
+    "initial final live-counter assertion used folded camel-case alias; corrected lowercase counters all PASS"
+  ]
+}

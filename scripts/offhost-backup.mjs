@@ -23,12 +23,14 @@ import {
   privateDecrypt,
   createDecipheriv,
   createHash,
+  randomUUID,
   constants,
 } from "node:crypto";
 import { execFile } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 const profileRecovery = process.argv[2] === "--recover-profile";
 const independentRecovery = process.argv[2] === "--recover-independent";
+const verifyApp = independentRecovery && process.argv[5] === "--verify-app";
 const initIndependent = process.argv[2] === "--init-independent";
 const upgradeOwner = process.argv[2] === "--upgrade-owner-escrows";
 const rotateProtector = process.argv[2] === "--rotate-protector";
@@ -73,7 +75,9 @@ function run(file, args, input, env = {}) {
   return new Promise((ok, no) => {
     const p = execFile(
       file,
-      args,
+      file.toLowerCase() === "docker.exe" && independentRecovery
+        ? ["--context", "desktop-linux", ...args]
+        : args,
       {
         encoding: "buffer",
         maxBuffer: 64 * 1024 * 1024,
@@ -81,7 +85,15 @@ function run(file, args, input, env = {}) {
         timeout: 120000,
         env: { ...inherited, ...env },
       },
-      (e, out) => (e ? no(Error("PRIVATE_OPERATION_FAILED")) : ok(out)),
+      (e, out, stderr) => {
+        if (!e) return ok(out);
+        const failure = Error("PRIVATE_OPERATION_FAILED");
+        const diagnostic = stderr
+          .toString()
+          .match(/^RECOVERED_APPLICATION_CHECK_FAILED:([a-z-]{1,48})$/m);
+        if (diagnostic) failure.recoveryStage = diagnostic[1];
+        no(failure);
+      },
     );
     p.stdin.on("error", () => {});
     p.stdin.end(input);
@@ -115,11 +127,19 @@ async function dpapi(mode, input) {
   );
 }
 let container;
+let containerName;
 let stage = "platform";
 try {
   if (
     process.platform !== "win32" ||
     resolve(root).toLowerCase().includes("codex\\tasks")
+  )
+    throw Error();
+  if (
+    independentRecovery &&
+    (process.argv.length < 5 ||
+      process.argv.length > 6 ||
+      (process.argv.length === 6 && !verifyApp))
   )
     throw Error();
   stage = "folder";
@@ -130,6 +150,21 @@ try {
     undefined,
     { TASKPILOT_PRIVATE_FOLDER: root },
   );
+  if (independentRecovery) {
+    stage = "local-docker-context";
+    const contexts = JSON.parse(
+      (
+        await run("docker.exe", ["context", "inspect", "desktop-linux"])
+      ).toString(),
+    );
+    if (
+      contexts.length !== 1 ||
+      !/^npipe:.*dockerDesktopLinuxEngine$/i.test(
+        contexts[0].Endpoints?.docker?.Host ?? "",
+      )
+    )
+      throw Error();
+  }
   if (initIndependent) {
     stage = "owner-init";
     const protectFolder = async (path) => {
@@ -544,7 +579,8 @@ try {
     "TPG1",
   );
   stage = "isolated-container";
-  const name = "taskpilot-recovery-" + Date.now();
+  const name = "taskpilot-recovery-" + randomUUID();
+  containerName = name;
   const id = (
     await run("docker.exe", [
       "run",
@@ -555,6 +591,8 @@ try {
       "--label",
       "com.taskpilot.purpose=offhost-recovery",
       "--network",
+      "none",
+      "--log-driver",
       "none",
       "--memory",
       "384m",
@@ -575,12 +613,15 @@ try {
     .trim();
   if (!/^[a-f0-9]{64}$/.test(id)) throw Error();
   container = id;
+  stage = "database-readiness";
   for (let i = 0; ; i++) {
     try {
       await run("docker.exe", [
         "exec",
         id,
         "pg_isready",
+        "-h",
+        "127.0.0.1",
         "-U",
         "taskpilot",
         "-d",
@@ -592,6 +633,7 @@ try {
       await delay(1000);
     }
   }
+  stage = "restore-dump";
   await run(
     "docker.exe",
     [
@@ -678,6 +720,17 @@ try {
     "BEGIN; WITH original AS (SELECT * FROM source_messages LIMIT 1), inserted AS (INSERT INTO source_messages(id,session_id,group_id,external_message_id,state) SELECT id,session_id,group_id,external_message_id,state FROM original ON CONFLICT DO NOTHING RETURNING id) SELECT json_build_object('inserted',(SELECT count(*) FROM inserted)); ROLLBACK;",
   );
   if (replay.inserted !== 0) throw Error();
+  let application = null;
+  if (verifyApp) {
+    stage = "isolated-application";
+    const { verifyRecoveredApp } = await import("./recovery-app.mjs");
+    application = await verifyRecoveredApp({
+      root,
+      container: id,
+      encryptionKey: keys["encryption-key"],
+      run,
+    });
+  }
   const report = {
     backup: "PASS",
     restore: "PASS",
@@ -704,16 +757,44 @@ try {
     sshCalls,
     containerNetwork: "none",
     plaintextDumpOnDisk: false,
+    application,
   };
   await writeFile(
     join(root, result.name + ".receipt.json"),
     JSON.stringify(report, null, 2),
   );
   console.log(JSON.stringify(report));
-} catch {
-  console.error("OFFHOST_BACKUP_OR_RECOVERY_FAILED:" + stage);
+} catch (error) {
+  const diagnostic = /^[a-z-]{1,48}$/.test(error?.recoveryStage ?? "")
+    ? ":" + error.recoveryStage
+    : "";
+  console.error("OFFHOST_BACKUP_OR_RECOVERY_FAILED:" + stage + diagnostic);
   process.exitCode = 1;
 } finally {
+  // run/CLI timeout can occur after creation but before receiving the ID.
+  if (!container && containerName) {
+    try {
+      const remaining = (
+        await run("docker.exe", [
+          "ps",
+          "-aq",
+          "--filter",
+          "name=^" + containerName + "$",
+          "--filter",
+          "label=com.taskpilot.purpose=offhost-recovery",
+        ])
+      )
+        .toString()
+        .trim();
+      if (remaining) {
+        if (!/^[a-f0-9]{12,64}$/.test(remaining)) throw Error();
+        container = remaining;
+      }
+    } catch {
+      console.error("OWN_RESTORE_CONTAINER_LOOKUP_FAILED");
+      process.exitCode = 1;
+    }
+  }
   if (container)
     try {
       await run("docker.exe", ["stop", container]);

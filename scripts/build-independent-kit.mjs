@@ -1,6 +1,6 @@
 // Explicit owner operation. No code, DPAPI, custodian, original escrow or plaintext key is read.
-import { readFile, writeFile, lstat } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { readFile, writeFile, lstat, readdir } from "node:fs/promises";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -8,7 +8,9 @@ import { ownerPublic, readBounded } from "./owner-recovery-files.mjs";
 import { recipientId } from "./recovery-crypto.mjs";
 const root = "E:\\TaskPilot-Backups";
 const scripts = dirname(fileURLToPath(import.meta.url));
-const snapshots = process.argv.slice(2);
+const withApp = process.argv[2] === "--app-bundle";
+const appSource = withApp ? resolve(process.argv[3] ?? "") : null;
+const snapshots = process.argv.slice(withApp ? 4 : 2);
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -71,10 +73,60 @@ try {
     "owner-recovery-files.mjs",
   ])
     await add(join(scripts, name), name, 131072);
+  if (withApp) {
+    if (
+      !/^[A-Z]:\\TaskPilot-Recovery-[A-Za-z0-9_-]{1,40}\\app$/i.test(appSource)
+    )
+      throw Error("PRIVATE_PUBLIC_APP_SOURCE_REQUIRED");
+    if ((await lstat(appSource)).isSymbolicLink()) throw Error();
+    for (const required of [
+      "package.json",
+      "dist/services/api/src/app.js",
+      "ops/recovery-api-check.mjs",
+    ])
+      await readBounded(join(appSource, required), 1024 * 1024);
+    await add(join(scripts, "recovery-app.mjs"), "recovery-app.mjs", 131072);
+    let total = 0,
+      count = 0;
+    const walk = async (path, relative = "") => {
+      for (const name of await readdir(path)) {
+        const next = relative ? relative + "/" + name : name;
+        if (
+          !relative &&
+          !["dist", "node_modules", "package.json", "ops"].includes(name)
+        )
+          throw Error("PUBLIC_APP_ALLOWLIST_REQUIRED");
+        if (
+          /[\\:]/.test(name) ||
+          name === ".." ||
+          /^\.env/i.test(name) ||
+          /\.(?:tpg|dpapi|db|sqlite|key|pem|pfx|log)$/i.test(name)
+        )
+          throw Error("PRIVATE_APP_ENTRY_REJECTED");
+        const source = join(path, name),
+          info = await lstat(source);
+        if (info.isSymbolicLink()) throw Error("APP_LINK_REJECTED");
+        if (info.isDirectory()) await walk(source, next);
+        else {
+          if (
+            !info.isFile() ||
+            ++count > 10000 ||
+            (total += info.size) > 256 * 1024 * 1024
+          )
+            throw Error("PUBLIC_APP_BOUNDS");
+          await add(source, "app/" + next, 32 * 1024 * 1024);
+        }
+      }
+    };
+    await walk(appSource);
+  }
   const readme = `TaskPilot independent encrypted recovery kit\n\nThe separate recovery code is NOT included. Keep it offline and outside this laptop/kit. No SSH, DPAPI, original Windows profile or provider process is used by independent mode.\n\nRequirements: Windows, Node.js24, Docker Desktop running, pinned PostgreSQL17 image in offhost-backup.mjs available locally (first pull requires network). Extract into a NEW private directory, for example E:\\TaskPilot-Recovery-OwnerDrill.\n\nFrom PowerShell inside that directory:\n$env:TASKPILOT_RECOVERY_ROOT='E:\\TaskPilot-Recovery-OwnerDrill'\nnode .\\offhost-backup.mjs --recover-independent ${snapshots.at(-1)} 'X:\\private-folder\\recovery-code.txt'\n\nUse the actual separate code-file path. Never paste its value in a command, Git, chat or report. Choose another included snapshot by its exact name if needed.\n\nThe runner enforces owner+SYSTEM folder access, validates snapshot SHA/AEAD/field domains and replay, restores only into a temporary PG container (network=none, no ports, bounded resources), removes it afterward and writes an aggregate receipt. It does NOT deploy a recovered API, replace a live database, reconnect WhatsApp or send messages. A real cutover needs a separate target and rollback procedure. Wrong code/tampered packet fails before container startup.\n\nLocal forgetting is not retroactive in older snapshots or the phone's linked devices. Originals are retained. Total laptop loss requires a separate owner-held copy of the code; cryptographic drills do not prove physical custody or a fresh-machine cutover.\n`;
+  const appReadme = withApp
+    ? "\nThis kit also includes the public compiled API/dependencies/probe. Add --verify-app to the independent command to verify API HTTP auth, masked reads, fake ingress/dedupe/completion and one MOCK reply with replay rejection. Cache the pinned official Node24 image from recovery-app.mjs first. The app shares only the PG network-none namespace, has a read-only public bundle and logs disabled. Only the field key is passed on private stdin; original API/AI keys are unused. Both containers are removed. This remains an isolated drill, not live deployment/WhatsApp reconnection.\n"
+    : "";
   const label = new Date().toISOString().replace(/[^0-9]/g, "");
   const destination = join(root, `TaskPilot-Independent-Recovery-${label}.zip`);
-  const spec = { root, destination, entries, readme };
+  const spec = { root, destination, entries, readme: readme + appReadme };
   const ps = `
 $ErrorActionPreference='Stop'
 $spec=[Console]::In.ReadToEnd() | ConvertFrom-Json
@@ -137,6 +189,7 @@ try {
     entryHashesVerified: true,
     recoveryCodeIncluded: false,
     plaintextMasterKeysIncluded: false,
+    applicationBundleIncluded: withApp,
     upload: "NOT_RUN; explicit private storage copy required",
   };
   await writeFile(
