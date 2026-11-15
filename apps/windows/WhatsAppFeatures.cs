@@ -22,8 +22,8 @@ public sealed partial class MainPage
     {
         var capabilities = await api.Send("GET", "/v1/whatsapp/capabilities");
         var allowed = capabilities["connectionEnabled"]?.GetValue<bool>() == true;
-        Body.Children.Add(Text("موصل Baileys غير رسمي. إنشاء إعداد جلسة لا يتصل بواتساب. الربط يتطلب تفعيلًا مستقلًا على الخادم وموافقتك؛ الإرسال له مفتاح مستقل."));
-        Body.Children.Add(Button("إضافة إعداد جلسة واتساب", async () =>
+        PageBody.Children.Add(Text("موصل Baileys غير رسمي. إنشاء إعداد جلسة لا يتصل بواتساب. الربط يتطلب تفعيلًا مستقلًا على الخادم وموافقتك؛ الإرسال له مفتاح مستقل."));
+        PageBody.Children.Add(Button("إضافة إعداد جلسة واتساب", async () =>
         {
             var label = Field("اسم الجلسة");
             if (await Dialog("إعداد جلسة دون اتصال", label))
@@ -32,7 +32,7 @@ public sealed partial class MainPage
                 await Render();
             }
         }));
-        if (mockToolsEnabled) Body.Children.Add(Button("إضافة جلسة محاكاة", async () =>
+        if (mockToolsEnabled) PageBody.Children.Add(Button("إضافة جلسة محاكاة", async () =>
         {
             var label = Field("اسم الجلسة");
             if (await Dialog("جلسة وهمية", label))
@@ -66,7 +66,7 @@ public sealed partial class MainPage
                     await Render();
                 }), forget);
         }
-        if (forgotten.Children.Count > 0) Body.Children.Add(new Expander { Header = "سجل الجلسات المنسية", Content = forgotten, HorizontalAlignment = HorizontalAlignment.Stretch });
+        if (forgotten.Children.Count > 0) PageBody.Children.Add(new Expander { Header = "سجل الجلسات المنسية", Content = forgotten, HorizontalAlignment = HorizontalAlignment.Stretch });
     }
     private async Task GroupDefaultTask(JsonNode group)
     {

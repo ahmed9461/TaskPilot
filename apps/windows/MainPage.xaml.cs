@@ -17,6 +17,7 @@ public sealed partial class MainPage : Page
         if (shuttingDown)
             return;
         shuttingDown = true;
+        viewCache.Clear();
         timer.Stop();
         sshConnection?.StopTunnel();
         desktop.Dispose();
@@ -25,6 +26,7 @@ public sealed partial class MainPage : Page
     private async Task<string?> Reauth(string value) => sshConnection is null ? value : await sshConnection.Reauthorize();
     private string page = "dashboard";
     private bool busy, polling, renderPending, pendingChanges, hasDraft;
+    private long workRevision;
     private bool Editing() => hasDraft || Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot) is TextBox or PasswordBox or ComboBox or NumberBox or CheckBox;
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(10) };
     private static string FriendlyError(string code) => code switch
@@ -97,15 +99,17 @@ public sealed partial class MainPage : Page
         var row = new ActionFlowPanel { Spacing = 8 };
         foreach (var a in actions)
             row.Children.Add(a);
-        Body.Children.Add(new Border { Padding = new Thickness(20), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1), BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"], Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"], Child = Stack(Text(title, 20), Text(detail), row) });
+        PageBody.Children.Add(new Border { Padding = new Thickness(20), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1), BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"], Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"], Child = Stack(Text(title, 20), Text(detail), row) });
     }
-    private async Task Run(Func<Task> action)
+    private async Task Run(Func<Task> action, bool background = false)
     {
         if (busy || shuttingDown)
             return;
         busy = true;
-        BusyIndicator.IsActive = true;
-        BusyIndicator.Visibility = Visibility.Visible;
+        var work = ++workRevision;
+        var progress = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+        progress.Tick += (_, _) => { progress.Stop(); if (busy && work == workRevision && !shuttingDown) { BusyIndicator.IsActive = true; BusyIndicator.Visibility = Visibility.Visible; } };
+        if (!background) progress.Start();
         try
         {
             await action();
@@ -123,6 +127,7 @@ public sealed partial class MainPage : Page
         }
         finally
         {
+            progress.Stop();
             busy = false;
             if (!shuttingDown)
             {
@@ -131,7 +136,8 @@ public sealed partial class MainPage : Page
                 if (renderPending)
                 {
                     renderPending = false;
-                    await Run(Render);
+                    if (renderedPage != page) RememberCurrentView();
+                    if (renderedPage != page && !RestoreView()) await Run(RenderCore);
                 }
             }
         }
@@ -163,7 +169,7 @@ public sealed partial class MainPage : Page
             if (probeFile is not null)
             {
                 // Local OS probe never consumes injected client configuration or opens SSH/API.
-                await Run(async () => { await Render(); await NotificationProbe.Run(desktop, probeFile, Body); });
+                await Run(async () => { await Render(); await NotificationProbe.Run(desktop, probeFile, PageBody); });
                 if (closeAfterProbe) App.CurrentWindow?.Close();
                 else if (!shuttingDown) timer.Start();
                 return;
@@ -202,6 +208,7 @@ public sealed partial class MainPage : Page
         ReconnectButton.Visibility = connectionState.Phase is ConnectionPhase.Interrupted or ConnectionPhase.Expired or ConnectionPhase.Unauthorized ? Visibility.Visible : Visibility.Collapsed;
         if (connectionState.Phase is ConnectionPhase.Expired or ConnectionPhase.Unauthorized)
         {
+            viewCache.Clear();
             sshConnection?.StopTunnel();
             Connection.Severity = InfoBarSeverity.Warning;
             Connection.Title = "تحتاج إعادة الاتصال";
@@ -255,16 +262,21 @@ public sealed partial class MainPage : Page
             if (shuttingDown || !connectionState.TrySucceeded(revision))
                 return;
             var batch = changes.Consume(n);
+            viewCache.Invalidate(changes.FreshTypes);
+            pendingChanges |= batch.NewItems > 0 && changes.FreshTypes.Any(type => WorkspaceViewCache<StackPanel>.Affects(type, page));
             UpdateUnread(notificationState);
-            if (batch.AttentionItems > 0)
-                desktop.Show(batch.AttentionItems);
+            if (batch.AttentionItems > 0) desktop.Show(batch.AttentionItems);
+            if (changes.FreshTypes.Any(type => type == "LIVE_SENDING_CHANGE_AUTHORIZED" || type.StartsWith("WHATSAPP_", StringComparison.Ordinal)))
+            {
+                await ReadWorkspaceIdentity(force: true);
+                if (shuttingDown || !connectionState.IsCurrent(revision)) return;
+            }
             ReconnectButton.Visibility = Visibility.Collapsed;
             Connection.Severity = InfoBarSeverity.Success;
             Connection.Title = "متصل بالخادم";
             Connection.Message = TransportSummary;
-            pendingChanges |= batch.NewItems > 0;
             if (pendingChanges && page != "settings" && !Editing())
-                await Run(RefreshFromChanges);
+                await Run(RefreshFromChanges, background: true);
             else if (pendingChanges)
                 Connection.Message = "توجد تغييرات جديدة؛ اضغط تحديث بعد الانتهاء من التحرير.";
         }
@@ -276,7 +288,7 @@ public sealed partial class MainPage : Page
     {
         var offset = ContentScroll.VerticalOffset;
         var currentPage = page;
-        await Render();
+        await RenderCore();
         if (currentPage == page && !shuttingDown)
         {
             ContentScroll.UpdateLayout();
@@ -288,14 +300,16 @@ public sealed partial class MainPage : Page
     {
         if (Body is null)
             return;
-        page = e.IsSettingsSelected ? "settings" : e.SelectedItemContainer?.Tag?.ToString() ?? "dashboard";
-        Heading.Text = e.IsSettingsSelected ? "الإعدادات" : e.SelectedItemContainer?.Content is TextBlock label ? label.Text : e.SelectedItemContainer?.Content?.ToString() ?? "لوحة التحكم";
+        var nextPage = e.IsSettingsSelected ? "settings" : e.SelectedItemContainer?.Tag?.ToString() ?? "dashboard";
+        if (nextPage == page && renderedPage == page) return;
+        if (!busy) RememberCurrentView();
+        page = nextPage;
         if (busy)
         {
             renderPending = true;
             return;
         }
-        await Run(Render);
+        if (!RestoreView()) await Run(RenderCore);
     }
     private async Task<bool> Dialog(string title, UIElement content, string primary = "حفظ", Func<string?>? validate = null)
     {
@@ -312,17 +326,11 @@ public sealed partial class MainPage : Page
             };
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
-    private async Task Render()
+    private async Task BuildPage(string target)
     {
         if (shuttingDown)
             return;
-        pendingChanges = false;
-        hasDraft = false;
-        // Explicit navigation/filter refresh starts at the top of the whole page.
-        // RefreshFromChanges restores its captured offset after automatic refresh.
-        ContentScroll.ChangeView(null, 0, null, true);
-        Body.Children.Clear();
-        if (page == "settings" || !api.Connected)
+        if (target == "settings" || !api.Connected)
         {
             if (!api.Connected)
             {
@@ -335,19 +343,14 @@ public sealed partial class MainPage : Page
             Settings();
             return;
         }
-        var identity = await api.Send("GET", "/v1/me");
-        mockToolsEnabled = identity["mockEnabled"]?.GetValue<bool>() == true;
-        liveSendingEnabled = identity["liveSendingEnabled"]?.GetValue<bool>() == true;
-        liveConnectionEnabled = identity["liveConnectionEnabled"]?.GetValue<bool>() == true;
-        var notificationState = await api.Send("GET", "/v1/notifications/state");
+        await ReadWorkspaceIdentity();
         if (shuttingDown)
             return;
-        UpdateUnread(notificationState);
         Connection.Severity = InfoBarSeverity.Success;
         Connection.Title = "متصل بالخادم";
         Connection.Message = TransportSummary;
-        Body.Children.Add(Button("تحديث", Render));
-        switch (page)
+        PageBody.Children.Add(Button("تحديث", Render));
+        switch (target)
         {
             case "dashboard":
                 await Dashboard();
@@ -393,17 +396,17 @@ public sealed partial class MainPage : Page
     private void Settings()
     {
         var alias = Field("اسم اتصال SSH المحفوظ", lastSshAlias ?? "New-VPS");
-        Body.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); SelectDashboard(); await Render(); })));
+        PageBody.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); SelectDashboard(); await Render(); })));
         if (sshConnection is not null)
-            Body.Children.Add(Text("انتهاء الجلسة: " + sshConnection.ExpiresAt.ToLocalTime().ToString("HH:mm:ss")));
+            PageBody.Children.Add(Text("انتهاء الجلسة: " + sshConnection.ExpiresAt.ToLocalTime().ToString("HH:mm:ss")));
         if (api.Connected)
-            Body.Children.Add(Button("تسجيل الخروج", async () => { if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); syncWorkspace = null; changes.Seed("0"); UnreadBadge.Visibility = Visibility.Collapsed; ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
+            PageBody.Children.Add(Button("تسجيل الخروج", async () => { if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); syncWorkspace = null; changes.Seed("0"); UnreadBadge.Visibility = Visibility.Collapsed; ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
         var address = Field("عنوان الخدمة الآمن", api.Address);
         address.FlowDirection = FlowDirection.LeftToRight;
         var token = Secret("رمز وصول المالك");
         var theme = new ComboBox { Header = "المظهر", ItemsSource = new[] { "النظام", "داكن", "فاتح" }, SelectedIndex = 0 };
         theme.SelectionChanged += (_, _) => RequestedTheme = theme.SelectedIndex switch { 1 => ElementTheme.Dark, 2 => ElementTheme.Light, _ => ElementTheme.Default };
-        Body.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); connectionState.Connected(null); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); SelectDashboard(); await Render(); })));
+        PageBody.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); connectionState.Connected(null); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); SelectDashboard(); await Render(); })));
         DesktopSettings();
     }
     private void SelectDashboard()
@@ -426,6 +429,7 @@ public sealed partial class MainPage : Page
         api.Configure(next.Address, next.Token, next.ExpiresAt);
         lastSshAlias = alias;
         connectionState.Connected(next.ExpiresAt);
+        viewCache.Clear();
         ReconnectButton.Visibility = Visibility.Collapsed;
         await InitializeSync("ssh:" + alias);
     }
@@ -440,19 +444,19 @@ public sealed partial class MainPage : Page
     {
         AccountFilters();
         var selectedIds = new HashSet<string>();
-        Body.Children.Add(Stack(Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }), Button("معاينة حذف الكل", () => Purge(null))));
+        PageBody.Children.Add(Stack(Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }), Button("معاينة حذف الكل", () => Purge(null))));
         var result = await PageData("accounts");
         var rows = result["items"]!.AsArray();
         foreach (var r in rows)
         {
             var n = r!;
             var select = new CheckBox { Content = "تحديد" };
-            select.Checked += (_, _) => { selectedIds.Add(V(n, "id")); hasDraft = true; };
-            select.Unchecked += (_, _) => { selectedIds.Remove(V(n, "id")); hasDraft = true; };
+            select.Checked += (_, _) => { selectedIds.Add(V(n, "id")); MarkDraft(); };
+            select.Unchecked += (_, _) => { selectedIds.Remove(V(n, "id")); MarkDraft(); };
             Card(V(n, "display_name"), $"{V(n, "namespace")} / {V(n, "username_normalized")} • {(V(n, "archived_at") == "" ? "نشط" : "مؤرشف")}", select, Button("التفاصيل والسجل", async () => { detailAccountId = V(n,"id"); detailSection = "tasks"; detailOffset = 0; page = "account-details"; await Render(); }), Button("تعديل", () => AccountForm(n)), Button("عرض الاعتماد", () => Reveal(n)), Button(V(n, "archived_at") == "" ? "أرشفة" : "استرجاع", async () => { await api.Send("POST", $"/v1/accounts/{V(n, "id")}/{(V(n, "archived_at") == "" ? "archive" : "restore")}", new { version = Ver(n) }); await Render(); }), Button("حذف", () => Purge(V(n, "id"))));
         }
         if (rows.Count == 0)
-            Body.Children.Add(Text("لا توجد حسابات مطابقة."));
+            PageBody.Children.Add(Text("لا توجد حسابات مطابقة."));
         Pager("accounts", result);
     }
     private async Task AccountForm(JsonNode? n)
@@ -585,7 +589,7 @@ public sealed partial class MainPage : Page
     }
     private async Task Inbox()
     {
-        if (mockToolsEnabled) Body.Children.Add(Button("إدخال رسالة اختبار وهمية", async () =>
+        if (mockToolsEnabled) PageBody.Children.Add(Button("إدخال رسالة اختبار وهمية", async () =>
         {
             var mockIds = (await api.Send("GET", "/v1/sessions")).AsArray().Where(n=>V(n,"provider")=="mock").Select(n=>V(n,"id")).ToHashSet();
             var groups = new JsonArray((await api.Send("GET", "/v1/groups")).AsArray().Where(n=>mockIds.Contains(V(n,"session_id"))).Select(n=>n!.DeepClone()).ToArray());
@@ -611,11 +615,11 @@ public sealed partial class MainPage : Page
         foreach (var row in rows)
         {
             var n = row!;
-            Card("بيانات تحتاج مراجعة", V(n, "group_title") + " • " + V(n, "external_message_id"),
-                Button("مراجعة", () => ReviewSource(n)), Button("اقتراح المهمة بالذكاء الاصطناعي", () => AiSuggest(n)));
+            Card("بيانات تحتاج مراجعة", V(n, "group_title") + " • " + V(n, "external_message_id") + (V(n,"ai_status")=="SUCCEEDED" ? "\nاقتراح AI جاهز؛ افتح المراجعة للتحقق من الحقول." : V(n,"ai_status")=="UNAVAILABLE" ? "\nتعذر تحليل AI؛ تبقى الرسالة محفوظة للمراجعة." : ""),
+                Button("مراجعة", () => ReviewSource(n)), Button("اقتراح بالذكاء الاصطناعي", () => AiSuggest(n)));
         }
         if (rows.Count == 0)
-            Body.Children.Add(Text("صندوق المراجعة فارغ."));
+            PageBody.Children.Add(Text("صندوق المراجعة فارغ."));
         Pager("inbox", result);
     }
     private async Task ReviewSource(JsonNode n, string? suggestedTask = null)
@@ -626,16 +630,18 @@ public sealed partial class MainPage : Page
                 var raw = await api.Send("POST", "/v1/inbox/" + V(n, "id") + "/reveal", new
                 {
                 }, await Reauth(reauth.Password));
-                var name = Field("الاسم");
-                var user = Field("المستخدم");
+                var suggested = raw["fields"];
+                var name = Field("الاسم", V(suggested,"displayName"));
+                var user = Field("المستخدم", V(suggested,"username"));
                 var ns = Field("النظام", V(n, "namespace"));
                 var pass = Secret("كلمة المرور (اختياري)");
+                pass.Password = V(suggested,"password");
                 var task = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), suggestedTask ?? V(n, "routing_task_type_id"));
                 var view = new TextBox { Header = "محتوى محمي — يُخفى بعد 30 ثانية", IsReadOnly = true, AcceptsReturn = true, Text = V(raw, "text"), TextWrapping = TextWrapping.Wrap, MinHeight = 90, MaxHeight = 180 };
                 var hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-                hide.Tick += (_, _) => { view.Text = ""; hide.Stop(); };
+                hide.Tick += (_, _) => { view.Text = ""; pass.Password = ""; hide.Stop(); };
                 hide.Start();
-                var ok = await Dialog("تصحيح البيانات", Stack(view, ns, name, user, pass, task));
+                var ok = await Dialog("تصحيح البيانات", Stack(Text(V(suggested,"origin") == "ai-review-only" ? "اقتراح AI ربط الحقول محليًا دون إرسال قيمها؛ راجعها قبل الحفظ." : "الحقول المعروفة عُبئت محليًا؛ راجع البيانات قبل الحفظ."), view, ns, name, user, pass, task));
                 hide.Stop();
                 view.Text = "";
                 if (ok)
@@ -654,16 +660,16 @@ public sealed partial class MainPage : Page
     private async Task Sessions() => await WhatsAppSessions();
     private async Task Groups()
     {
-        Body.Children.Add(Text("ابدأ بإضافة أنواع المهام، ثم اربط مجموعة واتساب وحدد مهمتها الافتراضية. من زر القواعد تختار الكلمات والأولوية لكل مهمة."));
-        Body.Children.Add(Button("إضافة نوع مهمة", async () => { var code = Field("رمز المهمة (اسم قصير فريد)"); var name = Field("اسم المهمة"); if (await Dialog("نوع مهمة", Stack(code, name))) { await api.Send("POST", "/v1/task-types", new { code = code.Text, name = name.Text }); await Render(); } }));
-        Body.Children.Add(Button("إضافة مجموعة واتساب", async () =>
+        PageBody.Children.Add(Text("ابدأ بإضافة أنواع المهام، ثم اربط مجموعة واتساب وحدد مهمتها الافتراضية. من زر القواعد تختار الكلمات والأولوية لكل مهمة."));
+        PageBody.Children.Add(Button("إضافة نوع مهمة", async () => { var code = Field("رمز المهمة (اسم قصير فريد)"); var name = Field("اسم المهمة"); if (await Dialog("نوع مهمة", Stack(code, name))) { await api.Send("POST", "/v1/task-types", new { code = code.Text, name = name.Text }); await Render(); } }));
+        PageBody.Children.Add(Button("إضافة مجموعة واتساب", async () =>
         {
             var sessions = (await api.Send("GET", "/v1/sessions")).AsArray().Where(n => V(n, "provider") == "baileys" && V(n, "status") == "CONNECTED" && V(n, "forgotten_at") == "").ToArray();
             if (sessions.Length == 0) throw new InvalidOperationException("افتح الجلسات واربط واتساب أولًا، ثم عد لإضافة المجموعة.");
             if (sessions.Length != 1) throw new InvalidOperationException("اختر الجلسة المطلوبة من صفحة الجلسات ثم اضغط اختيار مجموعة للاستقبال.");
             await BindWhatsAppGroup(V(sessions[0], "id"));
         }));
-        if (mockToolsEnabled) Body.Children.Add(Button("ربط مجموعة محاكاة", async () =>
+        if (mockToolsEnabled) PageBody.Children.Add(Button("ربط مجموعة محاكاة", async () =>
         {
             var sessions = new JsonArray((await api.Send("GET", "/v1/sessions")).AsArray().Where(n => V(n,"provider") == "mock").Select(n=>n!.DeepClone()).ToArray());
             var tasks = (await api.Send("GET", "/v1/task-types")).AsArray();
@@ -700,7 +706,7 @@ public sealed partial class MainPage : Page
     private async Task Replies()
     {
         await TemplateList();
-        Body.Children.Add(Text("سجل الردود", 24));
+        PageBody.Children.Add(Text("سجل الردود", 24));
         foreach (var n in (await api.Send("GET", "/v1/reply-jobs")).AsArray())
         {
             var detail = $"{V(n, "display_name")} • {V(n, "task_name")}\nالمجموعة: {V(n, "group_title")} • الجلسة: {V(n, "session_label")}\n{V(n, "body")}";

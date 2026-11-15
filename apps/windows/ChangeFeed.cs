@@ -7,9 +7,10 @@ public sealed record ChangeBatch(int NewItems, int AttentionItems);
 public sealed class ChangeFeed
 {
     private long cursor;
+    public IReadOnlySet<string> FreshTypes { get; private set; } = new HashSet<string>();
     public string Cursor => cursor.ToString(CultureInfo.InvariantCulture);
     private static long Id(string value) => long.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id >= 0 && id <= 9007199254740991L ? id : throw new InvalidOperationException("INVALID_CHANGE_FEED");
-    public void Seed(string head) => cursor = Id(head);
+    public void Seed(string head) { cursor = Id(head); FreshTypes = new HashSet<string>(); }
     public ChangeBatch Consume(JsonNode response)
     {
         var rows = response["items"]?.AsArray() ?? throw new InvalidOperationException("INVALID_CHANGE_FEED");
@@ -17,6 +18,7 @@ public sealed class ChangeFeed
         var prior = -1L;
         var added = 0;
         var attention = 0;
+        var freshTypes = new HashSet<string>();
         foreach (var row in rows)
         {
             var value = Id(row?["id"]?.ToString() ?? "");
@@ -26,12 +28,14 @@ public sealed class ChangeFeed
             if (value <= cursor)
                 continue;
             added++;
+            freshTypes.Add(row?["type"]?.ToString() ?? "UNKNOWN");
             if (NeedsAttention(row?["type"]?.ToString()))
                 attention++;
         }
         if ((rows.Count > 0 && next != prior) || (rows.Count == 0 && next != cursor))
             throw new InvalidOperationException("INVALID_CHANGE_FEED");
         cursor = Math.Max(cursor, next);
+        FreshTypes = freshTypes;
         return new(added, attention);
     }
     public static bool NeedsAttention(string? type) => type is "MESSAGE_PROCESSED" or "MESSAGE_MISSING_FIELDS" or "CREDENTIAL_REVIEW_REQUIRED" or "ACCOUNT_SAVED" or "CREDENTIAL_ERROR_VERIFIED" or "ACCOUNT_CREDENTIALS_UNVERIFIED" or "REPLY_DELIVERY_UNKNOWN";

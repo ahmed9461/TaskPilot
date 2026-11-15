@@ -1,6 +1,7 @@
 # الحالة الحالية — 2026-11-15 (Asia/Riyadh)
 
 ## استكمال D-086/D-087 — IN_PROGRESS
+تحديث النشر: API087/source3919a0b منشور وCI43752697349 Backend+Windows SUCCESS. نسخةpre087 المشفرة310369بايت استعيدت معزولة13migrations/0accounts/tasks/0SENDING قبلmigration014. بيانات المالك محفوظة: مجموعتان/نوعان/مصدرIGNORED1،auth834AEAD-valid ونفسالهوية،42خدمةأخرىunchangedعندcutover،env/journalدونتغيير وCOMMITTEDfalse. فُعّلautomaticFallback بطلبالمالك عبرجلسةSSH/reauthعادية، معdeepseek-flash وحدود20/10000نفسها؛لاbusinessfixtures أوWhatsAppmessages. Windows0613native/Desktop مازالاpending، والنصأدناهعن086checkpointتاريخي.
 المالك أضاف مجموعة فعلية ثانية وأرسل حسابًا دون تسميات. فحص086 أثبت وصول ACCEPTED_TEXT/notify ثمingressDONE، لكن المحلل القديم صنفهاIGNORED وأزال النص؛0accounts/tasks. السبب الحالي مؤكد، وهو مختلف عنI025 التاريخي. **لا تشغّل cleanup أوverifier القديم ذي مجموعة واحدة/أعداد صفرية لإزالة عمل المالك.**
 
 Candidate087: استخراجS2 وترتيبات الحقول والمواد/الاعتمادات ومراجعة الحالات الناقصة، وAI تلقائي اختياري بوصف تركيبي دون قيم سرية.46Node/113PG معزولة PASS. CandidateWindows0613: cache/تحديث هادئ وحماية المسودة وملء المراجعة؛47offline/build PASS، native/deploy/Desktop pending. المنشور أدناه086/0612 ما زال المعتمد عند هذا checkpoint؛ إعداد المالك بدأ فعلًا ولم يعد كل الإعداد مؤجلًا. النص السابق المحذوف لا يمكن استنتاجه من البصمة.

@@ -12,22 +12,23 @@ public sealed partial class MainPage
         var usage = await api.Send("GET", "/v1/ai/usage");
         var provider = new ComboBox { Header = "المزود", ItemsSource = new[] { "deepseek", "openrouter" }, SelectedItem = V(c,"provider") };
         var model = new ComboBox { Header = "النموذج", ItemsSource = new[] { V(c,"model") }, SelectedIndex = 0 };
-        var enabled = new CheckBox { Content = "تفعيل اقتراحات المهام اليدوية", IsChecked = c["enabled"]?.GetValue<bool>() };
-        var outbound = new CheckBox { Content = "السماح بإرسال رموز أنواع المهام إلى المزود", IsChecked = c["outboundApproved"]?.GetValue<bool>() };
+        var enabled = new CheckBox { Content = "تفعيل اقتراحات AI", IsChecked = c["enabled"]?.GetValue<bool>() };
+        var outbound = new CheckBox { Content = "السماح بإرسال رموز المهام ووصف تركيب الحقول فقط", IsChecked = c["outboundApproved"]?.GetValue<bool>() };
+        var automatic = new CheckBox { Content = "تحليل الرسائل الملتبسة تلقائيًا للمراجعة", IsChecked = c["automaticFallback"]?.GetValue<bool>() };
         var requests = new NumberBox { Header = "الحد اليومي للطلبات (UTC)", Minimum = 1, Maximum = 100, Value = c["dailyRequestLimit"]!.GetValue<int>() };
         var tokens = new NumberBox { Header = "حد التوكنات والحجوزات يوميًا", Minimum = 1000, Maximum = 100000, Value = c["dailyTokenLimit"]!.GetValue<int>() };
-        Body.Children.Add(Stack(Text("اقتراحات يدوية تحتاج مراجعتك",24),Text("ترسل رموز أنواع المهام المرشحة فقط. لا ترسل نص الرسالة أو الاسم أو المستخدم أو كلمة المرور. الاقتراح لا ينشئ حسابًا أو يغيّر مهمة أو يرسل ردًا."),Text(c["keyConfigured"]?.GetValue<bool>() == true ? "مفتاح المزود مضبوط على الخادم." : "مفتاح المزود غير مضبوط على الخادم."),provider,model,
+        PageBody.Children.Add(Stack(Text("استخراج محلي مع اقتراحات AI للمراجعة",24),Text("الصيغ الواضحة تُستخرج محليًا. للحالات الملتبسة ترسل رموز المهام وأنواع الحقول وترتيبها فقط؛ لا ترسل النص أو الاسم أو المستخدم أو كلمة المرور. يقترح AI مواضع الحقول وتبقى قيمها على الخادم للمراجعة قبل الحفظ. لا يرسل ردًا."),Text(c["keyConfigured"]?.GetValue<bool>() == true ? "مفتاح المزود مضبوط على الخادم." : "مفتاح المزود غير مضبوط على الخادم."),provider,model,
             Button("جلب النماذج من المزود", async () => {
                 var catalog = await api.Send("GET", "/v1/ai/models?provider=" + provider.SelectedItem);
                 var items = catalog["models"]!.AsArray().Select(n=>n!.ToString()).ToArray();
                 model.ItemsSource=items;
                 model.SelectedItem=items.Contains(V(c,"model")) ? V(c,"model") : items.FirstOrDefault();
-            }),enabled,outbound,requests,tokens,
+            }),enabled,outbound,automatic,requests,tokens,
             Button("حفظ إعدادات الذكاء الاصطناعي", async () => {
                 if (model.SelectedItem is null || !double.IsFinite(requests.Value) || !double.IsFinite(tokens.Value)) throw new InvalidOperationException("VALIDATION_ERROR");
                 var reauth=ReauthField();
-                if (!await Dialog("حفظ المزود والحدود",Stack(Text("يظل التحليل يدويًا لكل رسالة، مع حدود يومية ومنع تكرار الطلب."),reauth))) return;
-                await api.Send("PATCH","/v1/ai/config",new { version=Ver(c),provider=provider.SelectedItem?.ToString(),model=model.SelectedItem.ToString(),enabled=enabled.IsChecked==true,outboundApproved=outbound.IsChecked==true,dailyRequestLimit=(int)requests.Value,dailyTokenLimit=(int)tokens.Value },await Reauth(reauth.Password));
+                if (!await Dialog("حفظ المزود والحدود",Stack(Text("التحليل التلقائي اختياري للحالات الملتبسة فقط، مع حدود يومية وطلب واحد لكل إصدار. النتيجة تحتاج مراجعتك ولا تحفظ حسابًا أو ترسل ردًا تلقائيًا."),reauth))) return;
+                await api.Send("PATCH","/v1/ai/config",new { version=Ver(c),provider=provider.SelectedItem?.ToString(),model=model.SelectedItem.ToString(),enabled=enabled.IsChecked==true,outboundApproved=outbound.IsChecked==true,automaticFallback=automatic.IsChecked==true,dailyRequestLimit=(int)requests.Value,dailyTokenLimit=(int)tokens.Value },await Reauth(reauth.Password));
                 reauth.Password=""; await Render();
             })));
         var today=usage["today"]!;
@@ -39,9 +40,9 @@ public sealed partial class MainPage
         var id=V(source,"id");
         var preview=await api.Send("POST","/v1/inbox/"+id+"/ai-preview",new {});
         var codes=preview["candidateCodes"]!.AsArray().Select(n=>n!.ToString()).ToArray();
-        if(codes.Length==0) { await Dialog("لا توجد مهمة مرشحة",Text("لم تطابق القواعد المحلية كلمات مهمة. راجع الرسالة وحدد المهمة يدويًا."),"إغلاق"); return; }
+        if(codes.Length==0 && (preview["fieldCandidates"]?.GetValue<int>() ?? 0)==0) { await Dialog("لا توجد حقول كافية للاقتراح",Text("الرسالة محفوظة للمراجعة. لا يخمّن AI أرقامًا أو اعتمادات ناقصة؛ افتح المراجعة وأكمل البيانات."),"إغلاق"); return; }
         var reauth=ReauthField();
-        if(!await Dialog("معاينة البيانات المرسلة للمزود",Stack(Text("لن يُرسل سوى رموز المهام التالية:\n"+string.Join("\n",codes)+"\nالنتيجة اقتراح للمراجعة فقط."),reauth),"طلب اقتراح"))return;
+        if(!await Dialog("معاينة البيانات المرسلة للمزود",Stack(Text("ترسل أنواع الحقول وترتيبها ورموز المهام التالية فقط، دون قيم الاسم أو اليوزر أو كلمة المرور:\n"+string.Join("\n",codes)+"\nالنتيجة اقتراح للمراجعة فقط، ويعاد استخدام الاقتراح السابق إن وجد."),reauth),"طلب اقتراح"))return;
         var result=await api.Send("POST","/v1/inbox/"+id+"/ai-suggestion",new {idempotencyKey=$"ai-ui:{id}:{V(preview,"sourceVersion")}:{V(preview,"settingsVersion")}"},await Reauth(reauth.Password));
         reauth.Password="";
         if(V(result,"status")!="SUCCEEDED") { await Dialog("لم يكتمل الاقتراح",Text("تستمر المراجعة المحلية. لم يُعد طلب المزود تلقائيًا. الحالة: "+V(result,"status")),"إغلاق"); return; }

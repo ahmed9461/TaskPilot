@@ -18,15 +18,15 @@ public sealed partial class MainPage
     private async Task PrivacySettings()
     {
         var p = await api.Send("GET", "/v1/privacy/retention");
-        Body.Children.Add(Text("سياسة الاحتفاظ", 24));
-        Body.Children.Add(Text("الحسابات والمهام والاعتمادات وتاريخ المصادر والردود والمصادقة محفوظة حتى الحذف المقصود. النسخ الاحتياطية تبقى حتى تقرر إتلافها، وقد تحتوي بيانات حُذفت لاحقًا. التنظيف هنا يحتاج معاينة وتأكيدًا لكل دفعة."));
+        PageBody.Children.Add(Text("سياسة الاحتفاظ", 24));
+        PageBody.Children.Add(Text("الحسابات والمهام والاعتمادات وتاريخ المصادر والردود والمصادقة محفوظة حتى الحذف المقصود. النسخ الاحتياطية تبقى حتى تقرر إتلافها، وقد تحتوي بيانات حُذفت لاحقًا. التنظيف هنا يحتاج معاينة وتأكيدًا لكل دفعة."));
         NumberBox Days(string label, string key, int min, int max) => new() { Header = label, Value = p[key]!.GetValue<int>(), Minimum = min, Maximum = max, SmallChange = 1 };
         var reviews = Days("نص المراجعة بالأيام — يغلق الوارد القديم عند تنظيفه", "review_days", 1, 365);
         var ingress = Days("نص الوارد المعزول بالأيام", "failed_ingress_days", 1, 90);
         var access = Days("الموافقات وجلسات الوصول بعد انتهائها بالأيام", "expired_access_days", 1, 30);
         var notifications = Days("الإشعارات بعد قراءتها بالأيام", "read_notification_days", 7, 365);
         TrackDraft(reviews, ingress, access, notifications);
-        Body.Children.Add(Stack(reviews, ingress, access, notifications, Button("حفظ سياسة الاحتفاظ", async () =>
+        PageBody.Children.Add(Stack(reviews, ingress, access, notifications, Button("حفظ سياسة الاحتفاظ", async () =>
         {
             var input = new { version = Ver(p), reviewDays = WholeDays(reviews), failedIngressDays = WholeDays(ingress), expiredAccessDays = WholeDays(access), readNotificationDays = WholeDays(notifications) };
             var reauth = ReauthField();
@@ -35,7 +35,7 @@ public sealed partial class MainPage
             finally { reauth.Password = ""; }
             await Render();
         })));
-        Body.Children.Add(Button("معاينة تنظيف البيانات المنتهية", async () =>
+        PageBody.Children.Add(Button("معاينة تنظيف البيانات المنتهية", async () =>
         {
             var preview = await api.Send("POST", "/v1/privacy/retention-preview", new { });
             var phrase = Field("اكتب " + V(preview, "confirmation"));
@@ -46,7 +46,7 @@ public sealed partial class MainPage
             finally { reauth.Password = ""; }
             await Render();
         }));
-        Body.Children.Add(Text("سجل التنظيف والنسيان", 22));
+        PageBody.Children.Add(Text("سجل التنظيف والنسيان", 22));
         foreach (var run in (await api.Send("GET", "/v1/privacy/runs")).AsArray())
             Card(V(run, "kind") == "RETENTION" ? "تنظيف بيانات منتهية" : "نسيان جلسة محليًا", V(run, "created_at") + "\n" + (V(run, "kind") == "RETENTION" ? PrivacyCounts(run!["counts"]!) : $"مصادقة منسية: {V(run!["counts"], "auth")} • مفاتيح اقتباس: {V(run["counts"], "quotes")}"));
     }

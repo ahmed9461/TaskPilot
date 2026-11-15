@@ -32,12 +32,13 @@ public sealed partial class MainPage
         var status = Text(desktop.Status);
         var changing = false;
         toggle.Toggled += (_, _) => { if (changing) return; desktop.Enable(toggle.IsOn); changing = true; toggle.IsOn = desktop.Enabled; changing = false; status.Text = desktop.Status; };
-        Body.Children.Add(Stack(Text("الإشعارات", 24), Text("تعرض عدد التحديثات فقط دون أسماء أو بيانات حسابات. لا يوجد استقبال على Windows بعد إغلاق التطبيق؛ السجل يبقى على الخادم."), toggle, status,
+        PageBody.Children.Add(Stack(Text("الإشعارات", 24), Text("تعرض عدد التحديثات فقط دون أسماء أو بيانات حسابات. لا يوجد استقبال على Windows بعد إغلاق التطبيق؛ السجل يبقى على الخادم."), toggle, status,
             Button("إشعار اختباري عام", () => { if (!desktop.Enabled) throw new InvalidOperationException("فعّل إشعارات Windows لهذه الجلسة أولًا."); var accepted = desktop.Show(1); status.Text = accepted > 0 ? "قبل Windows الإشعار الاختباري؛ ظهوره يعتمد على إعدادات النظام." : desktop.Status; return Task.CompletedTask; }), Text("إذا لم يظهر التنبيه، راجع وضع ممنوع الإزعاج ومركز إشعارات Windows. يبقى سجل الإشعارات متاحًا داخل التطبيق.")));
     }
     private static string ActivityLabel(string code) => code switch
     {
         "MESSAGE_PROCESSED" => "تمت معالجة رسالة",
+        "AI_SUGGESTION_READY" => "اقتراح AI جاهز للمراجعة",
         "MESSAGE_MISSING_FIELDS" => "رسالة تحتاج مراجعة",
         "CREDENTIAL_REVIEW_REQUIRED" => "اعتماد يحتاج مراجعة",
         "ACCOUNT_SAVED" => "حُفظ حساب",
@@ -68,11 +69,11 @@ public sealed partial class MainPage
         const string resource = "notifications";
         var read = Choice("حالة القراءة", [("all", "الكل"), ("unread", "غير مقروء"), ("read", "مقروء")], Filter(resource, "read"));
         TrackDraft(read);
-        Body.Children.Add(Stack(read, Button("تطبيق حالة القراءة", async () => { filters[resource] = new() { ["read"] = Selected(read) }; offsets[resource] = 0; await Render(); })));
+        PageBody.Children.Add(Stack(read, Button("تطبيق حالة القراءة", async () => { filters[resource] = new() { ["read"] = Selected(read) }; offsets[resource] = 0; await Render(); })));
         var result = await PageData(resource);
         var rows = result["items"]!.AsArray();
         if (rows.Count > 0)
-            Body.Children.Add(Button("تعليم هذه الصفحة كمقروءة", async () => { await api.Send("POST", "/v1/notifications/read", new { ids = rows.Select(n => V(n, "id")).ToArray() }); await Render(); }));
+            PageBody.Children.Add(Button("تعليم هذه الصفحة كمقروءة", async () => { await api.Send("POST", "/v1/notifications/read", new { ids = rows.Select(n => V(n, "id")).ToArray() }); await Render(); }));
         foreach (var row in rows)
         {
             var n = row!;
@@ -80,7 +81,7 @@ public sealed partial class MainPage
                 Button("تمت القراءة", async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); await Render(); }));
         }
         if (rows.Count == 0)
-            Body.Children.Add(Text("لا توجد إشعارات مطابقة."));
+            PageBody.Children.Add(Text("لا توجد إشعارات مطابقة."));
         Pager(resource, result);
     }
     private async Task Audit()
@@ -91,13 +92,13 @@ public sealed partial class MainPage
         var target = Field("معرّف السجل (اختياري)", Filter(resource, "targetId"));
         target.FlowDirection = FlowDirection.LeftToRight;
         TrackDraft(action, target);
-        Body.Children.Add(Stack(Text("سجل منقّح: الإجراء والمعرّف والوقت فقط. لا تُعرض نصوص الرسائل أو الاعتمادات."), action, target,
+        PageBody.Children.Add(Stack(Text("سجل منقّح: الإجراء والمعرّف والوقت فقط. لا تُعرض نصوص الرسائل أو الاعتمادات."), action, target,
             Button("تطبيق التصفية", async () => { filters[resource] = new() { ["action"] = Selected(action), ["targetId"] = target.Text.Trim() }; offsets[resource] = 0; await Render(); })));
         var result = await PageData(resource);
         foreach (var n in result["items"]!.AsArray())
             Card(ActivityLabel(V(n, "action")), V(n, "created_at") + "\n" + V(n, "target_id"));
         if (result["items"]!.AsArray().Count == 0)
-            Body.Children.Add(Text("لا يوجد نشاط مطابق."));
+            PageBody.Children.Add(Text("لا يوجد نشاط مطابق."));
         Pager(resource, result);
     }
     private async Task Operations()
@@ -121,6 +122,6 @@ public sealed partial class MainPage
                 await Render();
             }));
         }
-        Body.Children.Add(Text("هذه قراءة للحالة الآن؛ لا تثبت اكتمال النسخ خارج الخادم أو الاستقبال الحقيقي. لا تغيّر هذه الشاشة إعدادات خدمات الخادم."));
+        PageBody.Children.Add(Text("هذه قراءة للحالة الآن؛ لا تثبت اكتمال النسخ خارج الخادم أو الاستقبال الحقيقي. لا تغيّر هذه الشاشة إعدادات خدمات الخادم."));
     }
 }

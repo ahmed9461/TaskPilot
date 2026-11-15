@@ -49,6 +49,7 @@ Console.WriteLine("PASS: 6 client checks (transport, address, auth, response, er
 await SshEncodingChecks.Run();
 await ClientReliabilityChecks.Run();
 ChangeFeedChecks.Run();
+WorkspaceViewChecks.Run();
 NotificationSessionChecks.Run();
 ActionFlowChecks.Run();
 sealed class FixtureHandler : HttpMessageHandler

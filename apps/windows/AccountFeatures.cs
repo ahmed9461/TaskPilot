@@ -12,10 +12,10 @@ public sealed partial class MainPage
         var result = await api.Send("GET", $"/v1/accounts/{detailAccountId}/details?section={detailSection}&limit=50&offset={detailOffset}");
         var account = result["account"]!;
         Card(V(account,"display_name"), V(account,"namespace") + " / " + V(account,"username_normalized") + " • " + (V(account,"archived_at")=="" ? "نشط" : "مؤرشف"));
-        Body.Children.Add(Button("العودة للحسابات", async () => { page="accounts"; await Render(); }));
+        PageBody.Children.Add(Button("العودة للحسابات", async () => { page="accounts"; await Render(); }));
         var section = Choice("عرض التفاصيل", [("tasks","المهام"),("sources","مصادر الرسائل"),("flags","بلاغات الاعتماد المسجلة"),("history","نشاط السجلات الحالية")],detailSection);
         TrackDraft(section);
-        Body.Children.Add(Stack(section,Button("عرض القسم",async () => {detailSection=Selected(section);detailOffset=0;await Render();})));
+        PageBody.Children.Add(Stack(section,Button("عرض القسم",async () => {detailSection=Selected(section);detailOffset=0;await Render();})));
         foreach (var row in result["items"]!.AsArray())
         {
             var n=row!;
@@ -40,7 +40,7 @@ public sealed partial class MainPage
         var total=result["total"]!.GetValue<int>();
         var previous=Button("السابق",async()=>{detailOffset=Math.Max(0,detailOffset-50);await Render();}); previous.IsEnabled=detailOffset>0;
         var next=Button("التالي",async()=>{detailOffset+=50;await Render();}); next.IsEnabled=detailOffset+50<total;
-        Body.Children.Add(Stack(Text(total==0 ? "لا توجد سجلات في هذا القسم." : $"النتائج {Math.Min(detailOffset+1,total)}–{Math.Min(detailOffset+50,total)} من {total}"),new ActionFlowPanel {Spacing=12,Children={previous,next}}));
-        Body.Children.Add(Text("تُعرض بيانات المصدر الوصفية فقط. يعرض النشاط السجلات المرتبطة الموجودة حاليًا؛ الحذف النهائي يزيل روابط البيانات المحذوفة، ويبقى سجل التدقيق العام منقّحًا."));
+        PageBody.Children.Add(Stack(Text(total==0 ? "لا توجد سجلات في هذا القسم." : $"النتائج {Math.Min(detailOffset+1,total)}–{Math.Min(detailOffset+50,total)} من {total}"),new ActionFlowPanel {Spacing=12,Children={previous,next}}));
+        PageBody.Children.Add(Text("تُعرض بيانات المصدر الوصفية فقط. يعرض النشاط السجلات المرتبطة الموجودة حاليًا؛ الحذف النهائي يزيل روابط البيانات المحذوفة، ويبقى سجل التدقيق العام منقّحًا."));
     }
 }

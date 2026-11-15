@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [API0.8.7 deployed / Windows0.6.13 candidate] — 2026-11-15
+- Fix confirmed accepted-but-ignored unlabelled S2 accounts; retain partial/ambiguous messages for encrypted review. Course codes are not passwords; exact secrets/order-independent input supported within conservative bounds.
+- Add opt-in automatic structural AI fallback, no raw values, one durable attempt/version, budgets and review-only field pointers. Migration014; current provider/limits preserved.47Node/113PG and exact backendCI43752697349 both jobs SUCCESS; predeploy encrypted backup/isolated restore/owner identity+two groups preserved/42other services unchanged.
+- Windows0613 adds in-memory navigation cache, event-scoped quiet staged refresh/draft fences, delayed progress and protected field prefills. Offline47/build PASS; native/Desktop pending.
+
 ## [API0.8.6 deployed / Windows0.6.12 personal accepted] — 2026-11-15
 - Complete D085: crash-safe durable sending decision, current clean independent recovery kit with local/cloud-readback app restores, actual Windows enable/disable with same PID/identity and no messages; final committedfalse.
 - Fix native I050 stale banner; corrected0612 card/banner/server verified. Exact accepted530-file ZIP installed/Desktop updated, previous artifacts retained; hostedCI43732126175 both SUCCESS. Preserve owner app/client and later group setup.

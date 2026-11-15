@@ -38,7 +38,7 @@ public sealed partial class MainPage
         var search = Field("رمز القالب", Filter(resource, "search"));
         var enabled = Choice("الإتاحة", [("all", "الكل"), ("true", "متاح"), ("false", "متوقف")], Filter(resource, "enabled"));
         TrackDraft(search, enabled);
-        Body.Children.Add(Stack(search, enabled, Button("تصفية القوالب", async () => { filters[resource] = new() { ["search"] = search.Text, ["enabled"] = Selected(enabled) }; offsets[resource] = 0; await Render(); }), Button("إضافة قالب", () => TemplateForm(null))));
+        PageBody.Children.Add(Stack(search, enabled, Button("تصفية القوالب", async () => { filters[resource] = new() { ["search"] = search.Text, ["enabled"] = Selected(enabled) }; offsets[resource] = 0; await Render(); }), Button("إضافة قالب", () => TemplateForm(null))));
         var result = await PageData(resource);
         foreach (var row in result["items"]!.AsArray())
         {
@@ -48,7 +48,7 @@ public sealed partial class MainPage
                 Button("تعديل القالب", () => TemplateForm(n)), Button(active ? "إيقاف القالب" : "تفعيل القالب", async () => { await api.Send("PATCH", "/v1/reply-templates/" + V(n, "id"), new { version = Ver(n), enabled = !active }); await Render(); }));
         }
         if (result["items"]!.AsArray().Count == 0)
-            Body.Children.Add(Text("لا توجد قوالب مطابقة."));
+            PageBody.Children.Add(Text("لا توجد قوالب مطابقة."));
         Pager(resource, result);
     }
     private async Task<(JsonNode Source, JsonNode Template)?> ChooseReply(JsonNode assignment)

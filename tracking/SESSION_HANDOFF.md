@@ -1,5 +1,10 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
+## D086/D087 استكمال نشط — اقرأ هذا أولًا
+API087/source3919a0b منشور بعدbackup310369bytes واستعادته المعزولة13migrations/0business/0SENDING، ثم014schema. CI43752697349 Backend+Windows SUCCESS. الآنauth834 صالح ونفسالهوية،groups2/tasktypes2/sourceIGNORED1/0accounts/tasks،42خدمةأخرى unchangedعندcutover،COMMITTEDfalse/env+journalمطابقان. المالكبدأإعدادمجموعاته؛لاcleanup أوoldone-group/zero-countverifier. سببالرسالةالحاليةlabel-onlyparser مؤكد؛النصالمتجاهلأزيل ولايسترجعمنhash؛I025القديممستقل.
+
+AFenabledtrue رسميًا عبرcurrentclient+reauth/المزودdeepseek-flash/الحدود20requests10000tokensبدونتغيير؛وصفحقول/مواضعفقطدونقيم،معreview-only.47Node/113PG PASS(الـPGقبلإضافةopaque-token الضيقة؛CIexact3919أعادالكاملSUCCESS). Windows0613cache/stagedswap/47offline/build PASS،native/Desktoppending. عملالواجهةغيرالمحفوظكانعلىنفسcheckout؛تحققgitقبلالتعديل. SandboxTaskPilot-native-087/8241 علىDBtaskpilot_student_native_087_test وهمي تمامًا،لاsocket/provider،helperخارجGit /opt/taskpilot/native-087-sandbox.mjs؛أوقف وحدته ونفقه فقط بعدnative،واحتفظبالتطبيقالشخصي النهائي.
+
 ## الحالة المعتمدة
 اكتملت أولويات D-085 ضمن النطاق المختبر: أمان الإرسال، تحديث حزمة الاستعادة، ثم التحكم الحي. API0.8.6/source8909bae منشور، وWindows0.6.12/source5d6574b مثبت واختصار سطح المكتب إليه. CI43727815777 و43732126175: Backend وWindows SUCCESS. الاختبارات:38Node/103PG/35offlineC# وبناء ونشرWinUI PASS. قبول سير عمل المالك الفعلي لاحقًا؛ سيضبط المجموعات والقواعد بنفسه، فلا تعاود سؤاله الآن أو تضف fixtures إلى المساحة الشخصية.
 
