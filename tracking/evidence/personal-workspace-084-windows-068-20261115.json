@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-15",
+  "decision": "D-082",
+  "apiVersion": "0.8.4",
+  "apiSource": "17baf5591ebd535efdf202295279da9a0891a70c",
+  "windowsVersion": "0.6.8",
+  "windowsSource": "544748eb10a562156bf99412393c464074ba744d",
+  "ci": {
+    "apiRun": 43709853053,
+    "windowsRun": 43710942527,
+    "bothJobsEachRun": "SUCCESS"
+  },
+  "localTests": {
+    "node": 35,
+    "postgresIncludingParents": 86,
+    "windowsBuildWarnings": 0,
+    "windowsBuildErrors": 0
+  },
+  "cleanup": {
+    "previewAndEncryptedSnapshot": true,
+    "preCleanSnapshotBytes": 333088,
+    "restoreRehearsals": 2,
+    "stalePlanRejectedNoPartialDeletes": true,
+    "unclassifiedAccountAndTemplateCanariesPreserved": true,
+    "appliedWithOwnServiceStopped": true,
+    "removed": {
+      "accounts": 4,
+      "sources": 7,
+      "groups": 25,
+      "sessions": 22,
+      "taskTypes": 37,
+      "templates": 33
+    },
+    "remainingAtAcceptance": {
+      "accounts": 0,
+      "assignments": 0,
+      "groups": 1,
+      "taskTypes": 1,
+      "templates": 0,
+      "mockSessions": 0,
+      "privacyRuns": 2,
+      "actualAiUsageRows": 2,
+      "ownerAuth": 833
+    },
+    "ownerIdentityPreserved": true,
+    "actualAuthAeadValid": true,
+    "unclassifiedPersonalSessionKept": true,
+    "forgottenTombstoneAuditUsageKept": true,
+    "liveIngressDedupeTombstonesKept": true,
+    "oldNotificationsClearedWithAuditRetained": true,
+    "newBackup": {
+      "bytes": 305513,
+      "sha256": "33b69bd96c9593674e0669b4b7b532cdaaa5ba5909bf28daefd1101c7a7adb88",
+      "restore": "NOT_RUN"
+    }
+  },
+  "personalMode": {
+    "mockEnabled": false,
+    "connectionEnabled": true,
+    "sendingEnabled": false
+  },
+  "nativeFinal": {
+    "personalBrand": true,
+    "fiveDashboardCountersZero": true,
+    "mockActionsHiddenInGroupsSessionsInbox": true,
+    "forgottenHistoryCollapsed": true,
+    "workScopeAndGeneralDefaultVisible": true,
+    "emptyGroupDiscoveryInformationalDialog": true,
+    "ownerHandOff": "Groups page connected, no modal, app left open",
+    "newGroupsBound": 0,
+    "newBusinessRecordsCreatedForTests": 0
+  },
+  "priorNativeSameFeatureCode": {
+    "defaultTaskDialogAndCancel": "PASS on source17baf55",
+    "ruleExplanationAndCancel": "PASS on source17baf55"
+  },
+  "protectedOtherServices": 42,
+  "changedDuringCutover": 0,
+  "package": {
+    "windowsVersion": "0.6.8",
+    "source": "544748eb10a562156bf99412393c464074ba744d",
+    "apiVersion": "0.8.4",
+    "apiSource": "17baf5591ebd535efdf202295279da9a0891a70c",
+    "files": 530,
+    "bytes": 94772854,
+    "sha256": "b736d913fcb70f020aa72915c45f8128d18ad7ebce3f92190f067bf2ce9d514a",
+    "rebuiltAfterNativeAcceptance": false,
+    "signed": false
+  }
+}
