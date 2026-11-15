@@ -1,4 +1,6 @@
 # خطة التنفيذ والتتبع — 2026-11-15
+
+- [x] Personal desktop placement D-081: exact067 package installed per-user, shortcut verified, installed native app connected and left open for owner.
 Checked means verified within stated scope. Current API0.8.3/Windows0.6.7 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
 
 ## P0 — القرارات والأمان

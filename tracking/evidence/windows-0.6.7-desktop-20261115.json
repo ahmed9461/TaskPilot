@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-15",
+  "windowsVersion": "0.6.7",
+  "source": "7082fcf964c6bd3d9c3a57edbe9acb69942ed8ab",
+  "archiveSha256": "4412d62305e7d47d76a129f6c693c105e2d4c8c5bcd2a925130ae0c8610c520c",
+  "filesVerified": 530,
+  "packageGuard": "PASS",
+  "installedProductVersion": "0.6.7+7082fcf964c6bd3d9c3a57edbe9acb69942ed8ab",
+  "perUserInstall": true,
+  "desktopShortcut": {
+    "name": "TaskPilot.lnk",
+    "targetExists": true,
+    "workingDirectoryMatches": true,
+    "iconExists": true,
+    "argumentsEmpty": true
+  },
+  "nativeInstalledTargetStartup": "PASS",
+  "sshConnectionObserved": "CONNECTED_SYNCHRONIZING",
+  "appLeftOpenForOwner": true,
+  "rebuilt": false,
+  "autostartAdded": false,
+  "credentialsCopied": false,
+  "businessDataMutated": false,
+  "serverRestarted": false,
+  "realSendingEnabled": false,
+  "deferredDrillsRun": false
+}
