@@ -573,7 +573,7 @@ public sealed partial class MainPage : Page
         var target = $"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionLabel")}\nاستلام المصدر: {V(p, "receivedAt")}";
         if (real && !liveSendingEnabled)
         {
-            await Dialog("معاينة الرد — الإرسال معطّل", Stack(Text(V(p, "body"), 20), Text(target), Text("هذه معاينة فقط؛ لم يُعتمد الرد ولم يُدرج في طابور الإرسال.")), "إغلاق");
+            await new ContentDialog { Title = "معاينة الرد — الإرسال معطّل", Content = Stack(Text(V(p, "body"), 20), Text(target), Text("هذه معاينة فقط؛ لم يُعتمد الرد ولم يُدرج في طابور الإرسال.")), CloseButtonText = "إغلاق", XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft }.ShowAsync();
             return;
         }
         if (!await Dialog(real ? "إقرار إرسال رد واتساب حقيقي" : "إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text(target + "\n" + (real ? "سيُرسل النص إلى رسالة المصدر في واتساب بعد الإقرار." : "موصل mock؛ لا إرسال واتساب حقيقي.")), reauth), real ? "إرسال الرد الحقيقي" : "إقرار المحاكاة"))

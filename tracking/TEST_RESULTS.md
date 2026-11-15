@@ -1,5 +1,10 @@
 # نتائج الاختبار الفعلية
 
+## D-088 Windows0.6.15 candidate / owner sending activation — 2026-11-16
+Release build: 0 errors/warnings; 47 offline C# checks/groups PASS. Disabled-send informational preview now has one Close button; mutation confirmation dialogs retain Cancel. Native/publish/Desktop acceptance pending.
+
+Existing API087 activated through current temporary client, single-use SSH reauth and the durable policy controller: COMMITTED/ready/enabled=true. Before/after: 2 actual accounts, 2 assignments, 2 groups, 3 sources, 0 reply jobs/unsettled jobs; identity preserved and 834 auth rows AEAD-valid. No missing owner rows, credential ciphertexts unchanged, other env unchanged, same API PID/invocation and 42 other services unchanged. No real messages initiated. The two PROCESSED sources with persisted accounts/credentials establish new-message reception after087, within this observed scope.
+
 ## Final087/0614 — DEPLOYED / VERIFIED_BOUNDED2026-11-15
 API3919/CI43752697349, cachee4/CI43753958494, finalWindows8b/CI43755691954: all Backend+Windows SUCCESS.47Node/113isolatedPG/47offlineC# checks-groups/build/publish/package PASS. Native613 proved cache GETaccounts/groups1→1, unrelatedCLIENT no group reload, relevant business AccountsGET2→3/new card, and preserved old cards/draft through3.5second read and navigation without another AccountsGET(4 stable). AI-prefill/save stored matching encrypted credential in isolated4accounts/4tasks/0review/0replies/auth0. Cache code unchanged in614.
 
