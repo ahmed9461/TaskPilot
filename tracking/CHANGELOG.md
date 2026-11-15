@@ -1,5 +1,9 @@
 # سجل التغيير
 
+## [API0.8.3 / Windows0.6.7 accepted] — 2026-11-15
+- Deployed4477d34/CI43661156807 bothSUCCESS. Native multiline parsing/routing, atomic rule controls, filters and completion after reopen verified.34Windows→SSH→API checks and own restart/privileges/identity PASS;42other services unchanged atdeploy.
+- Exact tested unsigned ZIP0677082fcf packaged without rebuild; own test data cleaned. Current backup strategy retained; fresh encrypted packet awaiting independent restore.
+
 ## [API0.8.3 candidate] — 2026-11-15
 - Accept LF/CRLF/CR consistently for explicit message fields and routing; credential lines remain excluded. Native Windows067 exposed CR-only input ignored by082. Two unit regressions RED then GREEN;31Node/85PG PASS. No migration/dependency change.
 - API082/source7082fcf is deployed; native067 atomic rule edits/validation/cancel/reopen and mock-group controls verified. Same-input083 retry pending.

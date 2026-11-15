@@ -1,5 +1,5 @@
 # خطة التنفيذ والتتبع — 2026-11-15
-Checked means verified within stated scope. Current API0.8.1/Windows0.6.6 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
+Checked means verified within stated scope. Current API0.8.3/Windows0.6.7 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
 
 ## P0 — القرارات والأمان
 - [x] P0-001 requirements/memory/decisions/tracking.
@@ -109,5 +109,5 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 
 - [x] I-043 native066 partial-save reproduced; atomic editor/dialog validation implemented;84PG/29Node/WinUI067 build PASS.
 - [x] Atomic rule sourceCI/deployAPI082; native067 invalid/valid/cancel/reopen/mock group enable workflows.
-- [ ] API083 CR line-ending fix CI/deploy + same-input native routing/filter/task-status retry, scoped067 cleanup and exact tested ZIP.
+- [x] API0834477d34 CI43661156807/deploy + same-input native routing/account and task filters/status/app restart, scoped067 cleanup and exact tested ZIP.
 - [ ] Existing encrypted packet independent restore including isolated app/business workflow; no new backup destination D-076.

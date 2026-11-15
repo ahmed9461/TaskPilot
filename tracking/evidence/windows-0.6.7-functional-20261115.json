@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-15",
+  "windowsVersion": "0.6.7",
+  "windowsSource": "7082fcf964c6bd3d9c3a57edbe9acb69942ed8ab",
+  "apiVersion": "0.8.3",
+  "apiSource": "4477d34e75f6d10df060316f88d5eb583388c34f",
+  "ciRun": 43661156807,
+  "ciBackend": "SUCCESS",
+  "ciWindows": "SUCCESS",
+  "nativeFunctional": "PASS_BOUNDED",
+  "verified": [
+    "inline invalid rule draft retained without mutation",
+    "atomic toggle and new rule save then reopen",
+    "cancel preserves rules",
+    "mock group disable and re-enable",
+    "native task creation",
+    "same multiline Arabic message routes to new task priority25",
+    "account username and namespace filter one result",
+    "task username period and type filter one result",
+    "completion persists after app close and reconnect without creating reply",
+    "logout visibly disconnected and owned windows closed"
+  ],
+  "nativeFixturesCleaned": true,
+  "realWhatsAppMessagesSent": 0,
+  "aiCalls": 0,
+  "isolatedPostgresTestsIncludingParents": 85,
+  "localNodeTests": 31,
+  "windowsToSshApiChecks": 34,
+  "protectedOtherServices": 42,
+  "changedProtectedServicesAtDeployment": 0,
+  "schemaMigrations": 13,
+  "package": {
+    "files": 530,
+    "bytes": 94770079,
+    "sha256": "4412d62305e7d47d76a129f6c693c105e2d4c8c5bcd2a925130ae0c8610c520c",
+    "rebuiltAfterAcceptance": false,
+    "signed": false
+  },
+  "limits": [
+    "bounded native cases only",
+    "historical first message loss remains unconfirmed",
+    "24h owner waived",
+    "no Narrator or cosmetic release gates",
+    "no new live provider or AI acceptance"
+  ]
+}
