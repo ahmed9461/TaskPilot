@@ -1,0 +1,123 @@
+{
+  "date": "2026-11-15",
+  "decision": "D-085",
+  "scope": "Native Windows to SSH/root policy control; no provider message",
+  "api": {
+    "version": "0.8.6",
+    "source": "8909bae7aee0ec979b0695292465d51aeac26093",
+    "ci": {
+      "run": 43727815777,
+      "backend": "SUCCESS",
+      "windows": "SUCCESS"
+    }
+  },
+  "windows": {
+    "version": "0.6.12",
+    "source": "5d6574b2bcf373c8b48d6f3bd7b502c2db291485",
+    "ci": {
+      "id": 43732126175,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5d6574b2bcf373c8b48d6f3bd7b502c2db291485"
+    },
+    "files": 530,
+    "zipBytes": 97543566,
+    "zipSha256": "e480a54f9af765d5bb93df7432e7104203d58f90991d9f8c9b8db812c485bf06",
+    "installedHashesMatched": true,
+    "desktopShortcutUpdated": true,
+    "shortcutArgumentsEmpty": true,
+    "priorVersionRetained": true,
+    "rebuiltAfterNativeAcceptance": false
+  },
+  "native": {
+    "first0612Enable": {
+      "server": "PASS",
+      "card": "enabled",
+      "banner": "sending permitted after individual approval"
+    },
+    "first0612DisableAttempt": "CUA click blocked by another foreground window; no click forwarded to that window",
+    "recovery": "Authorized false-only root operator committed disabled; canceled expired GUI preview. Extra disconnected own test window closed.",
+    "finalCompleteCycle": {
+      "enable": {
+        "stage": "enabled",
+        "check": "PASS",
+        "version": "0.8.6",
+        "pidUnchanged": true,
+        "identityUnchanged": true,
+        "paired": 1,
+        "encryptedAuthValid": true,
+        "authRows": 833,
+        "phase": "COMMITTED",
+        "enabled": true,
+        "operationChanged": true,
+        "envRestored": false,
+        "accounts": 0,
+        "tasks": 0,
+        "replies": 0,
+        "groups": 1,
+        "testgroups": 1,
+        "connected": 1,
+        "sources": 0
+      },
+      "disable": {
+        "stage": "disabled",
+        "check": "PASS",
+        "version": "0.8.6",
+        "pidUnchanged": true,
+        "identityUnchanged": true,
+        "paired": 1,
+        "encryptedAuthValid": true,
+        "authRows": 833,
+        "phase": "COMMITTED",
+        "enabled": false,
+        "operationChanged": true,
+        "envRestored": true,
+        "accounts": 0,
+        "tasks": 0,
+        "replies": 0,
+        "groups": 1,
+        "testgroups": 1,
+        "connected": 1,
+        "sources": 0
+      },
+      "typedConfirmationsArabic": true,
+      "viaSshRoot": true,
+      "disabledBannerAndCardMatched": true
+    },
+    "finalView": "Groups page, connected, sending disabled, no modal, only one TaskPilot window",
+    "issue050": "Fixed stale connection banner from same readback; native verified"
+  },
+  "liveInvariants": {
+    "sameProcess": true,
+    "samePairedIdentity": true,
+    "authRows": 833,
+    "authAeadValid": true,
+    "pairedSessions": 1,
+    "connectedRequestedSessions": 1,
+    "monitoredGroups": 1,
+    "accounts": 0,
+    "assignments": 0,
+    "sourceMessages": 0,
+    "replyJobs": 0,
+    "templates": 0,
+    "mockSessions": 0,
+    "privacyRuns": 2,
+    "retainedActualAiUsageRows": 2,
+    "previewFiles": 0,
+    "envBytesRestored": true,
+    "finalPhase": "COMMITTED",
+    "sendingPolicyReady": true,
+    "finalSendingEnabled": false
+  },
+  "externalMessages": 0,
+  "aiCalls": 0,
+  "personalFixturesCreated": 0,
+  "recoveryReference": "recovery-refresh-086-20261115.json",
+  "limits": [
+    "No new WhatsApp message or receipt tested in this increment",
+    "No owner business group or rule changed",
+    "No full native write matrix rerun",
+    "Fresh machine and real alternate-server cutover remain deferred",
+    "Post-commit lost acknowledgement requires readback, not automatic retry"
+  ]
+}

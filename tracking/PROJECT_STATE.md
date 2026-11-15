@@ -1,40 +1,36 @@
 # الحالة الحالية — 2026-11-15 (Asia/Riyadh)
 
-## D-085 phase2 — VERIFIED2026-11-15
-Fresh clean306804byte snapshot/SHAfbcc69cd0150a970ea5013e8d619cf9e32c7baafb70ff34881586e65947dc996 and API086 public bundle/root operators packaged:19012089bytes/5005files/SHA5205c377085ddef50ed6b378e3d8ac2c555be32ae79582b0e15ecf09d67840f5. Each entry hash verified; no recovery code/plaintext master keys/DPAPI/custodian/original escrow. Fresh private local extract independent app restore PASS, then copied to the SAME owner-only unshared Drive folder without deleting old copy, authenticated raw readback hash matched, fresh private cloud-readback extraction restored again PASS. Both:0accounts/0tasks/13migrations/auth833valid/identityciphertextunchanged/DPAPI0/SSH0/provider0/externalMessages0/AI0/schemaWrites0; API086 fake ingress/dedupe/completion0autoReply/oneMockReply/approvalreplay0extra PASS. Own containers removed. InitialDockerDesktopSTOPPED; restoration of that state pending final check. Backup destination/daily runner unchanged; no fresh-machine or live-cutover claim. Phase3 live Windows enable/disable and0611Desktop delivery OPEN.
+## المنشور والمثبت الآن
+- API **0.8.6** على New-VPS، source `8909bae7aee0ec979b0695292465d51aeac26093`، loopback8240. CI43727815777: Backend وWindows SUCCESS.
+- Windows **0.6.12**، source `5d6574b2bcf373c8b48d6f3bd7b502c2db291485`، مثبت لكل مستخدم، واختصار `D:\Desktop\TaskPilot.lnk` يشير إليه. CI43732126175: Backend وWindows SUCCESS. التطبيق مفتوح متصل على «المجموعات» دون حوار؛ احتفظ بعميله ونفقه، والجلسة المؤقتة تنتهي كالمعتاد بعد30دقيقة.
+- واتساب بنفس الهوية و833 سجل مصادقة مشفر صالح؛ اتصال=true، إرسال=false، mock=false. مساحة العمل:0حسابات/0تكليفات/0مصادر/0ردود/0قوالب، ومجموعة فعلية واحدة «مجموعة الاختبار» ونوع «متابعة عامة» واحد. لم تُضف مجموعات عمل أو fixtures أو رسائل/طلباتAI في هذه الجولة.
+- المالك سيضبط المجموعات والمهام والقواعد والقوالب لاحقًا بنفسه. هذا قبول محدود للوظائف المختبرة، وليس قبول سير عمله الفعلي أو إعلان اكتمال كل المشروع.
 
-## D-085 phase 1 — BACKEND DEPLOYED / 2026-11-15
-API0.8.6/source8909bae7aee0ec979b0695292465d51aeac26093 deployed; CI43727815777 SUCCESS. Durable root journal bootstrapped COMMITTED/false, same833valid auth/identity and clean personal workspace retained.42other services unchanged at cutover. Pre086 encrypted306750byte snapshot restored isolated0accounts/0tasks/13migrations/0SENDING. No new root watchdog service/migration/provider send. Windows0611 exact candidate built/published, native delivery remains pending phase3.103PG includes actual main SIGKILL/restart with envtrue/PENDING and zero requested sessions;38Node/35offlineC# PASS. Initial external cutover helper failed at set-eu due CRLF before any operation, normalizedLF and guarded cutover succeeded. Phase2 fresh306804byte offhost snapshot created; full refreshed kit build/extracted restore OPEN. Initial local staging ACL syntax/archive-not-yet-complete failed before private extraction; empty staging folder now owner+SYSTEM2rules, archive transfer still awaited.
-
-## المنشور المثبت
-- API **0.8.6** على New-VPS، source `8909bae7aee0ec979b0695292465d51aeac26093`، جاهز على loopback8240. CI43727815777: Backend وWindows SUCCESS.
-- Windows **0.6.10**، source `c7effe5c5c329766bd1fb8d6451bff6527e975d5`، مثبت لكل مستخدم واختصار `D:\Desktop\TaskPilot.lnk` يشير إليه. CI43721389866: Backend وWindows SUCCESS. التطبيق متصل ومتروك مفتوحًا في صفحة المجموعات دون حوار؛ احتفظ بعميله ونفقه الحاليين.
-- واتساب متصل بنفس الهوية، و833 سجل مصادقة مشفرًا صالحًا. الاتصال=true، الإرسال=false، mock=false. مساحة العمل: 0 حسابات، 0 تكليفات، 0 مصادر فعلية، 0 ردود، 0 قوالب، مجموعة فعلية واحدة ونوع عام واحد.
-- المالك سيضبط مجموعاته وقواعده لاحقًا بنفسه؛ لا نضيفها نيابة عنه ولا ننشئ fixtures في المساحة الشخصية.
+## الأولويات D-085 — مكتملة ضمن نطاق الاختبار
+1. **أمان تغيير الإرسال DEPLOYED / VERIFIED:** سجل root دائم PENDING قبل تعديلenv ثم authorization audit ثم COMMITTED مطابق لبصمةenv. بوابة النقل تقرأ القرار مباشرة؛ الحالة المعلقة/غير الصالحة تمنع الإرسال حتى بعد restart. اختبارات SIGKILL عند4نقاط وmain فعلي يعاد من env=true/PENDING وفشلDB/ملف القرار PASS في العزل. بعدCOMMITTED قد يبقى القرار معتمدًا إذا ضاع الرد؛ اقرأ الحالة ولا تعاود العملية تلقائيًا.
+2. **حزمة الاستعادة المحدّثة VERIFIED:** snapshot نظيف306804بايت/SHA256 `fbcc69cd0150a970ea5013e8d619cf9e32c7baafb70ff34881586e65947dc996`. حزمةAPI086 وأدواتroot العامة19012089بايت/5005ملفات/SHA256 `5205c377085ddef50ed6b378e3d8ac2c555be32ae79582b0e15ecf09d67840f5`؛ كل بصمات الملفات مطابقة، دون رمز الاستعادة أو مفاتيح صريحة. استعادة منZIP محلي مفكوك حديثًا ثم تنزيل النسخة الخاصة من نفسGoogleDrive ومطابقة بصمتها واستعادتها من مجلد مستقل PASS. كلاهما0حسابات/0مهام/13migrations/auth833صالح، وAPI086/HTTP وworkflow وهمي كامل، وDPAPI0/SSH0/provider0/AI0/externalMessages0. نفس مستخدمWindows؛ جهاز جديد وcutover فعلي ما زالا مؤجلين D-080.
+3. **التحكم الحي VERIFIED_BOUNDED:** Windows0611 ثم0612 نفذا تفعيلًا وإيقافًا فعليين عبرSSH/root. نفس PID وهويةواتساب/auth833، دون reconnect أو business writes أو رسائل.0611 كشف I-050: بطاقة الإعدادات صحيحة لكن الشريط احتفظ بحالة قديمة؛0612 أصلحه وأثبت native تطابقهما بعد الحفظ. في أول محاولة إيقاف0612 اعترضت نافذة أخرى النقر، فأعيدfalse بالأداة المعتمدة وأُلغيت المعاينة؛ دورة جديدة كاملة0612 enable→disable نجحت. الحالة النهائية COMMITTED/ready/false وenv مطابق للأصل، ومعايناتroot0.
 
 ## الفجوات الثلاث D-083
-| الفجوة | التنفيذ والقرينة | حدود الإثبات |
+| الفجوة | القرينة | الحد |
 |---|---|---|
-| F-083a تعديل القواعد القائمة | DEPLOYED / VERIFIED_BOUNDED: تعديل المهمة والكلمات والأولوية والتفعيل ذريًا مع الإصدارات. API معزول وWindows069 ضد sandbox085 أثبتا حفظ نفس القاعدة ثم إعادة فتحها، رفض الحقل الناقص دون كتابة أو فقد المسودة، وإلغاء تعديل لاحق | لم نغير قواعد المالك الفعلية.0610 يحمل نفس التنفيذ؛ لم نعد مصفوفة الكتابة كاملة فيه |
-| F-083b معاينة الرد والإرسال معطل | DEPLOYED / VERIFIED_BOUNDED: نص ووجهة مقروءة دون اعتماد أو طابور. API يرفض الاعتماد الحقيقي403؛ native069 أثبت الحوار وبقاء عدد الردود | مصدر وprovider metadata وهميان، دون موصل أو إرسال خارجي |
-| F-083c إدارة المنتظر وإعداد الإرسال | DEPLOYED / VERIFIED_BOUNDED: إلغاء APPROVED فقط، سجل مقروء، تحقق مفرد وسباق عامل محفوظ. إعداد Windows عبر SSH/root بمعاينة60ثانية وعبارة وتحقق وsnapshot وقفل التدوير، env ذري وHUP وACK وفشل مغلق. core معزول فعّل وأوقف بإشارات وهمية، وطفلmain فعلي اجتاز HUP. Native0610 أثبت العربية ورفض التأكيد الفارغ وإلغاء المعاينة؛ Windows→SSH→root false→false apply PASS | لم نفعّل الإرسال الحقيقي. false→true وHUP مع الجلسة الحقيقية والعمل اليومي للمالك NOT_RUN. كل رد يحتاج إقرارًا مستقلًا |
+| F-083a تعديل القاعدة القائمة ذريًا بكل حقولها | API وnative069 ضدsandbox085: save/reopen/invalid draft/cancel، same rule/version guards | لم نغيّر قواعد المالك؛0612 يحمل التنفيذ، دون إعادة كل مصفوفة الكتابة |
+| F-083b معاينة رد مع إرسال معطل | API يرفض الاعتماد403 دونjob، وnative069 قرأ النص والوجهة دونزيادةjobs | مصادر وmetadata وهمية، دونprovider |
+| F-083c إدارة المنتظر وإعداد الإرسال | إلغاءAPPROVED فقط وسباق العامل/replay وSSH/عبارة/reauth/snapshot/lock؛ actual0612 enable/disable وقرار دائم | كل رد يحتاج إقرارًا مستقلًا؛ لا اختبار رسالة جديدة ولا workflow مالك |
 
-## الاختبارات والعيوب
-38Node و100PostgreSQL معزولة و35C# محلية PASS؛ تشمل الأخيرة Arabic UTF-8 roundtrip عبر طفل فعلي. Build/publish:0warnings/0errors. Native writes استعملت `taskpilot_daily_085_test` و8241 دون worker أو موصل؛ الوحدة والنفق الخاصان أوقفا، وDB الوهمية محفوظة.
+## التحقق والنشر
+38Node/103PG معزولة/35offlineC# PASS؛ WinUI0612 build/publish0warnings/errors وportable guard PASS. HostedCI للـAPI086 ولمصدرWindows0612 كامل SUCCESS. الأدلة والفشل التاريخي محفوظان في TEST_RESULTS وISSUE_REGISTER؛ لا تساوي الاختبارات الوهمية قبولًا حيًا.
 
-أول تشغيل موسع93PG انتهى91PASS/2FAIL بسبب تجاوز harness حد120طلبًا/دقيقة؛ فُصل عميل كل fixture دون تخفيف حماية التطبيق، وأعيدت الحزمة كاملة بنجاح. I-048: native069 كشف mojibake في عبارة SSH العربية؛ أُلغي الحوار، ثم أصلح0610 stdout/stderr UTF-8 وstdin UTF-8 دون BOM. Regression وقبول أصلي وSSH/root no-op PASS. حزمة069 تاريخية مرفوضة لهذا الخلل؛0610 هي المعتمدة.
+نشر086 بعد نسخة مشفرةpre086306750بايت واستعادتها المعزولة:0حسابات/0مهام/13migrations/0SENDING.42خدمة أخرى لم تتغير PID/invocation/state **عندcutover**؛ لا ادعاء مراقبة كل المضيف باستمرار. لاmigration أو rootwatchdog أو خدمة إضافية. env والجورنالroot:taskpilot0640 بكتابةroot فقط، previewsroot0700/0600. الرجوع إلى085 يتطلب التحقق منenv=false لأن الكود القديم لا يعرف الجورنال؛ لا تستعدDB تاريخية فوق عمل المالك.
 
-## النشر والنسخ
-نشر محروس من084 بعد نسخة مشفرة305915بايت واستعادتها إلى DB مستقلة:0حسابات/0تكليفات/13migrations/0SENDING، دون موصل. لا تغيير schema/dependencies.42 خدمة أخرى بقيت بنفس PID/invocation/state عند cutover. معاينات root تحت `/etc/taskpilot/sending-previews`0700/0600؛env root:taskpilot0640، والكتابة للجذر فقط. الخدمة تتلقى أصلًا نفس القيم منsystemd. لا reboot مضيف أو تعديل خدمة أخرى.
+حزمةWindows0612: `TaskPilot-Windows-x64-0.6.12-personal-5d6574b.zip`،97543566بايت/530ملفًا/SHA256 `e480a54f9af765d5bb93df7432e7104203d58f90991d9f8c9b8db812c485bf06`. كل ملفات التثبيت مطابقة وProductVersion0612+5d6574b؛ لاrebuild بعدnative. الاختصار بلاarguments والقديم محفوظ، والنسخ السابقة باقية للرجوع. نافذة الاختبار الزائدة أُغلقت.
 
-حزمة0610: `TaskPilot-Windows-x64-0.6.10-personal-c7effe5.zip`،97543367بايت،530ملفًا،SHA256 `76c81808f3960df591d4243d0ba00f5030103ff67e1cd7a0c4ee4f9ffcfc3a4d`. جميع ملفات التثبيت مطابقة. لا rebuild بعد الفحص الأصلي، ولا أسرار في الحزمة أو الاختصار؛ النسخ السابقة محفوظة للرجوع.
+تبقى استراتيجيةD-076: نسخWindows يومي03:15 يعتمد تشغيل اللابتوب وGoogleDrive يدوي؛ لاوجهة/جدولة جديدة. آخر تشغيلطبيعي03:15:01/result0 وموعدالغد03:15، دونادعاء اختباراستعادة تلكالنسخةبالذات. حزمةDrive الجديدة خاصةowner-only وغيرمشاركة، والقديمةمحفوظة. DockerDesktop كانSTOPPED وأُعيدSTOPPED بعداستعادتي الحزمة؛ كلحاوياتالتجربةأزيلت.
 
-تبقى استراتيجية D-076: نسخة Windows يومية03:15 تعتمد اللابتوب، وGoogleDrive يدوي، ورمز استعادة خاص بالمالك. لا وجهة جديدة ولا قراءة أو نسخ لقيمة الرمز. آخر packet نظيف سابق305513بايت/SHA33b69bd96c9593674e0669b4b7b532cdaaa5ba5909bf28daefd1101c7a7adb88؛ استعادته الخاصة NOT_RUN. حزمةDR السابقة محفوظة وبها snapshot قبل التنظيف، فلا تعتبر بياناتها حالية.
+## المتبقي والحدود
+- OWNER_SETUP_LATER ثم قبول دورة عمل المالك على مجموعاته المختارة. الإرسال متروك معطلًا، وتفعيله للاستخدام اليومي اختيار لاحق منه.
+- multi-live، OpenRouter الحي، ومصفوفات الجلسات/الشبكة/الأمان الأوسع OPEN عند الحاجة؛ ليست PASS. سبب أول رسالة مفقودة قديمًا UNCONFIRMED، ولا ينسب إصلاحالجورنال أوparseسببًالها.
+- جهازWindows جديد وخادم بديل DEFERRED_BY_OWNER D-080؛24ساعة WAIVED D-060؛ الراوي مستبعدD-068 والتوسع الشكلي/OSpopupclick مؤجل. لاclosed-app push.
+- وجود ملف recovery محلي لا يثبت الحيازة المستقلة للرمز؛ لا تقرأ قيمته أو تطبعها أو ترفعها. كلUNKNOWN_DELIVERY يحتاج حسمًا ولا يعاد آليًا.
 
-## ما يبقى
-- OWNER_SETUP_LATER: المجموعات والمهام والقواعد والقوالب يختارها المالك عند تفرغه؛ ثم قبول مسار عمله الفعلي وتفعيل الإرسال إن اختاره صراحة.
-- قبول multi-live وOpenRouter الحي وبقية مصفوفة الجلسات والتعافي الأوسع OPEN. سبب أول رسالة فقدت قديمًا ما زال UNCONFIRMED؛ نجاح الرسائل اللاحقة لا يحسمه.
-- D-080: جهازWindows جديد وخادم بديل DEFERRED_BY_OWNER.24ساعة WAIVED_BY_OWNER D-060؛ الراوي مستبعدD-068 والتوسع الشكلي مؤجلD-069. OS popup/click غير مثبت ومنخفض الأولوية؛ لا closed-app push.
-- الفشل المقبوض أثناء تغيير السياسة fail-closed ومختبر. قتل أمرroot قسريًا بين كتابةenv والإقرار لم يُحقن، ولا watchdog مستقل لهذا الفاصل. عند نتيجة مجهولة اقرأ الحالة الحالية؛ لا تعاود mutation أو إرسالًا تلقائيًا.
-
-الأدلة التاريخية والفشل محفوظة في TEST_RESULTS/CHANGELOG/DECISION_LOG. دليل الاستخدام: docs/16_PERSONAL_USE.md. لا ادعاء جاهزية شاملة أو قبول حي من نجاح sandbox.
+دليل الاستخدام: docs/16_PERSONAL_USE.md. الأدلة: tracking/evidence/recovery-refresh-086-20261115.json وsending-control-086-windows0612-20261115.json.

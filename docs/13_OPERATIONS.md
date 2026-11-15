@@ -1,5 +1,10 @@
 # دليل التشغيل والمراقبة — Target Runbook
 
+## التحكم الحالي في الإرسال — API0.8.6
+استخدم إعدادات Windows0.6.12 عبر SSH للمعاينة والإقرار. الأمر root-only هو ops/sending-policy.mjs بمدخل JSON عبر stdin ومسارات ثابتة؛ HTTP للقراءة فقط. القرار محفوظ في /etc/taskpilot/sending-state.json: PENDING قبلenv، ثم authorizationaudit وCOMMITTED مطابق لبصمةenv. كل بوابة إرسال تقرأ القرار؛ missing/invalid/pending يمنع الإرسال حتى بعدrestart. القفل الإداري مشترك مع التدوير، والكتابةroot فقط، ولاخدمةrootجديدة. كلردخارجيمازاليحتاجإقرارًا مستقلًا.
+
+عند نتيجة مجهولة اقرأ الحالة أولًا؛ الموت بعدCOMMITTED قد يعني قرارًا ناجحًا بلاACK. لا تكررmutation/send تلقائيًا. لاستعادة تغيير ناقص استخدم تعطيلًا صريحًا بمعاينة وreauth جديدين. على خادم استعادة جديد، bootstrap بـinitialize-sending-policy.mjs فقط معenv=false ودونjournal سابق. لا تنسخ قرار تفعيل منخادمآخر. عمليات اختبارenv-only القديمة أدناه تاريخية وليست مسار تشغيل086؛ لا تستخدمها لتجاوزالجورنال. الرجوع إلى085 يتطلبenv=false قبلبدءالكودالقديم، ودوناستعادةDBتاريخية فوقأعمالجديدة. الحالة الفعلية الحالية في PROJECT_STATE، وآخر تحقق COMMITTED/ready/false.
+
 **تشغيل تجريبي مثبت:** taskpilot.service + own taskpilot-db container; business text deliberately fictitious; WhatsApp auth and selected-group transport are real/encrypted. One scoped quoted send verified; sending restored false. See tracking/PROJECT_STATE.md for exact deployed commit.
 
 ## مراقبة يومية مستهدفة

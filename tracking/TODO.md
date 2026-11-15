@@ -1,25 +1,25 @@
 # خطة التنفيذ والتتبع — 2026-11-15
 
-## D-085 active priority
-- [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (candidate086/0611,38Node/103PG).
+## D-085 completed priority — 2026-11-15
+- [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (deployed086/currentWindows0612,38Node/103PG).
 - [x] Guarded API086 deployment/bootstrap, same identity/auth833,42other services unchanged.
-- [ ] Windows0611 native acceptance/Desktop delivery (candidate published).
+- [x] Windows0612 native acceptance/Desktop delivery;0611 caught I-050 stale banner, corrected source5d6574b and CI43732126175 both jobs SUCCESS.
 - [x] Fresh clean packet/API086 kit, local extracted restore and private Drive readback/fresh extracted restore PASS;0external calls.
-- [ ] Live Windows enable/disable with same identity, then sendingfalse and bounded evidence. No business group setup.
+- [x] Actual Windows0611 and0612 enable/disable with same PID/identity/auth833, zero business rows/jobs/messages; final COMMITTEDfalse/env restored/previews0. First0612 off click obstructed, root false reset and canceled preview; fresh full native cycle PASS.
 
 ## أولوية العمل الحالية D-083 — تحديث نهائي
 - [x] F-083a تعديل القواعد القائمة بجميع الحقول ذريًا، invalid draft/cancel/reopen: DEPLOYED؛ API معزول وnative069 ضد085 PASS.
 - [x] F-083b معاينة الرد مع sending=false دون اعتماد: DEPLOYED؛ API وnative069 sandbox PASS.
-- [x] F-083c إدارة المنتظر وإعداد الإرسال من Windows: DEPLOYED؛100PG وcore fake signals وmain-child HUP وnative0610 Arabic/blank refusal/cancel وWindows→SSH/root false→false PASS. **live false→true مع الهوية الفعلية NOT_RUN**؛ لا نفعله نيابة عن المالك.
+- [x] F-083c إدارة المنتظر وإعداد الإرسال من Windows: DEPLOYED / VERIFIED_BOUNDED؛ إلغاءAPPROVED وسباقالعامل/replay، وnative0610Arabic/blank refusal/cancel، ثمD085durablejournal/103PG وactual0612enable→disable بنفسالهوية/PID،دونرسائل؛الحالةالنهائيةfalse. كلردمازاليحتاجإقرارًاخاصلَه.
 - [x] I-048 ترميز SSH العربي: UTF-8 fix/c7effe5/Windows0610، actual-child regression وnative PASS.069 ليست المعتمدة؛ Desktop0610 والتطبيق متصل مفتوح على المجموعات دون حوار.
 - [ ] OWNER_SETUP_LATER: المجموعات والقواعد والقوالب يضبطها المالك عند تفرغه؛ ثم قبول workflow الفعلي.
-- [ ] متابعة خطر قتل أمرroot قسريًا بينenv/ACK والقبول الوظيفي الموسع عند الحاجة؛ لا تخلط إثبات sandbox بالقبول الحي.
+- [x] خطر قتلroot قبل القرار عولج D-085 بأربع نقاطSIGKILL وrestart معزول؛ بعدCOMMITTED اقرأ النتيجة، لا ادعاءrollback مضمون أوmutation replay. قبول عمل المالك يبقىلاحقًا.
 
-## Prior checkpoints (historical; current API085/Windows0610 above)
+## Prior checkpoints (historical; current API086/Windows0612 above)
 - [x] D-082 clean personal handoff: reviewed/rehearsed cleanup applied, mock=false, API08417baf55/Windows068544748e published/native verified/Desktop updated;35Node/86PG/two hosted CI runs SUCCESS. Owner app left connected on Groups page.
 
 - [x] Personal desktop placement D-081: exact067 package installed per-user, shortcut verified, installed native app connected and left open for owner.
-Checked means verified within stated scope. Current API0.8.3/Windows0.6.7 personal pilot; unsigned portable accepted D-037. D-051/D-057 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by this current checklist and final results.
+Checked means verified within stated scope. API0.8.3/Windows0.6.7 was a historical personal checkpoint; current API086/Windows0612 is above. Unsigned portable accepted D-037. D-051/D-057 and current D-085 authorize scoped tests without repeated permission; per-job confirmation remains. Historical incremental checkpoints below are superseded by the current checklist and final results.
 
 ## P0 — القرارات والأمان
 - [x] P0-001 requirements/memory/decisions/tracking.

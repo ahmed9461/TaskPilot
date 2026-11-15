@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [API0.8.6 deployed / Windows0.6.12 personal accepted] — 2026-11-15
+- Complete D085: crash-safe durable sending decision, current clean independent recovery kit with local/cloud-readback app restores, actual Windows enable/disable with same PID/identity and no messages; final committedfalse.
+- Fix native I050 stale banner; corrected0612 card/banner/server verified. Exact accepted530-file ZIP installed/Desktop updated, previous artifacts retained; hostedCI43732126175 both SUCCESS. Preserve owner app/client and later group setup.
+- Recovery destination/daily runner unchanged; Docker initialSTOPPED restoredSTOPPED. Fresh machine/cutover/owner workflow and broader matrices remain outside this bounded acceptance. Historical checkpoints below retain their original scope/status.
+
 ## [Windows0.6.12 candidate] — 2026-11-15
 - Actual0611 enable/disable passed without messages or identity/process changes; final sendingfalse. Native I-050 exposed stale connection-banner summary after successful control. Refresh it from the same policy readback as Settings card. Build/35offline checks PASS; native retry pending.
 
