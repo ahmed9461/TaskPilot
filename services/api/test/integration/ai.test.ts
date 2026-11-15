@@ -184,7 +184,7 @@ test("AI manual runtime privacy, budget and replay acceptance", async (t) => {
         (await ai.analyze(id, "parallel-request-001")).needsReview,
         true,
       );
-      for (const secret of ["SECRET_CANARY", "PRIVATE_CANARY", "password"])
+      for (const secret of ["SECRET_CANARY", "PRIVATE_CANARY", "password:"])
         assert.equal(body.includes(secret), false);
       assert.deepEqual(JSON.parse(body).thinking, { type: "disabled" });
       assert.equal(

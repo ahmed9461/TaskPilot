@@ -1,5 +1,14 @@
 # API v1 — implementation reference (synthetic pilot)
 
+## API0.8.7 — unlabelled student accounts and structural AI
+Ingest accepts a unique complete S2-prefixed identifier (7–10 following digits), an unambiguous credential candidate and optional name in common orders/line endings, including separate course lines. An absent name uses the identifier as a display label. Password bytes are preserved; partial identifiers, multiple accounts/names/credentials and credential changes remain encrypted REVIEW. Account-like partial input is never silently IGNORED. Explicit labelled generic accounts remain supported. Course lines stay in task-routing context and cannot become passwords; identity/credential candidates cannot choose a task. Unknown formats remain reviewable, not fabricated.
+
+Migration014 adds ai_settings.automatic_fallback(defaultfalse), ai_requests.field_selection and durable ABSTAINED status/index. GET /v1/ai/config adds automaticFallback and privacy=task-codes-and-structural-indices-only. PATCH accepts optional automaticFallback; omitted preserves existing value for older clients. All enabled/outbound-approved/daily caps/current-version guards remain. A five-second serialized worker considers eligible encrypted REVIEW rows only when automaticFallback is enabled. At most one durable attempt per source/settings version, including manual/automatic reuse; provider failures/interrupted requests are never automatically replayed. ABSTAINED creates no provider call or request charge/reservation.
+
+Provider input contains allowlisted task codes and up to60 structural {index,kind} descriptors only. No raw body, snippets, names, usernames, passwords or course text crosses the boundary. Result fieldSelection contains distinct validated local indices for username/displayName/password or null. The server maps values locally after protected reveal; AI never creates/updates accounts/tasks or sends/deletes anything. Existing taskCode/confidence/needsReview remain; field suggestions always require explicit review.
+
+POST /v1/inbox/:id/ai-preview adds fieldCandidates; ai-suggestion may analyze field layout without task candidates. GET /v1/inbox adds ai_status for the current source/settings version without secret fields. POST /v1/inbox/:id/reveal still requires single-use reauth and now returns fields{username?,displayName?,password?,origin} alongside its protected30-second text; current validated suggestions may prefill values. Nothing is exposed by ordinary inbox/usage lists. Stale source/settings selectors are ignored. Resolve still requires fresh reauth/version and explicit account confirmation.
+
 Implemented in `services/api/src/app.ts`; runtime validation in Zod/contracts and PostgreSQL constraints. See appended live WhatsApp and manual AI contracts for current endpoints. Unlisted target features remain TODO.
 
 ## Access

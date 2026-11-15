@@ -1,4 +1,8 @@
 # سجل المشكلات
+
+I-051 CONFIRMED_LIVE_086 / FIX_VERIFIED_ISOLATED_087: owner added a second monitored group and sent an unlabelled account. Read-only diagnostic: ACCEPTED_TEXT/notify receipt, ingressDONE, sourceIGNORED/encrypted_payloadNULL,0accounts/tasks. Label-only parser returned no fields and intentionally removed ignored raw. New S2/order-independent parser plus conservative course/secret separation and partial review retention fixes future ingestion; isolated tests persist/dedupe all six input orders. Discarded prior raw is unavailable locally and cannot be reconstructed from its hash. Preserve the owner's second group and all new work; do not rerun clean-workspace cleanup or fixed one-group/zero-count verifier. Historical I025 first-packet cause remains unconfirmed and separate.
+
+I-052 CODE_CONFIRMED / WINDOWS0613_CANDIDATE: navigation rebuilt every page, polling rebuilt current content for all fresh event types, and the body cleared before reads finished. Session-scoped cached ordinary views, fresh-event page scoping, staged content swap, obsolete-render/draft fences and delayed foreground-only spinner implemented;47offline checks/build PASS. Native request-count/draft/refresh acceptance and desktop delivery pending.
 | ID | Evidence | Status | Next |
 |---|---|---|---|
 | I-001 | Initial tunnel-based concurrency test exceeded 5s pool wait, returned sanitized 503; whole server-local rerun 13/13 passes after 20s wait | VERIFIED FIX | Track real load once authorized |

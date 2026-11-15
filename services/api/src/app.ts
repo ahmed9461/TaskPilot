@@ -591,16 +591,18 @@ export async function createApp(
     return transaction(pool, async (c) => {
       const row = (
         await c.query(
-          "SELECT encrypted_payload FROM source_messages WHERE id=$1 AND state='REVIEW'",
+          "SELECT encrypted_payload,version FROM source_messages WHERE id=$1 AND state='REVIEW'",
           [messageId],
         )
       ).rows[0];
       if (!row) throw new Fault("NOT_FOUND", 404);
       await event(c, "REVIEW_REVEALED", messageId);
+      const body = row.encrypted_payload
+        ? service.vault.open(row.encrypted_payload, `message:${messageId}`)
+        : "";
       return {
-        text: row.encrypted_payload
-          ? service.vault.open(row.encrypted_payload, `message:${messageId}`)
-          : "",
+        text: body,
+        fields: await ai.fieldsForReview(messageId, row.version, body, c),
         expiresInSeconds: 30,
       };
     });

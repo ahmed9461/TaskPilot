@@ -2,6 +2,9 @@
 
 **آخر تحديث:** 2026-11-15. الحالة التشغيلية الأحدث في tracking/PROJECT_STATE.md؛ نقاط التحقق القديمة أدناه تاريخية. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
 
+## استكمال المالك D-086/D-087 — جارٍ
+بدأ المالك الإعداد وأصبح هناك مجموعتان فعليتان. رسالته الجديدة وصلتACCEPTED_TEXT/notify وصارتingressDONE لكن086label-only تجاهلها وأزالraw؛0accounts/tasks عندالفحص. أصلحنا candidate087 باستخراجS2 والترتيبات المختلفة، دون اشتراطاسمحقل أو اسمشخص، مع استبعادالمواد منالاعتمادات وحفظالناقص والملتبس للمراجعة. AIيستقبل وصفتركيب/مواضع فقط ويقترحindices لقيممحلية معمراجعة، وautomaticFallback مستقلتحتالموافقةوالحدود وطلبواحدلكلsource/settingsversion.46Node/113PGisolatedPASS. Windows0613cache/quietstagedrefresh/draftfence/protectedprefill و47offline/buildPASS؛native/deploy/Desktoppending. **احفظ المجموعةالثانية وأيعمل جديد؛لاcleanup ولاoldonegroupzerocountverify.** النصالمحذوفلايسترجعمنالبصمة،وسببI025القديممازالمجهولًا. Live086/Desktop0612باقيانحتىالقبولوالنشرالجديدين.
+
 ## D-085 مكتمل ضمن النطاق المختبر — 2026-11-15
 - API0.8.6/source8909bae منشور، Windows0.6.12/source5d6574b مثبت على سطح المكتب. CI43727815777 و43732126175: Backend وWindows SUCCESS.38Node/103PG/35offlineC# وWinUI build/publish PASS. الفجوات F083a/b/c منفذة بحدود القرائن في PROJECT_STATE؛ قبول سير عمل المالك بعد إعداده للمجموعات ما زال لاحقًا. لا تعاود سؤاله الآن ولا تضف بيانات أو مجموعات نيابة عنه.
 - أمان الإرسال: root journal يبدأ PENDING قبلenv، ثم authorization audit وCOMMITTED مطابق. كل gate يقرأه، والحالة الناقصة تمنع الإرسال حتى بعدrestart. أربع نقاطSIGKILL وrestart فعلي وفشلDB/ملف القرار PASS في العزل. بعدCOMMITTED قد تضيعACK؛ اقرأ الحالة ولا تكررmutation/send تلقائيًا. UI له استعادة تعطيل صريحة، ولاwatchdog أوmigration جديد. downgrade085 يتطلبenvfalse.

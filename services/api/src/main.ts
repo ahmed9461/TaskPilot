@@ -65,6 +65,7 @@ if (!whatsapp.connectionEnabled)
     "UPDATE whatsapp_sessions SET status='STOPPED',last_error_code='WHATSAPP_POLICY_DISABLED' WHERE provider='baileys' AND status IN ('CONNECTING','CONNECTED','QR_AVAILABLE','RECONNECTING')",
   );
 const stopIngress = whatsapp.startIngressWorker();
+const stopAi = ai.startFallbackWorker();
 await app.listen({
   host,
   port: Number(process.env.TASKPILOT_BIND_PORT ?? 8240),
@@ -74,6 +75,7 @@ for (const signal of ["SIGINT", "SIGTERM"])
   process.once(signal, async () => {
     await app.close();
     await stopIngress();
+    await stopAi();
     await stopLive();
     await stop();
     await whatsapp.close();

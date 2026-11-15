@@ -1,5 +1,13 @@
 # خطة التنفيذ والتتبع — 2026-11-15
 
+## D-086/D-087 active owner fixes
+- [x] Diagnose accepted but ignored unlabelled message without exposing raw credentials; preserve newly added second real group.
+- [x] Order-independent complete S2 accounts, optional name, course/password separation, partial/ambiguous encrypted review;46Node/113PG isolated PASS.
+- [x] Structural AI automatic opt-in, durable per-source/version attempt, budgets/no raw secrets/no automatic business actions; isolated acceptance PASS.
+- [ ] Guarded087 deployment with backup/restore and owner data/identity preservation; enable requested safe fallback with current provider and unchanged limits.
+- [ ] Native0613 cache/request-count/draft/quiet refresh and protected AI-prefill acceptance, then exact Desktop delivery.
+- [ ] Final live readback, tracking/memory/commits; prior raw removed by086 cannot be inferred/recovered from receipt hash.
+
 ## D-085 completed priority — 2026-11-15
 - [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (deployed086/currentWindows0612,38Node/103PG).
 - [x] Guarded API086 deployment/bootstrap, same identity/auth833,42other services unchanged.

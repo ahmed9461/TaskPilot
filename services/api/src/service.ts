@@ -4,7 +4,7 @@ import type { PoolClient } from "pg";
 import { transaction, event } from "./db.js";
 import { Vault, token, hash } from "./security.js";
 import { routeTask } from "./rules.js";
-import { normalize, parseMessage } from "./parser.js";
+import { normalize, parseMessage, hasAccountHint } from "./parser.js";
 import type { MessageInput } from "../../../packages/contracts/src/index.js";
 export class Fault extends Error {
   constructor(
@@ -117,7 +117,12 @@ export class Service {
           route.ambiguous,
         ],
       );
-      if (!parsed.username && !parsed.displayName && !parsed.password) {
+      if (
+        !parsed.username &&
+        !parsed.displayName &&
+        !parsed.password &&
+        !hasAccountHint(input.text)
+      ) {
         await c.query(
           "UPDATE source_messages SET state='IGNORED',encrypted_payload=NULL,encrypted_transport_key=NULL WHERE id=$1",
           [messageId],

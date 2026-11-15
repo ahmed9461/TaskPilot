@@ -1,9 +1,65 @@
 import { z } from "zod";
 import { routingContext } from "./rules.js";
+import {
+  hasAccountHint,
+  messageSegments,
+  opaqueCredentialCandidate,
+  type FieldSelection,
+} from "./parser.js";
 // Codes are administrator-authored task vocabulary, never extracted account identifiers.
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,63}$/);
-const input = z.object({ candidateCodes: z.array(code).max(20) }).strict();
+const fieldSelection = z
+  .object({
+    username: z.number().int().min(0).max(59).nullable(),
+    displayName: z.number().int().min(0).max(59).nullable(),
+    password: z.number().int().min(0).max(59).nullable(),
+  })
+  .strict();
+const input = z
+  .object({
+    candidateCodes: z.array(code).max(20),
+    layout: z
+      .array(
+        z
+          .object({
+            index: z.number().int().min(0).max(59),
+            kind: z.enum([
+              "username",
+              "name",
+              "credential",
+              "course",
+              "text",
+              "partial",
+              "opaque",
+            ]),
+          })
+          .strict(),
+      )
+      .max(60)
+      .optional(),
+  })
+  .strict();
 export type RedactedMessage = z.infer<typeof input>;
+// Only enumerated kinds and integer positions leave the server. Values stay encrypted/local.
+export function projectMessageStructure(
+  raw: string,
+  rules: ReadonlyArray<{ code: string; keywords: readonly string[] }>,
+): RedactedMessage {
+  const safe = projectTaskCodes(raw, rules);
+  const segments = messageSegments(raw);
+  if (hasAccountHint(raw) && segments.length <= 60)
+    return input.parse({
+      ...safe,
+      layout: segments.map((s) => ({
+        index: s.index,
+        kind:
+          s.kind === "text" && opaqueCredentialCandidate(s.value)
+            ? "opaque"
+            : s.kind,
+      })),
+    });
+  return safe;
+}
 export function projectTaskCodes(
   raw: string,
   rules: ReadonlyArray<{ code: string; keywords: readonly string[] }>,
@@ -38,6 +94,7 @@ export interface AiResult {
   completionTokens: number | null;
   reportedCostUsd?: number | null;
   cacheHitTokens?: number | null;
+  fieldSelection?: FieldSelection | null;
 }
 export interface AiProvider {
   listModels(): Promise<string[]>;
@@ -126,7 +183,13 @@ export class ChatProvider implements AiProvider {
   async analyzeMessageRedacted(message: RedactedMessage): Promise<AiResult> {
     this.gate();
     const safe = input.parse(message);
-    if (!safe.candidateCodes.length)
+    const canSelectFields =
+      safe.layout?.some((s) => s.kind === "username") &&
+      safe.layout.some(
+        (s) =>
+          s.kind === "credential" || s.kind === "opaque" || s.kind === "name",
+      );
+    if (!safe.candidateCodes.length && !canSelectFields)
       return {
         taskCode: null,
         confidence: 0,
@@ -142,7 +205,7 @@ export class ChatProvider implements AiProvider {
           {
             role: "system",
             content:
-              'Return JSON only: {"taskCode":null,"confidence":0}. Choose only a supplied candidate code or null. Do not invent identifiers or perform any actions.',
+              'Return JSON only: {"taskCode":null,"confidence":0,"fieldSelection":{"username":null,"displayName":null,"password":null}}. Choose taskCode only from supplied candidateCodes or null. layout contains structural segment kinds and integer indices, no values. For fieldSelection choose at most one supplied username index, one name index and one credential or opaque-token index for password, or null when unclear. Never select course/text/partial as credentials or username. Indices must be distinct. Infer no missing data and perform no actions. This is a review suggestion only.',
           },
           { role: "user", content: JSON.stringify(safe) },
         ],
@@ -178,6 +241,7 @@ export class ChatProvider implements AiProvider {
         .object({
           taskCode: code.nullable(),
           confidence: z.number().min(0).max(1),
+          fieldSelection: fieldSelection.nullable().optional(),
         })
         .strict()
         .parse(JSON.parse(envelope.choices[0]!.message.content));
@@ -186,6 +250,28 @@ export class ChatProvider implements AiProvider {
         !safe.candidateCodes.includes(result.taskCode)
       )
         throw Error();
+      if (result.fieldSelection) {
+        const seen = new Set<number>();
+        for (const [role, kind] of [
+          ["username", "username"],
+          ["displayName", "name"],
+          ["password", "credential"],
+        ] as const) {
+          const index = result.fieldSelection[role];
+          if (index === null) continue;
+          if (
+            seen.has(index) ||
+            !safe.layout?.some(
+              (s) =>
+                s.index === index &&
+                (s.kind === kind ||
+                  (role === "password" && s.kind === "opaque")),
+            )
+          )
+            throw Error();
+          seen.add(index);
+        }
+      }
       return {
         ...result,
         needsReview: true,
