@@ -46,7 +46,7 @@ Checked means verified within stated scope. Current API0.8.1/Windows0.6.6 person
 - [x] P3-002 API0.8.1/source05283e1 deployed; own privilege/restart/data/startup/identity PASS. Overall verifier EXTERNAL_SERVICE_DRIFT1added/0removed from another auto-restarting service, untouched; no global host invariance claim.
 - [ ] P3-003 multi-live beyond initial1 (multi-mock verified).
 - [x] P3-004 manual AI runtime/API/native catalog/usage/reservations; DeepSeek live+replay verified previously, no inference this increment. OpenRouter live acceptance OPEN.
-- [ ] P3-005 broader reports/alerts/always-on independent backup; safe CSV/ops/offhost/daily trigger/profile+owner+private-cloud copy done, cloud refresh manual.
+- [ ] P3-005 optional broader reports/alerts; new always-on independent target DEFERRED_BY_OWNER D-076; safe CSV/ops/offhost/daily trigger/profile+owner+private-cloud copy done, cloud refresh manual.
 - [x] P3-006 bounded exact-version readiness/authenticated smoke.
 
 - [x] P3-001d24h test WAIVED_BY_OWNER D-060; not a measured PASS or remaining release gate.
@@ -106,3 +106,6 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] I-042 isolated082 outbox DB-result/ACK/claim/restart recovery;29Node/76PG PASS.
 - [ ] API082 exact-codeCI/deploy/Windows workflow and existing-snapshot restore continuation.
 - [x] D-076 owner keeps current backups; new always-on destination removed from active work.
+
+- [x] I-043 native066 partial-save reproduced; atomic editor/dialog validation implemented;84PG/29Node/WinUI067 build PASS.
+- [ ] Final atomic sourceCI/deployAPI082, native067 invalid/valid/cancel/reopen/group/filter workflows and existing-snapshot full restore.

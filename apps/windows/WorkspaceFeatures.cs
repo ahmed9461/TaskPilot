@@ -124,40 +124,50 @@ public sealed partial class MainPage
     }
     private async Task Rules(JsonNode group)
     {
-        var list = (await api.Send("GET", "/v1/group-rules?groupId=" + V(group, "id"))).AsArray();
-        var panel = Stack(Text("الكلمات تخص نوع المهمة. عند تعادل أعلى أولوية لمهمتين، تُطلب المراجعة."));
+        var editor = await api.Send("GET", "/v1/groups/" + V(group, "id") + "/rule-editor");
+        var snapshot = editor["group"]!;
+        var readOnly = snapshot["readOnly"]!.GetValue<bool>();
+        var panel = Stack(Text("تُحفظ التغييرات معًا. الكلمات تخص نوع المهمة؛ عند تعادل أعلى أولوية لمهمتين تُطلب المراجعة."));
         var toggles = new List<(JsonNode Row, CheckBox Toggle)>();
-        foreach (var row in list)
+        foreach (var row in editor["rules"]!.AsArray())
         {
-            var check = new CheckBox { Content = V(row, "task_name") + " • " + V(row, "priority") + " • " + string.Join("، ", row!["keywords"]!.AsArray().Select(n => n!.ToString())), IsChecked = row!["enabled"]!.GetValue<bool>() };
+            var check = new CheckBox { Content = V(row, "task_name") + " • " + V(row, "priority") + " • " + string.Join("، ", row!["keywords"]!.AsArray().Select(n => n!.ToString())), IsChecked = row!["enabled"]!.GetValue<bool>(), IsEnabled = !readOnly };
             toggles.Add((row!, check));
             panel.Children.Add(check);
         }
-        var tasks = Choice("مهمة القاعدة الجديدة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"));
+        if (readOnly)
+        {
+            panel.Children.Add(Text("الجلسة منسية؛ القواعد المحفوظة للقراءة فقط."));
+            await Dialog("قواعد " + V(snapshot, "title"), panel, "إغلاق");
+            return;
+        }
+        var tasks = Choice("مهمة القاعدة الجديدة", Options(editor["taskTypes"]!.AsArray(), "name"));
         var words = Field("كلمات القاعدة الجديدة، مفصولة بفواصل");
         var priority = new NumberBox { Header = "الأولوية 0–100", Minimum = 0, Maximum = 100, Value = 10 };
         panel.Children.Add(Stack(tasks, words, priority));
-        if (!await Dialog("قواعد " + V(group, "title"), panel))
-            return;
-        foreach (var (row, toggle) in toggles)
-            if (toggle.IsChecked != row["enabled"]!.GetValue<bool>())
-                await api.Send("PATCH", "/v1/group-rules/" + V(row, "id"), new
-                {
-                    version = Ver(row),
-                    enabled = toggle.IsChecked == true
-                });
-        if (!string.IsNullOrWhiteSpace(words.Text))
+        JsonObject? create = null;
+        string? Validate()
         {
-            if (Selected(tasks) == "")
-                throw new InvalidOperationException("اختر مهمة للقاعدة الجديدة.");
-            await api.Send("POST", "/v1/group-rules", new
-            {
-                groupId = V(group, "id"),
-                taskTypeId = Selected(tasks),
-                keywords = words.Text.Split([',', '،'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-                priority = (int)priority.Value
-            });
+            create = null;
+            if (string.IsNullOrWhiteSpace(words.Text)) return null;
+            if (Selected(tasks) == "") return "اختر مهمة للقاعدة الجديدة.";
+            var keywords = words.Text.Split([',', '،'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (keywords.Length is < 1 or > 20 || keywords.Any(w => w.Length > 100))
+                return "أدخل من كلمة إلى 20 كلمة، وبحد أقصى 100 حرف للكلمة.";
+            if (!double.IsFinite(priority.Value) || priority.Value < 0 || priority.Value > 100 || Math.Truncate(priority.Value) != priority.Value)
+                return "أدخل أولوية صحيحة من 0 إلى 100.";
+            create = new JsonObject { ["taskTypeId"] = Selected(tasks), ["keywords"] = new JsonArray(keywords.Select(w => (JsonNode?)JsonValue.Create(w)).ToArray()), ["priority"] = (int)priority.Value };
+            return null;
         }
+        if (!await Dialog("قواعد " + V(snapshot, "title"), panel, validate: Validate)) return;
+        var updates = new JsonArray();
+        foreach (var (row, toggle) in toggles)
+            if ((toggle.IsChecked == true) != row["enabled"]!.GetValue<bool>())
+                updates.Add(new JsonObject { ["id"] = V(row, "id"), ["version"] = Ver(row), ["enabled"] = toggle.IsChecked == true });
+        if (updates.Count == 0 && create is null) return;
+        var payload = new JsonObject { ["groupVersion"] = Ver(snapshot), ["updates"] = updates };
+        if (create is not null) payload["create"] = create;
+        await api.Send("POST", "/v1/groups/" + V(group, "id") + "/rules", payload);
         await Render();
     }
 }

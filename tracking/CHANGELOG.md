@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [Windows0.6.7 / API0.8.2 candidate] — 2026-11-15
+- Fixed rule editor partially saving toggles before rejecting a new rule. Validate inline and retain draft; save all toggles/new rule in one transaction using fresh group/rule versions. Legacy writes share lock order and forgotten-session fence. No schema change.
+- Actual066 failure reproduced on mock fixture, isolated atomic tests pass;84PG/29Node/067WinUI build PASS. Corrected native acceptance and deployment pending.
+
+
 ## [API0.8.2 candidate] — 2026-11-15
 - Preserve provider result across transient DB failures and retry only guarded result persistence before the next send. Lost commit ACK cannot downgrade committed SENT or duplicate activity. Unacknowledged unsent claims settle safely; rolled-back approvals remain usable.
 - Startup recovery publishes UNKNOWN with atomic audit/notification; failed initialization releases provider lease. No automatic outbound retry/new schema.

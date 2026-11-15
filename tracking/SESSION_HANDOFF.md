@@ -1,5 +1,9 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
+## Windows0.6.7 / API0.8.2 — IMPLEMENTED / VERIFIED_ISOLATED؛ قبول النسخة النهائية قادم
+I-043 native066/API081 partial rule save reproduced. New editor validates inside the dialog and preserves the draft on error; a single atomic save locks session→group→rules, rejects stale/cross-group/duplicate inputs and rolls back versions/activity on failure. Forgotten-session writes are refused even by legacy routes.84PG including9parents/29Node PASS; Windows067 build0warnings/errors. Current pilot remains081/source05283e1. Commit836dffb outbox code CI43656616792 bothSUCCESS; final atomic-code CI/deploy/native067 acceptance pending. Only mock067 fixture exists for corrected retry, restored true/ruleVersion3/groupVersion3; activeClients0, actual identity unaffected.
+
+
 ## API0.8.2 — VERIFIED_ISOLATED؛ لم يُنشر بعد
 أُصلح I-042: يعيد العامل حفظ نتيجة الرد بعد تعافي DB دون استدعاء الإرسال ثانية،ولا يخفض SENT عند فقد تأكيدcommit. فشل claim قبل أي إرسال لا يترك SENDING معلقًا؛التراجع يبقي APPROVED صالحًا. استعادة SENDING بعد restart تنشئ UNKNOWN مع سجل وتنبيه ذريين لمرة واحدة.29Node/76PG بما فيها8parents PASS؛13مهاجرة دون تغيير. أول6regressions+parent فشلت ثم نجحت،وثلاث حالات إضافية أثبتت تقدم الطابور والتراجع وتحريرlease عند فشلstartup. API0.8.1/source05283e1 ما زال المنشور؛CI والنشر082 وقبولWindows قادمة.
 D-076: المالك أبقى النسخ الحالي؛لا وجهةدائمة جديدة أو إعادة سؤال. تابع الوظائف والاستعادة بالنسخ الموجودة. D-075: أُزيل بوت الفيديو وخدماته ونسخه بأمر المالك؛43خدمة أخرى ومنهاTaskPilot احتفظت بنفسPID/invocation/state،والهوية/auth833/source5/SENT1/sendfalse ثابتة. لا تحاول إعادة البوت المحذوف.

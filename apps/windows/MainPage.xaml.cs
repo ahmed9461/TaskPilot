@@ -290,7 +290,21 @@ public sealed partial class MainPage : Page
         }
         await Run(Render);
     }
-    private async Task<bool> Dialog(string title, UIElement content, string primary = "حفظ") => await new ContentDialog { Title = title, Content = content, PrimaryButtonText = primary, CloseButtonText = "إلغاء", DefaultButton = ContentDialogButton.Close, XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft }.ShowAsync() == ContentDialogResult.Primary;
+    private async Task<bool> Dialog(string title, UIElement content, string primary = "حفظ", Func<string?>? validate = null)
+    {
+        var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
+        var dialog = new ContentDialog { Title = title, Content = validate is null ? content : Stack(content, error), PrimaryButtonText = primary, CloseButtonText = "إلغاء", DefaultButton = ContentDialogButton.Close, XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft };
+        if (validate is not null)
+            dialog.PrimaryButtonClick += (_, args) =>
+            {
+                var message = validate();
+                if (message is null) return;
+                args.Cancel = true;
+                error.Message = message;
+                error.IsOpen = true;
+            };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
     private async Task Render()
     {
         if (shuttingDown)

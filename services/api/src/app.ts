@@ -1,3 +1,9 @@
+import {
+  ruleEditor,
+  saveGroupRules,
+  createGroupRule,
+  updateGroupRule,
+} from "./group-rules.js";
 import release from "../../../package.json" with { type: "json" };
 import { accountDetails } from "./account-details.js";
 import { AiRuntime } from "./ai-runtime.js";
@@ -475,50 +481,18 @@ export async function createApp(
       )
     ).rows;
   });
-  app.post("/v1/group-rules", async (req) => {
-    const p = z
-      .object({
-        groupId: id,
-        taskTypeId: id,
-        keywords: z.array(z.string().trim().min(1).max(100)).min(1).max(20),
-        priority: z.number().int().min(0).max(100),
-      })
-      .strict()
-      .parse(req.body);
-    return transaction(pool, async (c) => {
-      const row = (
-        await c.query(
-          "INSERT INTO group_rules(id,group_id,task_type_id,keywords,priority) VALUES($1,$2,$3,$4,$5) RETURNING *",
-          [randomUUID(), p.groupId, p.taskTypeId, p.keywords, p.priority],
-        )
-      ).rows[0];
-      await c.query("UPDATE groups SET version=version+1 WHERE id=$1", [
-        p.groupId,
-      ]);
-      await event(c, "GROUP_RULE_CREATED", row.id);
-      return row;
-    });
+  app.get("/v1/groups/:id/rule-editor", async (req) => {
+    const { id: groupId } = uuidParam.parse(req.params);
+    return ruleEditor(pool, groupId);
   });
+  app.post("/v1/groups/:id/rules", async (req) => {
+    const { id: groupId } = uuidParam.parse(req.params);
+    return saveGroupRules(pool, groupId, req.body);
+  });
+  app.post("/v1/group-rules", async (req) => createGroupRule(pool, req.body));
   app.patch("/v1/group-rules/:id", async (req) => {
     const { id: ruleId } = uuidParam.parse(req.params);
-    const p = z
-      .object({ version: z.number().int().positive(), enabled: z.boolean() })
-      .strict()
-      .parse(req.body);
-    return transaction(pool, async (c) => {
-      const row = (
-        await c.query(
-          "UPDATE group_rules SET enabled=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *",
-          [ruleId, p.enabled, p.version],
-        )
-      ).rows[0];
-      if (!row) throw new Fault("CONFLICT");
-      await c.query("UPDATE groups SET version=version+1 WHERE id=$1", [
-        row.group_id,
-      ]);
-      await event(c, "GROUP_RULE_UPDATED", row.id);
-      return row;
-    });
+    return updateGroupRule(pool, ruleId, req.body);
   });
   app.post("/v1/reports/export", async (req) => {
     await reauth(req);
