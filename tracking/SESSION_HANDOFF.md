@@ -1,5 +1,7 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
+D-080 — 2026-11-15: المالك أجّل اختبار الاستعادة على جهاز Windows جديد والتحويل الفعلي إلى خادم بديل إلى وقت لاحق. الحالة DEFERRED_BY_OWNER، وليست PASS؛ لا يُعدّان شرطًا لاستخدام النسخة الشخصية ضمن الوظائف المختبرة، ولا يُعاد تشغيلهما دون طلب استئناف من المالك. الأولوية للتشغيل الفعلي وإصلاح العيوب المؤثرة. تبقى أدلة الاستعادة المعزولة والنسخ الحالية محفوظة، ولا تغيير على الخادم أو الإرسال أو النسخ اليومي.
+
 Recovery source53a971e33b2fb03b0dada1119a920b1173b927c1 / hosted CI43664456529: Backend+Windows SUCCESS. All configured build/format/secrets/Node/PostgreSQL/audit/WinUI/client/package checks passed. Live API remains4477d34; tested Windows0677082fcf and installed daily runnerb876096 unchanged.
 
 ## الاستعادة المستقلة مع تشغيل API — VERIFIED_BOUNDED2026-11-15

@@ -6,7 +6,8 @@ Checked means verified within stated scope. Current API0.8.3/Windows0.6.7 person
 - [x] P0-002 personal provider/QR/selected-group receive/quoted-send/restart; unofficial sustained risk remains.
 - [x] P0-003 reviewed retention/local auth forgetting/immutable historical identity/new-UUID replacement policy and independent owner recovery; native synthetic+isolated proof.
 - [x] P0-003c owner-encrypted third recipient/old+new+cloud-readback+scheduled restore DPAPI0/SSH0; wrong-code/tamper reject.
-- [ ] P0-003d external physical custody of owner code/new user or machine/production disaster cutover; not inferred from local code file.
+- [ ] P0-003d physical custody of owner recovery code remains owner-held evidence, not inferred from a local file.
+- [ ] P0-003e DEFERRED_BY_OWNER D-080: fresh Windows machine recovery and real alternate-server cutover; outside current personal-use acceptance gates, not PASS. Resume only when owner asks.
 - [x] P0-003a actual project field/backup/API/reauth/Windows-protector rotation; old clients revoked,839 fields/same identity preserved; crash/mixed-key resume verified.
 - [x] P0-003b per-snapshot old/new encrypted recovery and profile-mode DPAPI0 verified WITH surviving VPS custodian/root SSH. Third recipient now covers simultaneous cryptographic-domain loss when kit+code survive; fresh-user/total-physical-laptop-loss still unverified.
 - [x] P0-004 namespace/account/task/period/source contracts.
