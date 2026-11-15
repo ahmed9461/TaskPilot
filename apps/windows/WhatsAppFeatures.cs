@@ -147,7 +147,11 @@ public sealed partial class MainPage
         finally { reauth.Password = ""; }
         var linked = (await api.Send("GET", "/v1/groups")).AsArray().Where(n => V(n, "session_id") == id).Select(n => V(n, "external_group_id")).ToHashSet();
         available = new JsonArray(available.Where(n => !linked.Contains(V(n, "externalGroupId"))).Select(n => n!.DeepClone()).ToArray());
-        if (available.Count == 0) throw new InvalidOperationException("لا توجد مجموعات جديدة لإضافتها. المجموعات المرتبطة موجودة في صفحة المجموعات لتعديل مهمتها وقواعدها.");
+        if (available.Count == 0)
+        {
+            await new ContentDialog { Title = "لا توجد مجموعات جديدة", Content = Text("لم تظهر مجموعات جديدة لإضافتها. المجموعات المضافة موجودة في صفحة المجموعات لتعديل مهمتها وقواعدها. تأكد أن رقم واتساب المرتبط عضو في المجموعة المطلوبة، ثم أعد قراءة المجموعات."), CloseButtonText = "إغلاق", XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft }.ShowAsync();
+            return;
+        }
         var group = Choice("المجموعة", available.Select(n => (V(n, "externalGroupId"), V(n, "title"))));
         var task = Choice("المهمة الافتراضية", tasks.Select(n => (V(n, "id"), ChoiceLabel(n!, "name"))));
         var ns = Field("مساحة الحسابات", "work"); var period = Field("الفترة", DateTime.Today.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture)); reauth = ReauthField();
