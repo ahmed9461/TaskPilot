@@ -639,22 +639,25 @@ public sealed partial class MainPage : Page
                 var task = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), suggestedTask ?? V(n, "routing_task_type_id"));
                 var view = new TextBox { Header = "محتوى محمي — يُخفى بعد 30 ثانية", IsReadOnly = true, AcceptsReturn = true, Text = V(raw, "text"), TextWrapping = TextWrapping.Wrap, MinHeight = 90, MaxHeight = 180 };
                 var hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-                hide.Tick += (_, _) => { view.Text = ""; pass.Password = ""; hide.Stop(); };
+                // Raw reveal expiry must not silently remove the credential being edited.
+                // The masked editor is scoped to this dialog and always cleared on exit.
+                hide.Tick += (_, _) => { view.Text = ""; hide.Stop(); };
                 hide.Start();
-                var ok = await Dialog("تصحيح البيانات", Stack(Text(V(suggested,"origin") == "ai-review-only" ? "اقتراح AI ربط الحقول محليًا دون إرسال قيمها؛ راجعها قبل الحفظ." : "الحقول المعروفة عُبئت محليًا؛ راجع البيانات قبل الحفظ."), view, ns, name, user, pass, task));
-                hide.Stop();
-                view.Text = "";
-                if (ok)
+                try
                 {
-                    var account = new JsonObject { ["namespace"] = ns.Text, ["username"] = user.Text, ["displayName"] = name.Text };
-                    if (pass.Password != "")
-                        account["password"] = pass.Password;
-                    var payload = new JsonObject { ["version"] = Ver(n), ["account"] = account };
-                    if (Selected(task) != "")
-                        payload["taskTypeId"] = Selected(task);
-                    await api.Send("POST", "/v1/inbox/" + V(n, "id") + "/resolve", payload, await Reauth(reauth.Password));
+                    var ok = await Dialog("تصحيح البيانات", Stack(Text(V(suggested,"origin") == "ai-review-only" ? "اقتراح AI ربط الحقول محليًا دون إرسال قيمها؛ راجعها قبل الحفظ." : "الحقول المعروفة عُبئت محليًا؛ راجع البيانات قبل الحفظ."), view, Text("يُخفى النص الأصلي بعد 30 ثانية؛ تبقى كلمة المرور في حقلها المخفي حتى الحفظ أو إغلاق المراجعة."), ns, name, user, pass, task));
+                    hide.Stop();
+                    view.Text = "";
+                    if (ok)
+                    {
+                        var account = new JsonObject { ["namespace"] = ns.Text, ["username"] = user.Text, ["displayName"] = name.Text };
+                        if (pass.Password != "") account["password"] = pass.Password;
+                        var payload = new JsonObject { ["version"] = Ver(n), ["account"] = account };
+                        if (Selected(task) != "") payload["taskTypeId"] = Selected(task);
+                        await api.Send("POST", "/v1/inbox/" + V(n, "id") + "/resolve", payload, await Reauth(reauth.Password));
+                    }
                 }
-                reauth.Password = pass.Password = "";
+                finally { hide.Stop(); view.Text = ""; reauth.Password = pass.Password = ""; raw["text"] = ""; raw["fields"] = null; }
                 await Render();
     }
     private async Task Sessions() => await WhatsAppSessions();
