@@ -52,6 +52,7 @@ export class WhatsAppConnector implements WhatsAppTransport {
   readonly provider = "baileys" as const;
   private active = new Map<string, Active>();
   private factory?: SocketFactory;
+  private sendingGuard?: () => boolean;
   constructor(
     private pool: pg.Pool,
     private vault: Vault,
@@ -73,7 +74,17 @@ export class WhatsAppConnector implements WhatsAppTransport {
     return this.policy.connectionEnabled;
   }
   get sendingEnabled() {
-    return this.policy.sendingEnabled;
+    try {
+      return (
+        this.connectionEnabled &&
+        (this.sendingGuard ? this.sendingGuard() : this.policy.sendingEnabled)
+      );
+    } catch {
+      return false;
+    }
+  }
+  setSendingPolicyGuard(guard: () => boolean) {
+    this.sendingGuard = guard;
   }
   setSendingEnabled(enabled: boolean) {
     this.policy.sendingEnabled = this.connectionEnabled && enabled;

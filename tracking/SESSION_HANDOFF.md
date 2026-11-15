@@ -1,5 +1,8 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
+## D-085 phase 1 — VERIFIED_ISOLATED / NOT_DEPLOYED
+API086/Windows0611 candidate: root durable PENDING→authorization→COMMITTED journal and per-send guard implemented.38Node/103isolatedPG PASS; real SIGKILL at4durable checkpoints, audit-write rollback, journal-commit filesystem failure, and actual main restart from pending env=true with immutable connection=true/no requested sessions PASS. Pre-commit sends remainfalse; post-commit decision is traceable, not automatically replayed. WinUI0611 build0warnings/errors; native/deploy pending. Current live remains085/acb6273 and Windows0610/c7effe5/sendfalse/auth833. Next: guarded deployment/bootstrap, fresh clean recovery kit+extracted independent app restore, then actual live control and returnfalse. D076 backup destination and D080 deferred cutover scope unchanged.
+
 المصدر التشغيلي الحالي PROJECT_STATE.md، والقرارات D-083/D-084. المالك مشغول وسيضبط مجموعاته وقواعده لاحقًا بنفسه. لا تكرر السؤال ولا تضف fixtures في المساحة الشخصية.
 
 ## ما تم

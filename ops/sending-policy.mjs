@@ -10,10 +10,16 @@ async function health() {
     if (
       r.ok &&
       h.livePolicyControl === true &&
-      h.sendingPolicyReady === true &&
+      h.livePolicyControlVersion === 2 &&
       typeof h.liveSendingEnabled === "boolean"
     )
-      return h.liveSendingEnabled;
+      return {
+        version: 2,
+        enabled: h.liveSendingEnabled,
+        ready: h.sendingPolicyReady,
+        phase: h.policyPhase,
+        operationId: h.policyOperationId,
+      };
   } catch {
     /* No raw response/error is returned. */
   }
@@ -30,6 +36,7 @@ try {
   const result = await executeSendingPolicy(JSON.parse(input), {
     envPath: "/etc/taskpilot/pilot.env",
     directory: "/etc/taskpilot/sending-previews",
+    statePath: "/etc/taskpilot/sending-state.json",
     health,
     async signal() {
       execFileSync(
@@ -53,6 +60,7 @@ try {
     "SENDING_POLICY_STALE",
     "SENDING_POLICY_BUSY",
     "SENDING_POLICY_NOT_SAFE",
+    "SENDING_POLICY_RECOVERY_REQUIRED",
     "SENDING_POLICY_DISABLED_AFTER_FAILURE",
     "SENDING_POLICY_SERVICE_STOPPED",
     "SESSION_EXPIRED",

@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { AiRuntime } from "./ai-runtime.js";
 import { createPool } from "./db.js";
 import { createApp } from "./app.js";
@@ -6,7 +7,7 @@ import { startMockWorker } from "./outbox.js";
 import { MockTransport } from "./transport.js";
 import { Vault } from "./security.js";
 import { WhatsAppConnector } from "./whatsapp/connector.js";
-import { SendingPolicyReloader } from "./sending-policy.js";
+import { CommittedSendingPolicy } from "./sending-policy.js";
 const secret = async (name: string) => {
   const path = process.env[`${name}_FILE`];
   if (!path) throw new Error(`MISSING_${name}_FILE`);
@@ -24,18 +25,23 @@ const whatsapp = new WhatsAppConnector(pool, new Vault(encryptionKey), {
   connectionEnabled: process.env.WHATSAPP_CONNECTION_ENABLED === "true",
   sendingEnabled: false,
 });
-const sendingPolicy = new SendingPolicyReloader(
+const sendingPolicy = new CommittedSendingPolicy(
   whatsapp.connectionEnabled,
   () =>
-    readFile(
+    readFileSync(
       process.env.TASKPILOT_SENDING_POLICY_FILE ?? "/etc/taskpilot/pilot.env",
       "utf8",
     ),
-  (enabled) => whatsapp.setSendingEnabled(enabled),
+  () =>
+    readFileSync(
+      process.env.TASKPILOT_SENDING_STATE_FILE ??
+        "/etc/taskpilot/sending-state.json",
+      "utf8",
+    ),
 );
-await sendingPolicy.reload();
+whatsapp.setSendingPolicyGuard(() => sendingPolicy.current().enabled);
 process.on("SIGHUP", () => {
-  void sendingPolicy.reload();
+  sendingPolicy.current(); // Wake/probe only; every send checks the durable decision directly.
 });
 const app = await createApp(
   pool,
@@ -44,7 +50,8 @@ const app = await createApp(
     reauthSecret: await secret("TASKPILOT_REAUTH_SECRET"),
     encryptionKey,
     mockEnabled: process.env.TASKPILOT_MOCK_ENABLED === "true",
-    sendingPolicyReady: () => sendingPolicy.ready,
+    sendingPolicyReady: () => sendingPolicy.current().ready,
+    sendingPolicyState: () => sendingPolicy.current(),
   },
   whatsapp,
   ai,

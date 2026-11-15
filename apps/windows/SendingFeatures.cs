@@ -8,9 +8,11 @@ public sealed partial class MainPage
         var status = await api.Send("GET", "/v1/whatsapp/sending-policy");
         var enabled = status["enabled"]!.GetValue<bool>();
         liveSendingEnabled = enabled;
+        var recovery = status["recoveryRequired"]?.GetValue<bool>() == true;
         var detail = (enabled ? "الإرسال اليدوي مفعّل." : "الإرسال الفعلي معطّل؛ الاستقبال والمعاينة مستمران.") + $"\nالجلسات المتصلة: {V(status, "connected")} • المجموعات المفعّلة: {V(status, "groups")} • الردود غير المحسومة: {V(status, "unsettled")}\nإكمال المهمة لا يرسل ردًا. كل رد يحتاج معاينة وإقرارًا مستقلًا.";
+        if (recovery) detail += "\nيوجد تغيير غير مكتمل أو إعداد غير صالح؛ أعد تثبيت وضع التعطيل الآمن قبل محاولة التفعيل.";
         if (sshConnection is not null && status["controlAvailable"]?.GetValue<bool>() == true)
-            Card("إرسال ردود واتساب", detail, Button(enabled ? "إيقاف الإرسال اليدوي" : "إعداد تفعيل الإرسال اليدوي", () => ChangeSending(!enabled)));
+            Card("إرسال ردود واتساب", detail, Button(recovery ? "استعادة وضع الإرسال المعطّل" : enabled ? "إيقاف الإرسال اليدوي" : "إعداد تفعيل الإرسال اليدوي", () => ChangeSending(!recovery && !enabled)));
         else Card("إرسال ردود واتساب", detail + "\nتغيير الإعداد يتطلب اتصال SSH وخادمًا يدعم التحكم الآمن.");
     }
     private async Task ChangeSending(bool enabled)

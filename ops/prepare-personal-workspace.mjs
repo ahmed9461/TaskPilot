@@ -36,7 +36,7 @@ try {
   ).version;
   if (
     !["0.8.3", "0.8.4"].includes(version) &&
-    !(version === "0.8.5" && mode === "--verify")
+    !(["0.8.5", "0.8.6"].includes(version) && mode === "--verify")
   )
     throw Error();
   const envFile = async (path) =>

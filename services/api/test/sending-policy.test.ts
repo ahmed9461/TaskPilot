@@ -4,7 +4,8 @@ import {
   parseSendingPolicy,
   replaceSendingPolicy,
   applySendingPolicy,
-  SendingPolicyReloader,
+  CommittedSendingPolicy,
+  policyHash,
 } from "../src/sending-policy.js";
 const config =
   "OTHER=synthetic-canary$literal\r\nWHATSAPP_CONNECTION_ENABLED=true\r\nWHATSAPP_SENDING_ENABLED=false\r\n";
@@ -26,38 +27,55 @@ test("sending policy changes only a single literal flag and rejects ambiguous co
   ])
     assert.throws(() => parseSendingPolicy(text));
 });
-test("reload disables first, rejects stale reads, and cannot enable an unauthorized connection", async () => {
-  const pending: Array<(value: string) => void> = [],
-    changes: boolean[] = [];
-  const gate = new SendingPolicyReloader(
+test("only a matching durable commit enables the gate, including a fresh process view", () => {
+  let env = config,
+    journal = "";
+  const id = "11111111-1111-4111-8111-111111111111";
+  const gate = new CommittedSendingPolicy(
     true,
-    () => new Promise((r) => pending.push(r)),
-    (value) => changes.push(value),
+    () => env,
+    () => journal,
   );
-  const first = gate.reload(),
-    second = gate.reload();
-  assert.deepEqual(changes, [false, false]);
-  pending[1]!(config);
-  await second;
-  pending[0]!(replaceSendingPolicy(config, true));
-  await first;
-  assert.deepEqual(changes, [false, false, false]);
-  assert.equal(gate.ready, true);
-  const disabled = new SendingPolicyReloader(
+  assert.equal(gate.current().enabled, false);
+  env = replaceSendingPolicy(config, true);
+  journal = JSON.stringify({
+    version: 1,
+    phase: "PENDING",
+    operationId: id,
+    enabled: true,
+    envHash: policyHash(config),
+  });
+  assert.equal(gate.current().recoveryRequired, true);
+  assert.equal(gate.current().enabled, false);
+  assert.equal(
+    new CommittedSendingPolicy(
+      true,
+      () => env,
+      () => journal,
+    ).current().enabled,
     false,
-    async () => replaceSendingPolicy(config, true),
-    (value) => changes.push(value),
   );
-  await disabled.reload();
-  assert.equal(changes.at(-1), false);
-  const invalid = new SendingPolicyReloader(
-    true,
-    async () => "broken",
-    (value) => changes.push(value),
+  journal = JSON.stringify({
+    version: 1,
+    phase: "COMMITTED",
+    operationId: id,
+    enabled: true,
+    envHash: policyHash(env),
+  });
+  assert.equal(gate.current().enabled, true);
+  assert.equal(
+    new CommittedSendingPolicy(
+      false,
+      () => env,
+      () => journal,
+    ).current().enabled,
+    false,
   );
-  await invalid.reload();
-  assert.equal(invalid.ready, false);
-  assert.equal(changes.at(-1), false);
+  env += "UNRELATED=changed\n";
+  assert.equal(gate.current().phase, "INVALID");
+  assert.equal(gate.current().enabled, false);
+  journal = "broken";
+  assert.equal(gate.current().enabled, false);
 });
 test("policy writes and signal/ACK failures fall back to false or stop only the owned service", async () => {
   for (const fault of ["none", "write", "signal", "ack", "recovery"]) {

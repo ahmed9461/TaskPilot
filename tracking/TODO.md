@@ -1,5 +1,11 @@
 # خطة التنفيذ والتتبع — 2026-11-15
 
+## D-085 active priority
+- [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (candidate086/0611,38Node/103PG).
+- [ ] Guarded deployment/bootstrap and Windows0611 delivery.
+- [ ] Fresh clean encrypted packet + current public app kit + extracted independent app restore.
+- [ ] Live Windows enable/disable with same identity, then sendingfalse and bounded evidence. No business group setup.
+
 ## أولوية العمل الحالية D-083 — تحديث نهائي
 - [x] F-083a تعديل القواعد القائمة بجميع الحقول ذريًا، invalid draft/cancel/reopen: DEPLOYED؛ API معزول وnative069 ضد085 PASS.
 - [x] F-083b معاينة الرد مع sending=false دون اعتماد: DEPLOYED؛ API وnative069 sandbox PASS.

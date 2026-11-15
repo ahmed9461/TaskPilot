@@ -49,6 +49,7 @@ public sealed partial class MainPage
         "ACCOUNT_CREDENTIALS_UNVERIFIED" => "اعتماد غير متحقق",
         "REPLY_APPROVED" => "اعتُمد رد",
         "REPLY_CANCELED" => "أُلغي رد منتظر",
+        "LIVE_SENDING_CHANGE_AUTHORIZED" => "اعتُمد تغيير إعداد الإرسال؛ الحالة الفعلية في الإعدادات",
         "REPLY_SENT" => "سُجل إرسال رد",
         "REPLY_DELIVERY_UNKNOWN" => "تسليم يحتاج تحققًا",
         "REPLY_RECONCILED_SENT" => "حُسم التسليم: وصل",

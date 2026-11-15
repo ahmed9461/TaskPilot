@@ -1,5 +1,8 @@
 # الحالة الحالية — 2026-11-15 (Asia/Riyadh)
 
+## D-085 phase 1 — VERIFIED_ISOLATED / NOT_DEPLOYED
+API086/Windows0611 candidate: root durable PENDING→authorization→COMMITTED journal and per-send guard implemented.38Node/103isolatedPG PASS; real SIGKILL at4durable checkpoints, audit-write rollback, journal-commit filesystem failure, and actual main restart from pending env=true with immutable connection=true/no requested sessions PASS. Pre-commit sends remainfalse; post-commit decision is traceable, not automatically replayed. WinUI0611 build0warnings/errors; native/deploy pending. Current live remains085/acb6273 and Windows0610/c7effe5/sendfalse/auth833. Next: guarded deployment/bootstrap, fresh clean recovery kit+extracted independent app restore, then actual live control and returnfalse. D076 backup destination and D080 deferred cutover scope unchanged.
+
 ## المنشور المثبت
 - API **0.8.5** على New-VPS، source `acb62734b3cba58c2996af648cbea6c10321f403`، جاهز على loopback8240. CI43720147122: Backend وWindows SUCCESS.
 - Windows **0.6.10**، source `c7effe5c5c329766bd1fb8d6451bff6527e975d5`، مثبت لكل مستخدم واختصار `D:\Desktop\TaskPilot.lnk` يشير إليه. CI43721389866: Backend وWindows SUCCESS. التطبيق متصل ومتروك مفتوحًا في صفحة المجموعات دون حوار؛ احتفظ بعميله ونفقه الحاليين.

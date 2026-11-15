@@ -8,6 +8,7 @@ import release from "../../../package.json" with { type: "json" };
 import { accountDetails } from "./account-details.js";
 import { AiRuntime } from "./ai-runtime.js";
 import { PrivacyService } from "./privacy.js";
+import type { SendingState } from "./sending-policy.js";
 import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { z } from "zod";
@@ -43,6 +44,7 @@ export interface AppConfig {
   encryptionKey: string;
   mockEnabled: boolean;
   sendingPolicyReady?: () => boolean;
+  sendingPolicyState?: () => SendingState;
 }
 const uuidParam = z.object({ id });
 declare module "fastify" {
@@ -135,18 +137,29 @@ export async function createApp(
     )
       throw new Fault("REAUTH_REQUIRED", 403);
   }
-  app.get("/health", async () => ({
-    status: "ok",
-    version: release.version,
-    provider: "mock",
-    ...(config.sendingPolicyReady
-      ? {
-          livePolicyControl: true,
-          sendingPolicyReady: config.sendingPolicyReady(),
-          liveSendingEnabled: whatsapp?.sendingEnabled ?? false,
-        }
-      : {}),
-  }));
+  app.get("/health", async () => {
+    const state = config.sendingPolicyState?.();
+    return {
+      status: "ok",
+      version: release.version,
+      provider: "mock",
+      ...(config.sendingPolicyReady
+        ? {
+            livePolicyControl: true,
+            sendingPolicyReady: state?.ready ?? config.sendingPolicyReady(),
+            liveSendingEnabled:
+              state?.enabled ?? whatsapp?.sendingEnabled ?? false,
+            ...(state
+              ? {
+                  livePolicyControlVersion: 2,
+                  policyPhase: state.phase,
+                  policyOperationId: state.operationId,
+                }
+              : {}),
+          }
+        : {}),
+    };
+  });
   app.get("/ready", async () => {
     await pool.query("SELECT 1");
     return { status: "ready" };
@@ -176,18 +189,29 @@ export async function createApp(
       .parse(req.body);
     return ai.analyze(uuidParam.parse(req.params).id, body.idempotencyKey);
   });
-  app.get("/v1/whatsapp/sending-policy", async () => ({
-    enabled: whatsapp?.sendingEnabled ?? false,
-    controlAvailable:
-      !!config.sendingPolicyReady && config.sendingPolicyReady(),
-    connectionEnabled: whatsapp?.connectionEnabled ?? false,
-    ...(
-      await pool.query(`SELECT
+  app.get("/v1/whatsapp/sending-policy", async () => {
+    const state = config.sendingPolicyState?.();
+    return {
+      enabled: state?.enabled ?? whatsapp?.sendingEnabled ?? false,
+      controlAvailable:
+        !!config.sendingPolicyState ||
+        (!!config.sendingPolicyReady && config.sendingPolicyReady()),
+      ...(state
+        ? {
+            phase: state.phase,
+            operationId: state.operationId,
+            recoveryRequired: state.recoveryRequired,
+          }
+        : {}),
+      connectionEnabled: whatsapp?.connectionEnabled ?? false,
+      ...(
+        await pool.query(`SELECT
       (SELECT count(*)::int FROM whatsapp_sessions WHERE provider='baileys' AND connect_requested AND status='CONNECTED') connected,
       (SELECT count(*)::int FROM groups g JOIN whatsapp_sessions s ON s.id=g.session_id WHERE s.provider='baileys' AND g.enabled) groups,
       (SELECT count(*)::int FROM reply_jobs r JOIN whatsapp_sessions s ON s.id=r.session_id WHERE s.provider='baileys' AND r.status IN ('APPROVED','SENDING','UNKNOWN_DELIVERY')) unsettled`)
-    ).rows[0],
-  }));
+      ).rows[0],
+    };
+  });
   app.get("/v1/me", async () => ({
     id: "owner",
     role: "owner",

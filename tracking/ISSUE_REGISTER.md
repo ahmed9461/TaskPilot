@@ -133,3 +133,5 @@ I-046 VERIFIED_RESOLVED_D082: actual personal workspace cleaned with auth/histor
 I-048 REPRODUCED_NATIVE069/acb6273: SSH sending preview Arabic confirmation rendered mojibake on Windows; no apply executed, preview canceled. Explicit UTF-8 stdout/stderr and BOM-free stdin implemented in shared SSH process setup; real local-child Arabic stdio regression and Windows0610 native retry required. API085 remains sendfalse;069 desktop temporarily points to candidate until corrected0610 replaces it.
 
 I-048 VERIFIED_NATIVE0610/c7effe5: ArabicSSHconfirmationcorrect/blankrefusal/cancel and actualfalse→falseSSHrootapplyPASS.069rejectedartifactretained;Desktop0610. No live enable.
+
+I-049 VERIFIED_ISOLATED_D085: env-only sending change allowed root-process loss before ACK to leave an uncommitted enabled flag. Candidate086 durable PENDING/authorization/COMMITTED gate and0611 recovery UI implemented;4SIGKILL checkpoints/actual pending restart/DB+filesystem faults PASS. Beforecommit disabled; aftercommit traceable authorized state. Deployment/native/live-control OPEN.

@@ -1,5 +1,9 @@
 # سجل التغيير
 
+## [API0.8.6 / Windows0.6.11 candidate] — 2026-11-15
+- Add fsynced pending/committed root journal and synchronous committed sending guard; read-back operation/phase and explicit disabled recovery UI. Preserve single-use authorization, no mutation/send replay, no extra service.
+-38Node/103isolatedPG/build PASS; deployment/native/recovery/live-control pending.
+
 ## [API0.8.5 deployed / Windows0.6.10 personal] — 2026-11-15
 - CloseF083a/b/cwithinrecordedboundedacceptance:fullruleedits/disabledpreview/pendingcancellation/manualsendingcontrol.100PG/38Node/35offlineC#/twohostedCIrunsSUCCESS.
 - Native069caughtArabicSSHencodingI048;0610UTF8fix/nativeconfirmation+blankrefusal+cancelPASS. Rootcontrolactualfalse→falsenoopPASS;sendingremainfalse.

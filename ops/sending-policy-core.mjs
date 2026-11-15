@@ -3,9 +3,6 @@ import {
   readFile,
   writeFile,
   mkdir,
-  chmod,
-  chown,
-  rename,
   unlink,
   lstat,
   readdir,
@@ -19,6 +16,8 @@ import {
   applySendingPolicy,
 } from "../dist/services/api/src/sending-policy.js";
 import { transaction, event } from "../dist/services/api/src/db.js";
+import { durableReplace, journalStamp } from "./durable-policy.mjs";
+import { CommittedSendingPolicy } from "../dist/services/api/src/sending-policy.js";
 
 const digest = (text) => createHash("sha256").update(text).digest("hex");
 const phrase = (enabled) => (enabled ? "تفعيل الردود اليدوية" : "إيقاف الردود");
@@ -29,9 +28,25 @@ const fail = (code) => {
 // Dependency boundary permits isolated file/DB acceptance without production signals.
 export async function executeSendingPolicy(
   p,
-  { envPath, directory, health, signal, stop, owner = 0 },
+  {
+    envPath,
+    directory,
+    health,
+    signal,
+    stop,
+    owner = 0,
+    statePath = envPath + ".sending-state.json",
+    checkpoint = async () => {},
+  },
 ) {
   let pool, lease;
+  let actorId;
+  async function observe() {
+    const h = await health();
+    if (!h || h.version !== 2 || typeof h.enabled !== "boolean")
+      fail("SENDING_POLICY_UNAVAILABLE");
+    return h;
+  }
   async function envFile() {
     const stat = await lstat(envPath);
     if (!stat.isFile() || stat.uid !== owner || stat.mode & 0o022)
@@ -69,28 +84,74 @@ export async function executeSendingPolicy(
     };
   }
   async function apply(enabled) {
+    let previousOperationId,
+      operationId,
+      recovery = false;
+    async function store(phase, value) {
+      const file = await envFile();
+      if (phase === "COMMITTED" && file.parsed.sending !== value)
+        fail("SENDING_POLICY_STALE");
+      await durableReplace(
+        statePath,
+        JSON.stringify({
+          version: 1,
+          phase,
+          operationId,
+          previousOperationId,
+          enabled: value,
+          envHash: digest(file.text),
+          actorId,
+          recovery,
+          recordedAt: new Date().toISOString(),
+        }),
+        { ...file.stat, mode: 0o640 },
+      );
+    }
     await applySendingPolicy(enabled, {
+      async prepare(value) {
+        const previous = await journalStamp(statePath, owner);
+        let parsed;
+        try {
+          parsed = JSON.parse(previous.text);
+        } catch {}
+        previousOperationId = parsed?.operationId ?? null;
+        recovery = !!operationId || parsed?.phase !== "COMMITTED";
+        operationId = randomUUID();
+        await store("PENDING", value);
+        await checkpoint("PENDING_DURABLE");
+      },
       async write(value) {
         const file = await envFile();
-        const temp = envPath + ".sending-" + randomUUID();
-        try {
-          await writeFile(temp, replaceSendingPolicy(file.text, value), {
-            flag: "wx",
-            mode: 0o600,
-          });
-          await chown(temp, file.stat.uid, file.stat.gid);
-          await chmod(temp, file.stat.mode & 0o777);
-          if (digest((await envFile()).text) !== digest(file.text))
-            fail("SENDING_POLICY_STALE");
-          await rename(temp, envPath);
-        } finally {
-          await unlink(temp).catch(() => {});
-        }
+        await durableReplace(
+          envPath,
+          replaceSendingPolicy(file.text, value),
+          file.stat,
+        );
+        await checkpoint("ENV_DURABLE");
+      },
+      async authorize() {
+        await transaction(pool, (c) =>
+          event(c, "LIVE_SENDING_CHANGE_AUTHORIZED", operationId),
+        );
+        await checkpoint("AUTHORIZATION_DURABLE");
+      },
+      async commit(value) {
+        await store("COMMITTED", value);
+        await checkpoint("COMMIT_DURABLE");
       },
       signal,
       async verify(value) {
         for (let n = 0; n < 20; n++) {
-          if ((await health()) === value) return true;
+          const h = await observe();
+          if (
+            h.ready &&
+            h.enabled === value &&
+            h.phase === "COMMITTED" &&
+            h.operationId === operationId
+          ) {
+            await checkpoint("ACK_VERIFIED");
+            return true;
+          }
           await delay(250);
         }
         return false;
@@ -133,15 +194,30 @@ export async function executeSendingPolicy(
       )
     ).rows[0];
     if (!client) fail("SESSION_EXPIRED");
+    actorId = client.id;
+    const journal = await journalStamp(statePath, owner);
+    const persisted = new CommittedSendingPolicy(
+      true,
+      () => file.text,
+      () => journal.text,
+    ).current();
     await mkdir(directory, { recursive: true, mode: 0o700 });
     const ds = await lstat(directory);
     if (!ds.isDirectory() || ds.uid !== owner || ds.mode & 0o077)
       fail("SENDING_POLICY_UNAVAILABLE");
     if (p.action === "preview") {
       if (typeof p.enabled !== "boolean") fail("SENDING_POLICY_INVALID");
-      const effective = await health();
-      if (effective === null || effective !== file.parsed.sending)
-        fail("SENDING_POLICY_UNAVAILABLE");
+      const effective = await observe();
+      if (
+        p.enabled &&
+        (persisted.phase !== "COMMITTED" ||
+          persisted.recoveryRequired ||
+          !effective.ready ||
+          effective.phase !== "COMMITTED" ||
+          effective.operationId !== persisted.operationId ||
+          effective.enabled !== file.parsed.sending)
+      )
+        fail("SENDING_POLICY_RECOVERY_REQUIRED");
       const state = await snapshot();
       if (
         p.enabled &&
@@ -166,6 +242,7 @@ export async function executeSendingPolicy(
           clientId: client.id,
           enabled: p.enabled,
           envHash: digest(file.text),
+          policyHash: journal.hash,
           stateHash: state.hash,
           expiresAt: Date.now() + 60000,
         }),
@@ -174,6 +251,8 @@ export async function executeSendingPolicy(
       return {
         token,
         enabled: p.enabled,
+        currentEnabled: effective.enabled,
+        phase: effective.phase,
         confirmation: phrase(p.enabled),
         expiresInSeconds: 60,
         connected: state.connected,
@@ -208,26 +287,26 @@ export async function executeSendingPolicy(
     if (
       preview.expiresAt < Date.now() ||
       preview.envHash !== digest(file.text) ||
+      preview.policyHash !== journal.hash ||
       preview.stateHash !== (await snapshot()).hash ||
       p.confirmation !== phrase(preview.enabled)
     )
       fail("SENDING_POLICY_STALE");
-    if ((await health()) !== file.parsed.sending)
-      fail("SENDING_POLICY_UNAVAILABLE");
-    if (preview.enabled !== file.parsed.sending) {
+    const observed = await observe();
+    if (
+      digest((await envFile()).text) !== preview.envHash ||
+      (await journalStamp(statePath, owner)).hash !== preview.policyHash
+    )
+      fail("SENDING_POLICY_STALE");
+    if (
+      preview.enabled !== file.parsed.sending ||
+      persisted.recoveryRequired ||
+      !observed.ready ||
+      observed.phase !== "COMMITTED" ||
+      observed.operationId !== persisted.operationId ||
+      observed.enabled !== preview.enabled
+    ) {
       await apply(preview.enabled);
-      try {
-        await transaction(pool, (c) =>
-          event(
-            c,
-            preview.enabled ? "LIVE_SENDING_ENABLED" : "LIVE_SENDING_DISABLED",
-            client.id,
-          ),
-        );
-      } catch {
-        await apply(false);
-        fail("SENDING_POLICY_DISABLED_AFTER_FAILURE");
-      }
     }
     return { enabled: preview.enabled };
   }

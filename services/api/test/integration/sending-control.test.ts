@@ -1,11 +1,25 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
-import { mkdtemp, writeFile, readFile, rm, lstat } from "node:fs/promises";
+import {
+  mkdtemp,
+  writeFile,
+  readFile,
+  rm,
+  lstat,
+  mkdir,
+  rename,
+  rmdir,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { spawn } from "node:child_process";
+import { spawn, fork } from "node:child_process";
+import { readFileSync } from "node:fs";
+import {
+  CommittedSendingPolicy,
+  policyHash,
+} from "../../src/sending-policy.js";
 import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { createPool } from "../../src/db.js";
@@ -32,6 +46,27 @@ test("privileged sending control uses isolated files, PostgreSQL and fake servic
     directory = join(root, "previews");
   const original = `DATABASE_URL=${url}\nCANARY=synthetic-preserved\r\nWHATSAPP_CONNECTION_ENABLED=true\r\nWHATSAPP_SENDING_ENABLED=false\r\n`;
   await writeFile(envPath, original, { mode: 0o640 });
+  const statePath = envPath + ".sending-state.json";
+  async function resetState() {
+    await writeFile(envPath, original);
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        phase: "COMMITTED",
+        enabled: false,
+        operationId: randomUUID(),
+        envHash: policyHash(original),
+      }),
+      { mode: 0o600 },
+    );
+  }
+  await resetState();
+  const gate = new CommittedSendingPolicy(
+    true,
+    () => readFileSync(envPath, "utf8"),
+    () => readFileSync(statePath, "utf8"),
+  );
   let effective = false,
     signals = 0,
     stops = 0;
@@ -39,7 +74,7 @@ test("privileged sending control uses isolated files, PostgreSQL and fake servic
     envPath,
     directory,
     owner: process.getuid?.() ?? 0,
-    health: async () => effective,
+    health: async () => ({ version: 2, ...gate.current() }),
     async signal() {
       signals++;
       effective = (await readFile(envPath, "utf8")).includes(
@@ -197,7 +232,7 @@ test("privileged sending control uses isolated files, PostgreSQL and fake servic
       assert.equal(
         (
           await pool.query(
-            "SELECT count(*)::int n FROM audit_events WHERE action IN ('LIVE_SENDING_ENABLED','LIVE_SENDING_DISABLED')",
+            "SELECT count(*)::int n FROM audit_events WHERE action='LIVE_SENDING_CHANGE_AUTHORIZED'",
           )
         ).rows[0].n,
         2,
@@ -253,7 +288,178 @@ test("privileged sending control uses isolated files, PostgreSQL and fake servic
   );
 
   await t.test(
-    "real main process reloads only the sending gate on HUP without restart or provider connection",
+    "SIGKILL at durable checkpoints never enables an uncommitted change and preserves a committed decision",
+    { skip: process.platform === "win32" },
+    async () => {
+      for (const killAt of [
+        "PENDING_DURABLE",
+        "ENV_DURABLE",
+        "AUTHORIZATION_DURABLE",
+        "COMMIT_DURABLE",
+      ]) {
+        await resetState();
+        const preview = await command("preview", { enabled: true });
+        const child = fork(
+          resolve("services/api/test/fixtures/sending-control-child.mjs"),
+          [],
+          { stdio: ["ignore", "ignore", "ignore", "ipc"] },
+        );
+        const reached = new Promise<void>((yes, no) => {
+          const timer = setTimeout(
+            () => no(Error("SYNTHETIC_CHECKPOINT_TIMEOUT")),
+            10000,
+          );
+          child.on("message", (raw: any) => {
+            clearTimeout(timer);
+            raw.stage === killAt
+              ? yes()
+              : no(Error("SYNTHETIC_CHECKPOINT_NOT_REACHED"));
+          });
+          child.once("exit", () => {
+            clearTimeout(timer);
+            no(Error("SYNTHETIC_CHILD_EXITED_EARLY"));
+          });
+        });
+        child.send({
+          input: {
+            action: "apply",
+            clientToken: client,
+            token: preview.token,
+            confirmation: preview.confirmation,
+            reauth: await grant(),
+          },
+          envPath,
+          directory,
+          statePath,
+          killAt,
+        });
+        try {
+          await reached;
+        } finally {
+          if (child.exitCode === null && child.signalCode === null) {
+            child.kill("SIGKILL");
+            await new Promise<void>((r) => child.once("exit", () => r()));
+          }
+        }
+        // Wait for the dead child's DB connection to release the same admin lock.
+        const barrier = await pool.connect();
+        try {
+          await barrier.query("SELECT pg_advisory_lock(8240008)");
+          await barrier.query("SELECT pg_advisory_unlock(8240008)");
+        } finally {
+          barrier.release();
+        }
+        const fresh = new CommittedSendingPolicy(
+          true,
+          () => readFileSync(envPath, "utf8"),
+          () => readFileSync(statePath, "utf8"),
+        ).current();
+        assert.equal(fresh.enabled, killAt === "COMMIT_DURABLE");
+        assert.equal(fresh.recoveryRequired, killAt !== "COMMIT_DURABLE");
+        const durable = JSON.parse(await readFile(statePath, "utf8"));
+        const events = (
+          await pool.query(
+            "SELECT count(*)::int n FROM audit_events WHERE action='LIVE_SENDING_CHANGE_AUTHORIZED' AND target_id=$1",
+            [durable.operationId],
+          )
+        ).rows[0].n;
+        assert.equal(
+          events,
+          ["AUTHORIZATION_DURABLE", "COMMIT_DURABLE"].includes(killAt) ? 1 : 0,
+        );
+        if (killAt !== "COMMIT_DURABLE")
+          await assert.rejects(
+            command("preview", { enabled: true }),
+            /SENDING_POLICY_RECOVERY_REQUIRED/,
+          );
+        // Explicit disable/recovery uses a new preview and grant, never resumes the killed command.
+        await apply(await command("preview", { enabled: false }));
+        assert.equal(gate.current().enabled, false);
+        assert.equal(gate.current().phase, "COMMITTED");
+        assert.equal(await readFile(envPath, "utf8"), original);
+        assert.equal(
+          (
+            await pool.query(
+              "SELECT reauth_hash FROM client_sessions WHERE id=$1",
+              [clientId],
+            )
+          ).rows[0].reauth_hash,
+          null,
+        );
+      }
+    },
+  );
+
+  await t.test(
+    "audit failure before commit rolls back authorization and durably disables sending",
+    async () => {
+      await resetState();
+      const preview = await command("preview", { enabled: true });
+      await pool.query(
+        "CREATE FUNCTION synthetic_policy_audit_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic policy audit failure' USING ERRCODE='40001'; END $$",
+      );
+      await pool.query(
+        "CREATE TRIGGER synthetic_policy_audit_failure BEFORE INSERT ON audit_events FOR EACH ROW WHEN (NEW.action='LIVE_SENDING_CHANGE_AUTHORIZED') EXECUTE FUNCTION synthetic_policy_audit_failure()",
+      );
+      try {
+        await assert.rejects(
+          apply(preview),
+          /SENDING_POLICY_DISABLED_AFTER_FAILURE/,
+        );
+        assert.equal(gate.current().enabled, false);
+        assert.equal(gate.current().phase, "COMMITTED");
+        assert.equal(await readFile(envPath, "utf8"), original);
+      } finally {
+        await pool.query(
+          "DROP TRIGGER synthetic_policy_audit_failure ON audit_events",
+        );
+        await pool.query("DROP FUNCTION synthetic_policy_audit_failure()");
+      }
+    },
+  );
+  await t.test(
+    "unwritable commit journal cannot enable transport and stops only the injected owned service",
+    async () => {
+      await resetState();
+      const preview = await command("preview", { enabled: true });
+      let stopped = false;
+      try {
+        await assert.rejects(
+          run(
+            {
+              action: "apply",
+              clientToken: client,
+              token: preview.token,
+              confirmation: preview.confirmation,
+              reauth: await grant(),
+            },
+            {
+              ...io,
+              async checkpoint(stage: string) {
+                if (stage === "AUTHORIZATION_DURABLE") {
+                  await rename(statePath, statePath + ".saved");
+                  await mkdir(statePath);
+                }
+              },
+              async stop() {
+                stopped = true;
+              },
+            },
+          ),
+          /SENDING_POLICY_SERVICE_STOPPED/,
+        );
+        assert.equal(stopped, true);
+        assert.equal(gate.current().enabled, false);
+      } finally {
+        await rmdir(statePath);
+        await rename(statePath + ".saved", statePath);
+        await resetState();
+      }
+    },
+  );
+
+  await t.test(
+    "main process starts disabled from an interrupted enable and survives restart without provider connection",
     { skip: process.platform === "win32" },
     async () => {
       await pool.query(
@@ -268,45 +474,65 @@ test("privileged sending control uses isolated files, PostgreSQL and fake servic
       const key = join(root, "key"),
         api = join(root, "api"),
         reauth = join(root, "reauth"),
-        policy = join(root, "child.env");
+        policy = join(root, "child.env"),
+        childState = policy + ".state.json";
+      const text =
+        "WHATSAPP_CONNECTION_ENABLED=true\nWHATSAPP_SENDING_ENABLED=true\n";
+      const operationId = randomUUID();
+      async function phase(value: string) {
+        await writeFile(policy, text);
+        await writeFile(
+          childState,
+          JSON.stringify({
+            version: 1,
+            phase: value,
+            operationId,
+            enabled: true,
+            envHash: policyHash(text),
+          }),
+          { mode: 0o600 },
+        );
+      }
       for (const [path, value] of [
         [key, randomBytes(32).toString("base64")],
         [api, randomBytes(32).toString("hex")],
         [reauth, randomBytes(32).toString("hex")],
-        [
-          policy,
-          "WHATSAPP_CONNECTION_ENABLED=false\nWHATSAPP_SENDING_ENABLED=false\n",
-        ],
       ])
         await writeFile(path!, value!, { mode: 0o600 });
-      const child = spawn(
-        process.execPath,
-        [resolve("dist/services/api/src/main.js")],
-        {
-          stdio: "ignore",
-          env: {
-            PATH: process.env.PATH,
-            DATABASE_URL: url,
-            TASKPILOT_BIND_PORT: String(port),
-            TASKPILOT_API_TOKEN_FILE: api,
-            TASKPILOT_REAUTH_SECRET_FILE: reauth,
-            TASKPILOT_ENCRYPTION_KEY_FILE: key,
-            TASKPILOT_SENDING_POLICY_FILE: policy,
-            WHATSAPP_CONNECTION_ENABLED: "false",
-            TASKPILOT_MOCK_ENABLED: "false",
+      await phase("PENDING");
+      function launch() {
+        return spawn(
+          process.execPath,
+          [resolve("dist/services/api/src/main.js")],
+          {
+            stdio: "ignore",
+            env: {
+              PATH: process.env.PATH,
+              DATABASE_URL: url,
+              TASKPILOT_BIND_PORT: String(port),
+              TASKPILOT_API_TOKEN_FILE: api,
+              TASKPILOT_REAUTH_SECRET_FILE: reauth,
+              TASKPILOT_ENCRYPTION_KEY_FILE: key,
+              TASKPILOT_SENDING_POLICY_FILE: policy,
+              TASKPILOT_SENDING_STATE_FILE: childState,
+              WHATSAPP_CONNECTION_ENABLED: "true",
+              TASKPILOT_MOCK_ENABLED: "false",
+            },
           },
-        },
-      );
-      async function waitReady(ready: boolean) {
+        );
+      }
+      let child = launch();
+      async function waitReady(ready: boolean, enabled: boolean) {
         for (let n = 0; n < 80; n++) {
           try {
             const h = (await (
               await fetch(`http://127.0.0.1:${port}/health`)
             ).json()) as any;
-            if (h.sendingPolicyReady === ready) {
-              assert.equal(h.liveSendingEnabled, false);
-              return;
-            }
+            if (
+              h.sendingPolicyReady === ready &&
+              h.liveSendingEnabled === enabled
+            )
+              return h;
           } catch {}
           await delay(50);
         }
@@ -314,21 +540,44 @@ test("privileged sending control uses isolated files, PostgreSQL and fake servic
       }
       try {
         const pid = child.pid;
-        await waitReady(true);
+        assert.equal((await waitReady(true, false)).policyPhase, "PENDING");
         await writeFile(policy, "invalid");
         child.kill("SIGHUP");
-        await waitReady(false);
-        await writeFile(
-          policy,
-          "WHATSAPP_CONNECTION_ENABLED=true\nWHATSAPP_SENDING_ENABLED=true\n",
-        );
-        child.kill("SIGHUP");
-        await waitReady(true);
+        await waitReady(false, false);
+        await phase("COMMITTED");
+        await waitReady(true, true); // No signal is required to observe the durable commit.
         assert.equal(child.pid, pid);
         assert.equal(child.exitCode, null);
-      } finally {
-        child.kill("SIGTERM");
+        await phase("PENDING");
+        await waitReady(true, false);
+        child.kill("SIGKILL");
         await new Promise<void>((r) => child.once("exit", () => r()));
+        const barrier = await pool.connect();
+        try {
+          for (const lock of [8240002, 8240004]) {
+            await barrier.query("SELECT pg_advisory_lock($1)", [lock]);
+            await barrier.query("SELECT pg_advisory_unlock($1)", [lock]);
+          }
+        } finally {
+          barrier.release();
+        }
+        child = launch();
+        const restarted = await waitReady(true, false);
+        assert.equal(restarted.policyPhase, "PENDING");
+        assert.equal(restarted.policyOperationId, operationId);
+        assert.equal(
+          (
+            await pool.query(
+              "SELECT count(*)::int n FROM whatsapp_sessions WHERE connect_requested",
+            )
+          ).rows[0].n,
+          0,
+        );
+      } finally {
+        if (child.exitCode === null && child.signalCode === null) {
+          child.kill("SIGTERM");
+          await new Promise<void>((r) => child.once("exit", () => r()));
+        }
       }
     },
   );
