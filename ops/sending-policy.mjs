@@ -29,7 +29,7 @@ try {
   }
   const result = await executeSendingPolicy(JSON.parse(input), {
     envPath: "/etc/taskpilot/pilot.env",
-    directory: "/var/lib/taskpilot/sending-policy/previews",
+    directory: "/etc/taskpilot/sending-previews",
     health,
     async signal() {
       execFileSync(
