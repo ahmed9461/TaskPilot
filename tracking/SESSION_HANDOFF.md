@@ -1,9 +1,7 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
-## D-085 phase 1 — VERIFIED_ISOLATED / NOT_DEPLOYED
-API086/Windows0611 candidate: root durable PENDING→authorization→COMMITTED journal and per-send guard implemented.38Node/103isolatedPG PASS; real SIGKILL at4durable checkpoints, audit-write rollback, journal-commit filesystem failure, and actual main restart from pending env=true with immutable connection=true/no requested sessions PASS. Pre-commit sends remainfalse; post-commit decision is traceable, not automatically replayed. WinUI0611 build0warnings/errors; native/deploy pending. Current live remains085/acb6273 and Windows0610/c7effe5/sendfalse/auth833. Next: guarded deployment/bootstrap, fresh clean recovery kit+extracted independent app restore, then actual live control and returnfalse. D076 backup destination and D080 deferred cutover scope unchanged.
-
-المصدر التشغيلي الحالي PROJECT_STATE.md، والقرارات D-083/D-084. المالك مشغول وسيضبط مجموعاته وقواعده لاحقًا بنفسه. لا تكرر السؤال ولا تضف fixtures في المساحة الشخصية.
+## D-085 phase 1 — BACKEND DEPLOYED / 2026-11-15
+API0.8.6/source8909bae7aee0ec979b0695292465d51aeac26093 deployed; CI43727815777 SUCCESS. Durable root journal bootstrapped COMMITTED/false, same833valid auth/identity and clean personal workspace retained.42other services unchanged at cutover. Pre086 encrypted306750byte snapshot restored isolated0accounts/0tasks/13migrations/0SENDING. No new root watchdog service/migration/provider send. Windows0611 exact candidate built/published, native delivery remains pending phase3.103PG includes actual main SIGKILL/restart with envtrue/PENDING and zero requested sessions;38Node/35offlineC# PASS. Initial external cutover helper failed at set-eu due CRLF before any operation, normalizedLF and guarded cutover succeeded. Phase2 fresh306804byte offhost snapshot created; full refreshed kit build/extracted restore OPEN. Initial local staging ACL syntax/archive-not-yet-complete failed before private extraction; empty staging folder now owner+SYSTEM2rules, archive transfer still awaited.
 
 ## ما تم
 - API085/acb6273 منشور، CI43720147122 SUCCESS. Windows0610/c7effe5 مثبت والاختصار إليه، CI43721389866 SUCCESS. التطبيق مفتوح متصل على المجموعات دون حوار؛ احتفظ بعميله ونفقه.

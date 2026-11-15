@@ -2,7 +2,8 @@
 
 ## D-085 active priority
 - [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (candidate086/0611,38Node/103PG).
-- [ ] Guarded deployment/bootstrap and Windows0611 delivery.
+- [x] Guarded API086 deployment/bootstrap, same identity/auth833,42other services unchanged.
+- [ ] Windows0611 native acceptance/Desktop delivery (candidate published).
 - [ ] Fresh clean encrypted packet + current public app kit + extracted independent app restore.
 - [ ] Live Windows enable/disable with same identity, then sendingfalse and bounded evidence. No business group setup.
 

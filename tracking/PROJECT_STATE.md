@@ -1,10 +1,10 @@
 # الحالة الحالية — 2026-11-15 (Asia/Riyadh)
 
-## D-085 phase 1 — VERIFIED_ISOLATED / NOT_DEPLOYED
-API086/Windows0611 candidate: root durable PENDING→authorization→COMMITTED journal and per-send guard implemented.38Node/103isolatedPG PASS; real SIGKILL at4durable checkpoints, audit-write rollback, journal-commit filesystem failure, and actual main restart from pending env=true with immutable connection=true/no requested sessions PASS. Pre-commit sends remainfalse; post-commit decision is traceable, not automatically replayed. WinUI0611 build0warnings/errors; native/deploy pending. Current live remains085/acb6273 and Windows0610/c7effe5/sendfalse/auth833. Next: guarded deployment/bootstrap, fresh clean recovery kit+extracted independent app restore, then actual live control and returnfalse. D076 backup destination and D080 deferred cutover scope unchanged.
+## D-085 phase 1 — BACKEND DEPLOYED / 2026-11-15
+API0.8.6/source8909bae7aee0ec979b0695292465d51aeac26093 deployed; CI43727815777 SUCCESS. Durable root journal bootstrapped COMMITTED/false, same833valid auth/identity and clean personal workspace retained.42other services unchanged at cutover. Pre086 encrypted306750byte snapshot restored isolated0accounts/0tasks/13migrations/0SENDING. No new root watchdog service/migration/provider send. Windows0611 exact candidate built/published, native delivery remains pending phase3.103PG includes actual main SIGKILL/restart with envtrue/PENDING and zero requested sessions;38Node/35offlineC# PASS. Initial external cutover helper failed at set-eu due CRLF before any operation, normalizedLF and guarded cutover succeeded. Phase2 fresh306804byte offhost snapshot created; full refreshed kit build/extracted restore OPEN. Initial local staging ACL syntax/archive-not-yet-complete failed before private extraction; empty staging folder now owner+SYSTEM2rules, archive transfer still awaited.
 
 ## المنشور المثبت
-- API **0.8.5** على New-VPS، source `acb62734b3cba58c2996af648cbea6c10321f403`، جاهز على loopback8240. CI43720147122: Backend وWindows SUCCESS.
+- API **0.8.6** على New-VPS، source `8909bae7aee0ec979b0695292465d51aeac26093`، جاهز على loopback8240. CI43727815777: Backend وWindows SUCCESS.
 - Windows **0.6.10**، source `c7effe5c5c329766bd1fb8d6451bff6527e975d5`، مثبت لكل مستخدم واختصار `D:\Desktop\TaskPilot.lnk` يشير إليه. CI43721389866: Backend وWindows SUCCESS. التطبيق متصل ومتروك مفتوحًا في صفحة المجموعات دون حوار؛ احتفظ بعميله ونفقه الحاليين.
 - واتساب متصل بنفس الهوية، و833 سجل مصادقة مشفرًا صالحًا. الاتصال=true، الإرسال=false، mock=false. مساحة العمل: 0 حسابات، 0 تكليفات، 0 مصادر فعلية، 0 ردود، 0 قوالب، مجموعة فعلية واحدة ونوع عام واحد.
 - المالك سيضبط مجموعاته وقواعده لاحقًا بنفسه؛ لا نضيفها نيابة عنه ولا ننشئ fixtures في المساحة الشخصية.
