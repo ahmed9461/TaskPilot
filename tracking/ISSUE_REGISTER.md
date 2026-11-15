@@ -134,4 +134,6 @@ I-048 REPRODUCED_NATIVE069/acb6273: SSH sending preview Arabic confirmation rend
 
 I-048 VERIFIED_NATIVE0610/c7effe5: ArabicSSHconfirmationcorrect/blankrefusal/cancel and actualfalse→falseSSHrootapplyPASS.069rejectedartifactretained;Desktop0610. No live enable.
 
-I-049 VERIFIED_ISOLATED_D085: env-only sending change allowed root-process loss before ACK to leave an uncommitted enabled flag. Candidate086 durable PENDING/authorization/COMMITTED gate and0611 recovery UI implemented;4SIGKILL checkpoints/actual pending restart/DB+filesystem faults PASS. Beforecommit disabled; aftercommit traceable authorized state. Deployment/native/live-control OPEN.
+I-049 VERIFIED_LIVE_CONTROL_D085: API086 durable PENDING/authorization/COMMITTED gate deployed; four isolated SIGKILL checkpoints, actual pending restart and DB/filesystem faults PASS. Windows0611 actual enable then disable PASS with same PID/paired identity/auth833, zero business rows/jobs and final committedfalse. No message was sent. Beforecommit disabled; aftercommit traceable authorized state.
+
+I-050 REPRODUCED_NATIVE0611: after successful enable, Settings card correctly showed enabled while the connection banner retained its previous disabled summary until polling. SendingSettings updated the cached flag but omitted the banner refresh. Windows0612 updates the banner from the same readback before displaying the card; native enable/disable retry and final Desktop delivery pending. Server control itself passed; final sendingfalse verified independently, with no provider send.

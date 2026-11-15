@@ -8,6 +8,7 @@ public sealed partial class MainPage
         var status = await api.Send("GET", "/v1/whatsapp/sending-policy");
         var enabled = status["enabled"]!.GetValue<bool>();
         liveSendingEnabled = enabled;
+        Connection.Message = TransportSummary;
         var recovery = status["recoveryRequired"]?.GetValue<bool>() == true;
         var detail = (enabled ? "الإرسال اليدوي مفعّل." : "الإرسال الفعلي معطّل؛ الاستقبال والمعاينة مستمران.") + $"\nالجلسات المتصلة: {V(status, "connected")} • المجموعات المفعّلة: {V(status, "groups")} • الردود غير المحسومة: {V(status, "unsettled")}\nإكمال المهمة لا يرسل ردًا. كل رد يحتاج معاينة وإقرارًا مستقلًا.";
         if (recovery) detail += "\nيوجد تغيير غير مكتمل أو إعداد غير صالح؛ أعد تثبيت وضع التعطيل الآمن قبل محاولة التفعيل.";

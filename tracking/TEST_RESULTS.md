@@ -1,5 +1,8 @@
 # نتائج الاختبار الفعلية
 
+## D-085 live control / I-050 checkpoint — 2026-11-15
+Windows0611 actual SSH/root enable and disable both PASS against API086, same process/paired identity/auth833, zero accounts/tasks/sources/reply jobs throughout, exact env restored and committedfalse. Zero external messages/AI calls/fixtures. Independent false-only cleanup confirmedfalse. Native enabled card matched server but banner briefly retained disabled summary: I-050 reproduced, corrected0612 refreshes banner from the same policy readback.0612 WinUI build0warnings/errors and35offline C# checks PASS; native retry/Desktop delivery pending. Evidence: tracking/evidence/sending-control-086-windows0611-20261115.json. Recovery phase2 complete; Docker initiallySTOPPED restoredSTOPPED, own containers removed.
+
 Date: 2026-11-11 UTC. Evidence: commands in repository, phase-1 backend commit containing this file.
 
 

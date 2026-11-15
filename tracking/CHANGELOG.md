@@ -1,5 +1,8 @@
 # سجل التغيير
 
+## [Windows0.6.12 candidate] — 2026-11-15
+- Actual0611 enable/disable passed without messages or identity/process changes; final sendingfalse. Native I-050 exposed stale connection-banner summary after successful control. Refresh it from the same policy readback as Settings card. Build/35offline checks PASS; native retry pending.
+
 ## [Independent recovery refresh086 verified] — 2026-11-15
 - Current clean encrypted snapshot and API086 public app/root operators in5005-entry kit, all hashes verified. Local and private Drive readback fresh-folder independent app restores PASS,0originalAPIkeys/DPAPI/SSH/providers/outbound; old copy retained.
 - Current destination/daily runner unchanged. Same-user isolated proof; fresh machine and production cutover remain deferred.
