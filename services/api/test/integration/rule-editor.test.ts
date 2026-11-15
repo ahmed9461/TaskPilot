@@ -332,6 +332,52 @@ test("atomic group rule editor preserves all-or-nothing configuration", async (t
   );
 
   await t.test(
+    "WinUI CR input materializes once and credentials cannot choose the task",
+    async () => {
+      const { s, g } = await seed();
+      const password = "private-credential-beta-canary-083";
+      const message = {
+        sessionId: s.id,
+        groupId: g.id,
+        externalMessageId: "synthetic-cr-" + randomUUID(),
+        text: [
+          "name: Synthetic CR fixture",
+          "user: synthetic-cr-native-083",
+          `password: ${password}`,
+          "alpha",
+        ].join("\r"),
+      };
+      const received = await api("POST", "/v1/mock/messages", message);
+      assert.equal(received.state, "PROCESSED");
+      const assignment = (
+        await pool.query(
+          "SELECT task_type_id,priority FROM assignments WHERE id=$1",
+          [received.assignmentId],
+        )
+      ).rows[0];
+      assert.equal(assignment.task_type_id, a.id);
+      assert.equal(assignment.priority, 10);
+      assert.equal(
+        (await api("POST", "/v1/mock/messages", message)).duplicate,
+        true,
+      );
+      const counts = (
+        await pool.query(
+          "SELECT (SELECT count(*)::int FROM accounts WHERE namespace='synthetic-rule-editor' AND username_normalized='synthetic-cr-native-083') accounts,(SELECT count(*)::int FROM source_messages WHERE group_id=$1) sources,(SELECT count(*)::int FROM assignment_sources WHERE source_message_id=$2) links",
+          [g.id, received.id],
+        )
+      ).rows[0];
+      assert.deepEqual(counts, { accounts: 1, sources: 1, links: 1 });
+      assert.equal(
+        JSON.stringify(
+          await api("GET", "/v1/accounts?search=synthetic-cr-native-083"),
+        ).includes(password),
+        false,
+      );
+    },
+  );
+
+  await t.test(
     "forgotten session rules are readable but every write route refuses mutation",
     async () => {
       const { s, g, first } = await seed();

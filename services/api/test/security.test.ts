@@ -37,3 +37,32 @@ test("auth comparison handles arbitrary length without disclosure", () => {
   assert.equal(equal("a", "aa"), false);
   assert.equal(equal("same", "same"), true);
 });
+
+test("structured fields accept LF, CRLF and WinUI CR without weakening ambiguity checks", () => {
+  for (const ending of ["\n", "\r\n", "\r"]) {
+    assert.deepEqual(
+      parseMessage(
+        [
+          "الاسم: حساب قواعد",
+          "اليوزر: synthetic-cr",
+          "كلمة المرور: synthetic-only",
+        ].join(ending),
+      ),
+      {
+        displayName: "حساب قواعد",
+        username: "synthetic-cr",
+        password: "synthetic-only",
+        needsReview: false,
+      },
+    );
+    assert.equal(
+      parseMessage(["name: A", "user: one", "username: two"].join(ending))
+        .needsReview,
+      true,
+    );
+    assert.equal(
+      parseMessage(["name: A", "unrelated: value"].join(ending)).needsReview,
+      true,
+    );
+  }
+});

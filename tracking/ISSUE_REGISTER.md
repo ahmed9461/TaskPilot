@@ -120,3 +120,5 @@ I-042 VERIFIED_ISOLATED0822026-11-15: outbox result-store failure may leave SEND
 I-043 REPRODUCED_NATIVE066/API081 / IMPLEMENTED_PENDING_NATIVE067: toggled existing rule off + entered new keyword with taskAll. UI error select task, but server persisted old toggle enabledfalse/version2/group2/newrule0. Only synthetic-config067 fixture; reset true/version3. Implement atomic rules save and validate before writes, then native exact-candidate retry.
 
 I-043 isolated atomic editor7children+parent PASS, full84PG/29Node PASS; no schema edits. Native067 corrected-dialog/save/reopen acceptance still required. Forgotten fixture originally used mock provider and then STOPPED, both rejected by immutable013 constraint; corrected to synthetic Baileys/connectfalse/FORGOTTEN+forgotten_at, never a socket. No migration bypass.
+
+I-044 REPRODUCED_NATIVE/UNIT_PENDING_RETRY: native067 correct mock group accepted 3-line message but IGNORED/priority0/account0. CR-only unit tests reproduce empty parsing and lost task context. Backend common line splitter implemented083; same native binary/input retry after isolated tests/CI/deploy required.

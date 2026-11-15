@@ -1,5 +1,7 @@
 export const normalize = (v: string) =>
   v.normalize("NFKC").trim().toLocaleLowerCase("en-US");
+// WinUI TextBox uses CR; accept the common wire line endings consistently.
+export const messageLines = (body: string) => body.split(/\r\n|\r|\n/);
 // Deliberately conservative: no fuzzy identities or inference of missing credentials.
 export function parseMessage(body: string) {
   const values = new Map<string, string>();
@@ -15,7 +17,7 @@ export function parseMessage(body: string) {
     password: "password",
     pass: "password",
   };
-  for (const line of body.split(/\r?\n/)) {
+  for (const line of messageLines(body)) {
     const match = /^\s*([^:：]+)[:：]\s*(.+?)\s*$/.exec(line);
     if (!match) continue;
     const key = aliases[normalize(match[1]!)];

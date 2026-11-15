@@ -104,8 +104,10 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] I-041 source+built exact health version RED→GREEN; actual rejected-version guarded rollback PASS.
 
 - [x] I-042 isolated082 outbox DB-result/ACK/claim/restart recovery;29Node/76PG PASS.
-- [ ] API082 exact-codeCI/deploy/Windows workflow and existing-snapshot restore continuation.
+- [x] API082 exact-code CI43658630409 Backend+Windows SUCCESS and guarded deployment7082fcf.
 - [x] D-076 owner keeps current backups; new always-on destination removed from active work.
 
 - [x] I-043 native066 partial-save reproduced; atomic editor/dialog validation implemented;84PG/29Node/WinUI067 build PASS.
-- [ ] Final atomic sourceCI/deployAPI082, native067 invalid/valid/cancel/reopen/group/filter workflows and existing-snapshot full restore.
+- [x] Atomic rule sourceCI/deployAPI082; native067 invalid/valid/cancel/reopen/mock group enable workflows.
+- [ ] API083 CR line-ending fix CI/deploy + same-input native routing/filter/task-status retry, scoped067 cleanup and exact tested ZIP.
+- [ ] Existing encrypted packet independent restore including isolated app/business workflow; no new backup destination D-076.

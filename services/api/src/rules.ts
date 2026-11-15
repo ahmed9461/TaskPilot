@@ -1,4 +1,4 @@
-import { normalize } from "./parser.js";
+import { normalize, messageLines } from "./parser.js";
 export interface Rule {
   task_type_id: string;
   keywords: string[];
@@ -8,8 +8,7 @@ export interface Rule {
 export function routingContext(raw: string) {
   // Identity/credential lines cannot determine task routing.
   return normalize(
-    normalize(raw)
-      .split(/\r?\n/)
+    messageLines(normalize(raw))
       .filter(
         (line) =>
           !/^\s*(name|user(?:name)?|password|pass|otp|code|email|phone|الاسم|اليوزر|المستخدم|كلمة المرور|الرمز|رمز|الهاتف|البريد)\s*[:：]/i.test(

@@ -46,3 +46,41 @@ test("CSV uses explicit safe columns and neutralizes spreadsheet formulas", () =
   assert.ok(csv.includes("'@cmd"));
   assert.equal(csv[0], "\uFEFF");
 });
+
+test("CR and mixed line endings keep credential values out of routing context", () => {
+  const rules = [
+    {
+      task_type_id: "a",
+      keywords: ["actual-task"],
+      priority: 10,
+      enabled: true,
+    },
+    {
+      task_type_id: "b",
+      keywords: ["credential-canary"],
+      priority: 99,
+      enabled: true,
+    },
+  ];
+  for (const ending of ["\n", "\r\n", "\r"]) {
+    const body = [
+      "name: credential-canary",
+      "user: credential-canary",
+      "password: credential-canary",
+      "actual-task",
+    ].join(ending);
+    assert.deepEqual(routeTask(body, rules, "fallback"), {
+      taskTypeId: "a",
+      priority: 10,
+      ambiguous: false,
+    });
+  }
+  assert.equal(
+    routeTask(
+      "name: credential-canary\r\nuser: test\ractual-task\n",
+      rules,
+      "fallback",
+    ).taskTypeId,
+    "a",
+  );
+});

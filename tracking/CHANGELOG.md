@@ -1,5 +1,9 @@
 # سجل التغيير
 
+## [API0.8.3 candidate] — 2026-11-15
+- Accept LF/CRLF/CR consistently for explicit message fields and routing; credential lines remain excluded. Native Windows067 exposed CR-only input ignored by082. Two unit regressions RED then GREEN;31Node/85PG PASS. No migration/dependency change.
+- API082/source7082fcf is deployed; native067 atomic rule edits/validation/cancel/reopen and mock-group controls verified. Same-input083 retry pending.
+
 ## [Windows0.6.7 / API0.8.2 candidate] — 2026-11-15
 - Fixed rule editor partially saving toggles before rejecting a new rule. Validate inline and retain draft; save all toggles/new rule in one transaction using fresh group/rule versions. Legacy writes share lock order and forgotten-session fence. No schema change.
 - Actual066 failure reproduced on mock fixture, isolated atomic tests pass;84PG/29Node/067WinUI build PASS. Corrected native acceptance and deployment pending.
