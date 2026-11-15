@@ -35,11 +35,12 @@ public sealed class SshConnection : IAsyncDisposable
         Token = issued["token"]!.GetValue<string>();
         ExpiresAt = DateTimeOffset.Parse(issued["expiresAt"]!.GetValue<string>());
     }
-    private static ProcessStartInfo Info(string alias)
+    internal static ProcessStartInfo Info(string alias, bool input = false)
     {
         if (!Regex.IsMatch(alias, "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,80}$"))
             throw new InvalidOperationException("INVALID_SSH_ALIAS");
-        var info = new ProcessStartInfo("ssh.exe") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true };
+        var info = new ProcessStartInfo("ssh.exe") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true, StandardOutputEncoding = System.Text.Encoding.UTF8, StandardErrorEncoding = System.Text.Encoding.UTF8 };
+        if (input) { info.RedirectStandardInput = true; info.StandardInputEncoding = new System.Text.UTF8Encoding(false); }
         foreach (var arg in new[] { "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=2" })
             info.ArgumentList.Add(arg);
         return info;
@@ -124,8 +125,7 @@ public sealed class SshConnection : IAsyncDisposable
         if (enabled is not null) payload["enabled"] = enabled.Value;
         if (token is not null) payload["token"] = token;
         if (confirmation is not null) { payload["confirmation"] = confirmation; payload["reauth"] = await Reauthorize(); }
-        var info = Info(alias);
-        info.RedirectStandardInput = true;
+        var info = Info(alias, input: true);
         info.ArgumentList.Add(alias);
         info.ArgumentList.Add("node /opt/taskpilot/current/ops/sending-policy.mjs");
         using var process = Process.Start(info) ?? throw new InvalidOperationException("SSH_UNAVAILABLE");

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using TaskPilot_Windows;
+if (args is ["--synthetic-utf8-echo"]) { Console.InputEncoding = new UTF8Encoding(false); Console.OutputEncoding = new UTF8Encoding(false); Console.Write(await Console.In.ReadToEndAsync()); return; }
 if (args.Length == 2 && args[0] == "--security-acceptance") { await SecurityAcceptance.Run(args[1]); return; }
 if (args.Length == 1 && args[0] == "--seed-native-matrix") { await ExtendedNativeFixtures.Seed(); return; }
 if (args.Length > 0 && args[0] == "--whatsapp-test-quoted-reply") { if (args.Length != 2) throw new InvalidOperationException("EXACT_TEST_GROUP_TITLE_REQUIRED"); await WhatsAppQuotedAcceptance.Run(args[1]); return; }
@@ -28,6 +29,7 @@ try
 }
 catch (InvalidOperationException e) { if (e.Message != "REAUTH_REQUIRED") throw; }
 Console.WriteLine("PASS: 6 client checks (transport, address, auth, response, errors); no network used.");
+await SshEncodingChecks.Run();
 await ClientReliabilityChecks.Run();
 ChangeFeedChecks.Run();
 NotificationSessionChecks.Run();
