@@ -131,3 +131,5 @@ I-046 personal handoff retained test fixtures and mock tools/trial branding. Sco
 I-046 VERIFIED_RESOLVED_D082: actual personal workspace cleaned with auth/history/usage protection, mock API disabled and normal UI actions hidden. I-047 VERIFIED_NATIVE544748e: empty discovery opens informational membership guidance; closed dialog leaves Groups connected, no binding/write. Empty SDK result does not prove phone membership absence; no cause inferred.
 
 I-048 REPRODUCED_NATIVE069/acb6273: SSH sending preview Arabic confirmation rendered mojibake on Windows; no apply executed, preview canceled. Explicit UTF-8 stdout/stderr and BOM-free stdin implemented in shared SSH process setup; real local-child Arabic stdio regression and Windows0610 native retry required. API085 remains sendfalse;069 desktop temporarily points to candidate until corrected0610 replaces it.
+
+I-048 VERIFIED_NATIVE0610/c7effe5: ArabicSSHconfirmationcorrect/blankrefusal/cancel and actualfalse→falseSSHrootapplyPASS.069rejectedartifactretained;Desktop0610. No live enable.

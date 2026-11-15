@@ -1,11 +1,14 @@
 # خطة التنفيذ والتتبع — 2026-11-15
 
-## أولوية العمل الحالية D-083
-- [ ] F-083a تعديل المهمة والكلمات والأولوية للقواعد القائمة دون إعادة إنشاء: IMPLEMENTED، اختبارAPI المعزول PASS؛ القبول الأصلي والنشر OPEN.
-- [ ] F-083b عرض معاينة الرد مع إرسال معطل دون اعتماد: IMPLEMENTED، اختبارAPI المعزول PASS؛ القبول الأصلي والنشر OPEN.
-- [ ] F-083c إلغاء الرد المنتظر وإعداد الإرسال من التطبيق: الإلغاء المعزول/سباق العامل/إعادة التحقق PASS؛ تحكمSSH/root/HUP قيد التنفيذ والاختبار والنشر. يبقى إرسال المالكfalse.
-- إعداد مجموعات العمل وقواعدها OWNER_SETUP_LATER؛ المالك مشغول وسيجريه بنفسه. لا تُملأ المساحة الشخصية ببيانات الاختبار.
+## أولوية العمل الحالية D-083 — تحديث نهائي
+- [x] F-083a تعديل القواعد القائمة بجميع الحقول ذريًا، invalid draft/cancel/reopen: DEPLOYED؛ API معزول وnative069 ضد085 PASS.
+- [x] F-083b معاينة الرد مع sending=false دون اعتماد: DEPLOYED؛ API وnative069 sandbox PASS.
+- [x] F-083c إدارة المنتظر وإعداد الإرسال من Windows: DEPLOYED؛100PG وcore fake signals وmain-child HUP وnative0610 Arabic/blank refusal/cancel وWindows→SSH/root false→false PASS. **live false→true مع الهوية الفعلية NOT_RUN**؛ لا نفعله نيابة عن المالك.
+- [x] I-048 ترميز SSH العربي: UTF-8 fix/c7effe5/Windows0610، actual-child regression وnative PASS.069 ليست المعتمدة؛ Desktop0610 والتطبيق متصل مفتوح على المجموعات دون حوار.
+- [ ] OWNER_SETUP_LATER: المجموعات والقواعد والقوالب يضبطها المالك عند تفرغه؛ ثم قبول workflow الفعلي.
+- [ ] متابعة خطر قتل أمرroot قسريًا بينenv/ACK والقبول الوظيفي الموسع عند الحاجة؛ لا تخلط إثبات sandbox بالقبول الحي.
 
+## Prior checkpoints (historical; current API085/Windows0610 above)
 - [x] D-082 clean personal handoff: reviewed/rehearsed cleanup applied, mock=false, API08417baf55/Windows068544748e published/native verified/Desktop updated;35Node/86PG/two hosted CI runs SUCCESS. Owner app left connected on Groups page.
 
 - [x] Personal desktop placement D-081: exact067 package installed per-user, shortcut verified, installed native app connected and left open for owner.

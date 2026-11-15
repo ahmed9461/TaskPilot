@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-15",
+  "api": {
+    "version": "0.8.5",
+    "source": "acb62734b3cba58c2996af648cbea6c10321f403",
+    "ci": 43720147122,
+    "deployed": true
+  },
+  "windows": {
+    "version": "0.6.10",
+    "source": "c7effe5c5c329766bd1fb8d6451bff6527e975d5",
+    "ci": 43721389866,
+    "files": 530,
+    "zipBytes": 97543367,
+    "zipSha256": "76c81808f3960df591d4243d0ba00f5030103ff67e1cd7a0c4ee4f9ffcfc3a4d",
+    "rebuildAfterNative": false
+  },
+  "tests": {
+    "node": 38,
+    "isolatedPostgres": 100,
+    "offlineClient": 35,
+    "nativeRuleAndReplyVersion": "0.6.9",
+    "nativeSshConfirmationVersion": "0.6.10",
+    "actualSshRootDisabledNoop": "PASS",
+    "liveActivation": "NOT_RUN"
+  },
+  "live": {
+    "sending": false,
+    "mock": false,
+    "authValid": 833,
+    "accounts": 0,
+    "assignments": 0,
+    "monitoredGroups": 1,
+    "templates": 0,
+    "protectedOtherServices": 42,
+    "changedOtherServicesAtCutover": 0,
+    "newWhatsAppMessages": 0,
+    "newAiCalls": 0
+  },
+  "cleanup": {
+    "sandboxUnitStopped": true,
+    "ownedSandboxTunnelStopped": true,
+    "syntheticDbRetained": true
+  },
+  "ownerSetup": "LATER_BY_OWNER",
+  "ownerAppLeftOpen": true,
+  "ownerAppPage": "groups",
+  "ownerAppModal": false
+}

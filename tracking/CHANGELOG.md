@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [API0.8.5 deployed / Windows0.6.10 personal] — 2026-11-15
+- CloseF083a/b/cwithinrecordedboundedacceptance:fullruleedits/disabledpreview/pendingcancellation/manualsendingcontrol.100PG/38Node/35offlineC#/twohostedCIrunsSUCCESS.
+- Native069caughtArabicSSHencodingI048;0610UTF8fix/nativeconfirmation+blankrefusal+cancelPASS. Rootcontrolactualfalse→falsenoopPASS;sendingremainfalse.
+- Exact0610packageinstalled/Desktopupdated;personalDBclean/authpreserved/42otherunitsunchangedatdeploy. Ownsandboxstopped;ownerconfigurationlater. Liveactivationanddailyownerworkflowunverified.
+
 ## [API0.8.5 / Windows0.6.9 candidate] — 2026-11-15
 - Full versioned atomic editing of existing rules; readable source/preview even when sending disabled; pending-only cancellation and human-readable outbox.
 - Root-only SSH sending preview/apply/discard with temporary session/single-use reauth/typed phrase/stale guard/admin lock/atomic env/HUP ACK/fail-closed fallback; no HTTP mutation, no automatic send/retry.

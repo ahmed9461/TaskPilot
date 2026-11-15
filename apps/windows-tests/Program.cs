@@ -2,6 +2,23 @@ using System.Net;
 using System.Text;
 using TaskPilot_Windows;
 if (args is ["--synthetic-utf8-echo"]) { Console.InputEncoding = new UTF8Encoding(false); Console.OutputEncoding = new UTF8Encoding(false); Console.Write(await Console.In.ReadToEndAsync()); return; }
+if (args is ["--verify-disabled-sending-control"])
+{
+    await using var connection = await SshConnection.Connect("New-VPS");
+    using var probe = new ApiClient(); probe.Configure(connection.Address, connection.Token, connection.ExpiresAt);
+    if ((await probe.Send("GET", "/v1/whatsapp/sending-policy"))["enabled"]?.GetValue<bool>() != false) throw new InvalidOperationException("DISABLED_POLICY_REQUIRED_NO_CHANGE_ATTEMPTED");
+    var preview = await connection.SendingPolicy("preview", enabled: false);
+    if ((await probe.Send("GET", "/v1/whatsapp/sending-policy"))["enabled"]?.GetValue<bool>() != false)
+    {
+        await connection.SendingPolicy("discard", token: preview["token"]!.ToString());
+        throw new InvalidOperationException("POLICY_CHANGED_NO_CHANGE_ATTEMPTED");
+    }
+    if (preview["confirmation"]?.ToString() != "إيقاف الردود") throw new InvalidOperationException("ARABIC_SSH_CONFIRMATION_CORRUPTED");
+    var policyResult = await connection.SendingPolicy("apply", token: preview["token"]!.ToString(), confirmation: "إيقاف الردود");
+    if (policyResult["enabled"]?.GetValue<bool>() != false || (await probe.Send("GET", "/v1/whatsapp/sending-policy"))["enabled"]?.GetValue<bool>() != false) throw new InvalidOperationException("POLICY_RESULT_UNVERIFIED");
+    Console.WriteLine("PASS: Windows to SSH/root control Arabic preview and single-use reauth apply; false-to-false no-op, no sending activation or provider call.");
+    return;
+}
 if (args.Length == 2 && args[0] == "--security-acceptance") { await SecurityAcceptance.Run(args[1]); return; }
 if (args.Length == 1 && args[0] == "--seed-native-matrix") { await ExtendedNativeFixtures.Seed(); return; }
 if (args.Length > 0 && args[0] == "--whatsapp-test-quoted-reply") { if (args.Length != 2) throw new InvalidOperationException("EXACT_TEST_GROUP_TITLE_REQUIRED"); await WhatsAppQuotedAcceptance.Run(args[1]); return; }
