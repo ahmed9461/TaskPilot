@@ -1,5 +1,10 @@
 # تسليم قابل للاستئناف — 2026-11-15
 
+## API0.8.2 — VERIFIED_ISOLATED؛ لم يُنشر بعد
+أُصلح I-042: يعيد العامل حفظ نتيجة الرد بعد تعافي DB دون استدعاء الإرسال ثانية،ولا يخفض SENT عند فقد تأكيدcommit. فشل claim قبل أي إرسال لا يترك SENDING معلقًا؛التراجع يبقي APPROVED صالحًا. استعادة SENDING بعد restart تنشئ UNKNOWN مع سجل وتنبيه ذريين لمرة واحدة.29Node/76PG بما فيها8parents PASS؛13مهاجرة دون تغيير. أول6regressions+parent فشلت ثم نجحت،وثلاث حالات إضافية أثبتت تقدم الطابور والتراجع وتحريرlease عند فشلstartup. API0.8.1/source05283e1 ما زال المنشور؛CI والنشر082 وقبولWindows قادمة.
+D-076: المالك أبقى النسخ الحالي؛لا وجهةدائمة جديدة أو إعادة سؤال. تابع الوظائف والاستعادة بالنسخ الموجودة. D-075: أُزيل بوت الفيديو وخدماته ونسخه بأمر المالك؛43خدمة أخرى ومنهاTaskPilot احتفظت بنفسPID/invocation/state،والهوية/auth833/source5/SENT1/sendfalse ثابتة. لا تحاول إعادة البوت المحذوف.
+
+
 ## API0.8.1 — DEPLOYED / VERIFIED ضمن الاختبارات المحددة
 المصدر05283e12ed87f0064e8914adbd8468a9796582ed؛CI43652374112 لمساريBackend/Windows SUCCESS. أُصلح I-039(الاحتفاظ بالوارد عند خطأ DB مؤقت قبل/بعد حفظ العمل) وI-040(اتصال DB الخامل لا يُسقط العملية) وI-041(إصدارhealth منpackage.json).29Node(24TS+5JS)/66PG بما فيها7parents PASS؛13مهاجرة دون تغيير. نجحت34Windows C#→SSH→API0.8.1 checks؛ليست قبولWinUI أصليًا جديدًا،وحزمة0.6.6/source69f6757 المقبولة سابقًا محفوظة دون rebuild.
 بعد الاختبار:4حسابات/4مهام،fixtureAccounts0/activeClients0/PENDING0/ERROR0/unsettledReplies0/privacyRuns2. نفس الهوية الفعلية/auth833 AEAD-valid/livegroup1/liveSources5/SENT1،connectiontrue/sendingfalse؛لا WhatsApp/AI sends جديدة. تحقق restart/least-privilege/DDL denial/data/startup/identity PASS؛verifier الإجمالي EXTERNAL_SERVICE_DRIFT(added1/removed0) بسبب خدمة أخرى تعيد التشغيل ذاتيًا،لم تُعدّل. لا global-host invariance PASS.

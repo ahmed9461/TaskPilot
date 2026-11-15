@@ -21,11 +21,14 @@ try {
   const version = JSON.parse(
     await readFile(release + "/package.json", "utf8"),
   ).version;
-  // Only read-only verification of the already-cleaned fixture extends to 0.8.1.
+  // Only read-only verification of the already-cleaned fixture extends to reviewed 0.8.1/0.8.2.
   // Seeding and every other operation retain the exact 0.8.0 guard.
   if (
     version !== "0.8.0" &&
-    !(version === "0.8.1" && process.argv[2] === "--verify-cleaned-synthetic")
+    !(
+      ["0.8.1", "0.8.2"].includes(version) &&
+      process.argv[2] === "--verify-cleaned-synthetic"
+    )
   )
     throw Error();
   const env = Object.fromEntries(

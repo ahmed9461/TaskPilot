@@ -1,5 +1,11 @@
 # سجل التغيير
 
+## [API0.8.2 candidate] — 2026-11-15
+- Preserve provider result across transient DB failures and retry only guarded result persistence before the next send. Lost commit ACK cannot downgrade committed SENT or duplicate activity. Unacknowledged unsent claims settle safely; rolled-back approvals remain usable.
+- Startup recovery publishes UNKNOWN with atomic audit/notification; failed initialization releases provider lease. No automatic outbound retry/new schema.
+-6regressions RED→GREEN plus3queue/rollback/lease cases;76PG/29Node PASS. Not deployed yet. Existing backup strategy retained by owner D-076; decommissioned video bot stays removed D-075.
+
+
 ## [API0.8.1] — 2026-11-15
 - Deployed05283e1/CI43652374112 bothSUCCESS,29Node/66PG/34actualWindows→SSH→API checks PASS. Own restart/identity/data verified; overall service-set verifier reports unrelated auto-restart drift. Predeploy restore and fresh encrypted offhost snapshot recorded.
 - Fixed release health metadata after guarded candidate deployment rejected a stale version and rolled back safely. package.json now supplies the version for source and compiled API; both routes tested.29Node PASS; no readiness bypass.

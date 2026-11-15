@@ -66,7 +66,7 @@ Checked means verified within stated scope. Current API0.8.1/Windows0.6.6 person
 ## Next
 1. Remaining functional Windows session/group/rule/filter workflows; no cosmetic gates. API0.8.1 recovery/deploy/34client checks completed.
 2. Outbox/restart/idempotency/recovery functional acceptance with unrelated services protected.24h stays waived.
-3. Functional Windows/server workflow gaps and always-on independent backup; external recovery-code custody remains owner-managed.
+3. Existing-backup restore/fresh-environment acceptance; keep current backup strategy D-076, no always-on destination task. External recovery-code custody remains owner-managed.
 
 Previous privacy/native acceptance0.6.4 source1bd7344 (currentAPI0.8.1/Windows0.6.6 above); candidate0.6.5 sourcedfebeb1(code CI43633370508 SUCCESS),security8585562 CI43633806414 SUCCESS; installed recovery runner b876096. One actual group/connectiontrue/sendingfalse. Installer/updater optional/signing not a gate. Never reset CONNECTED identity or auto-retry UNKNOWN_DELIVERY.
 
@@ -102,3 +102,7 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] I-040 isolated owned idle DB connection termination RED→GREEN; same child survives and uses new backend.
 - [x] API0.8.1/source05283e1 CI43652374112 bothSUCCESS/scoped deploy/34Windows→server/pre-backup isolated restore/new offhost snapshot.
 - [x] I-041 source+built exact health version RED→GREEN; actual rejected-version guarded rollback PASS.
+
+- [x] I-042 isolated082 outbox DB-result/ACK/claim/restart recovery;29Node/76PG PASS.
+- [ ] API082 exact-codeCI/deploy/Windows workflow and existing-snapshot restore continuation.
+- [x] D-076 owner keeps current backups; new always-on destination removed from active work.
