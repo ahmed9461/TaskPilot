@@ -1,0 +1,218 @@
+{
+  "date": "2026-11-15",
+  "scope": "D-086/D-087 functional reception, private AI fallback and Windows navigation",
+  "api": {
+    "version": "0.8.7",
+    "source": "3919a0b3c4ee07d356fbd9aead6b623626100f1a",
+    "ci": {
+      "id": 43752697349,
+      "backend": "SUCCESS",
+      "windows": "SUCCESS"
+    },
+    "migrations": 14
+  },
+  "windows": {
+    "version": "0.6.14",
+    "source": "8b3d7f473af2e9ae76ecbd4e2366ac6d5639adba",
+    "ci": {
+      "id": 43755691954,
+      "backend": "SUCCESS",
+      "windows": "SUCCESS"
+    },
+    "files": 530,
+    "zipBytes": 97550667,
+    "zipSha256": "14cac4e2f98abfb4670c714cb4a52612595fe6e48f89aa7074c464f7d26ded80",
+    "productVersion": "0.6.14+8b3d7f473af2e9ae76ecbd4e2366ac6d5639adba",
+    "installedFileHashesMatched": true,
+    "desktopUpdated": true,
+    "priorVersionsRetained": true,
+    "rebuiltAfterNativeAcceptance": false
+  },
+  "diagnosis": {
+    "receipt": "ACCEPTED_TEXT",
+    "eventType": "notify",
+    "ingress": "DONE",
+    "source": "IGNORED",
+    "retainedRaw": false,
+    "confirmedCause": "label-only parser returned no fields",
+    "oldRawRecoverableLocally": false,
+    "historicalFirstPacketCause": "still unconfirmed; separate issue"
+  },
+  "checks": {
+    "node": 47,
+    "isolatedPostgres": 113,
+    "offlineCSharpGroups": 47,
+    "winUiBuild": "PASS",
+    "portablePackage": "PASS"
+  },
+  "native613": {
+    "source": "e4d33742f57cd8ed7f80b8856b3c029287ff451e",
+    "ci": 43753958494,
+    "navigationBefore": {
+      "requests": 12,
+      "routes": {
+        "GET /v1/notifications/state": 4,
+        "GET /v1/me": 1,
+        "GET /v1/dashboard": 1,
+        "GET /v1/changes": 3,
+        "GET /v1/accounts": 1,
+        "GET /v1/task-types": 1,
+        "GET /v1/groups": 1
+      }
+    },
+    "navigationAfter": {
+      "requests": 17,
+      "routes": {
+        "GET /v1/notifications/state": 6,
+        "GET /v1/me": 1,
+        "GET /v1/dashboard": 1,
+        "GET /v1/changes": 6,
+        "GET /v1/accounts": 1,
+        "GET /v1/task-types": 1,
+        "GET /v1/groups": 1
+      }
+    },
+    "cacheResourceRequestsUnchanged": true,
+    "unrelatedClientEvent": {
+      "groupsGetsBefore": 1,
+      "groupsGetsAfter": 1
+    },
+    "relevantBusinessEvent": {
+      "accountsGetsBefore": 2,
+      "accountsGetsAfter": 3,
+      "newAccountCardObserved": true,
+      "spinnerAbsentAtReadback": true
+    },
+    "delayedRead": {
+      "milliseconds": 3500,
+      "before": {
+        "requests": 43,
+        "routes": {
+          "GET /v1/notifications/state": 18,
+          "GET /v1/me": 2,
+          "GET /v1/dashboard": 1,
+          "GET /v1/changes": 17,
+          "GET /v1/accounts": 3,
+          "GET /v1/task-types": 1,
+          "GET /v1/groups": 1
+        }
+      },
+      "after": {
+        "requests": 49,
+        "routes": {
+          "GET /v1/notifications/state": 20,
+          "GET /v1/me": 3,
+          "GET /v1/dashboard": 1,
+          "GET /v1/changes": 19,
+          "GET /v1/accounts": 4,
+          "GET /v1/task-types": 1,
+          "GET /v1/groups": 1
+        }
+      },
+      "oldCardsRetainedDuringRead": true,
+      "newDraftRetained": true,
+      "draftRetainedAcrossNavigation": true,
+      "noAdditionalAccountsGetOnReturn": true
+    },
+    "aiReview": {
+      "nameAndUsernamePrefilled": true,
+      "credentialMasked": true,
+      "matchingCredentialPersisted": true,
+      "accounts": 4,
+      "assignments": 4,
+      "review": 0,
+      "processed": 4,
+      "replyJobs": 0,
+      "authRows": 0,
+      "fakeAiRequests": 1
+    }
+  },
+  "native614": {
+    "rawExpiryWaitMs": 32000,
+    "rawTextHidden": true,
+    "credentialStillMasked": true,
+    "saveAfterExpiry": "PASS",
+    "matchingCredentialPersisted": true,
+    "accounts": 5,
+    "assignments": 5,
+    "review": 0,
+    "processed": 5,
+    "replyJobs": 0,
+    "authRows": 0,
+    "fakeAiRequests": 2,
+    "finalOwnerView": "Groups, connected, two real groups, no modal or busy indicator",
+    "ownerClientPreserved": true
+  },
+  "realAiProbe": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "calls": 1,
+    "fieldMappingVerified": true,
+    "promptTokens": 182,
+    "completionTokens": 26,
+    "estimatedCostUsd": 0.0000858,
+    "estimateRateVerifiedDate": "2026-11-14",
+    "reportedCostUsd": null,
+    "usageRecorded": true,
+    "rawValuesExported": false,
+    "businessRowsCreated": 0
+  },
+  "deployment": {
+    "preBackupBytes": 310369,
+    "preBackupIsolatedRestore": "PASS",
+    "restoredMigrations": 13,
+    "restoredAccounts": 0,
+    "restoredTasks": 0,
+    "restoredSending": 0,
+    "missingOwnerRows": 0,
+    "identityPreserved": true,
+    "envAndPolicyUnchanged": true,
+    "protectedOtherServicesAtCutover": 42,
+    "changedOtherServicesAtCutover": 0,
+    "laterExternalServiceDrift": 1,
+    "laterChangedServiceActive": true,
+    "externalDriftCauseUnattributed": true
+  },
+  "finalLive": {
+    "accounts": 0,
+    "assignments": 0,
+    "monitoredGroups": 2,
+    "taskTypes": 2,
+    "sourceMessages": 1,
+    "sourceState": "IGNORED",
+    "replyJobs": 0,
+    "authRows": 834,
+    "encryptedAuthValid": true,
+    "paired": 1,
+    "requestedConnected": 1,
+    "mock": false,
+    "sending": false,
+    "policyPhase": "COMMITTED",
+    "automaticAiFallback": true,
+    "dailyRequestLimit": 20,
+    "dailyTokenLimit": 10000,
+    "retainedActualAiUsageRows": 3
+  },
+  "offhostSnapshot": {
+    "file": "offhost-20261115195706946.tpg",
+    "bytes": 311741,
+    "sha256": "649e000c1dbca379c063812133c213b1fbce6f06dffa3d20619411e304a18204",
+    "restore": "NOT_RUN",
+    "existingDestinationAndDailyRunnerUnchanged": true,
+    "priorVerifiedFullKit": "API086 historical kit retained"
+  },
+  "cleanup": {
+    "ownSandboxStopped": true,
+    "ownTunnelListeners": 0,
+    "isolatedDatabaseRetained": true,
+    "realWhatsappMessages": 0,
+    "personalBusinessFixturesCreated": 0
+  },
+  "limits": [
+    "No new real WhatsApp business message accepted after the fix yet; old discarded message must be resent with a new message ID",
+    "AI suggestions remain human-reviewed, never generate missing identifiers or save/send automatically",
+    "Native cache proof from0613 carried unchanged into0614;0614 added the delayed credential-save fix",
+    "Fresh-machine and alternate-server recovery remain deferred; current post087 offhost packet restore was not run",
+    "No cosmetic/Narrator/24h acceptance claim"
+  ]
+}

@@ -1,12 +1,13 @@
 # خطة التنفيذ والتتبع — 2026-11-15
 
-## D-086/D-087 active owner fixes
+## D-086/D-087 completed owner fixes — 2026-11-15
 - [x] Diagnose accepted but ignored unlabelled message without exposing raw credentials; preserve newly added second real group.
-- [x] Order-independent complete S2 accounts, optional name, course/password separation, partial/ambiguous encrypted review;46Node/113PG isolated PASS.
+- [x] Order-independent complete S2 accounts, optional name, course/password separation, partial/ambiguous encrypted review;47Node/113PG isolated PASS.
 - [x] Structural AI automatic opt-in, durable per-source/version attempt, budgets/no raw secrets/no automatic business actions; isolated acceptance PASS.
-- [ ] Guarded087 deployment with backup/restore and owner data/identity preservation; enable requested safe fallback with current provider and unchanged limits.
-- [ ] Native0613 cache/request-count/draft/quiet refresh and protected AI-prefill acceptance, then exact Desktop delivery.
-- [ ] Final live readback, tracking/memory/commits; prior raw removed by086 cannot be inferred/recovered from receipt hash.
+- [x] Guarded087/3919 deployment, encrypted prebackup/isolated restore,014 applied; owner rows/identity/env/journal preserved,42other services unchanged atcutover. Requested fallback enabled with same provider/limits.
+- [x] Native0613 cache/request-count/draft/quiet refresh and AI review/save PASS.0614 fixes I053; native32second save retained matching encrypted credential. Exact0614/8b installed/Desktop updated, CI43755691954 bothSUCCESS; owner app connected/Groups/no modal/sendfalse.
+- [x] Final evidence/readback/memory; genuine DeepSeek structural probe recorded without raw values/business fixtures/WhatsApp messages. New offhost311741byte packet copied, restoreNOT_RUN; old086fullkit remains historical.
+- [ ] OWNER_MESSAGE_ACCEPTANCE: discarded old raw needs a new message ID/send; no real post-fix business message has yet been observed.
 
 ## D-085 completed priority — 2026-11-15
 - [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (deployed086/currentWindows0612,38Node/103PG).
@@ -20,7 +21,7 @@
 - [x] F-083b معاينة الرد مع sending=false دون اعتماد: DEPLOYED؛ API وnative069 sandbox PASS.
 - [x] F-083c إدارة المنتظر وإعداد الإرسال من Windows: DEPLOYED / VERIFIED_BOUNDED؛ إلغاءAPPROVED وسباقالعامل/replay، وnative0610Arabic/blank refusal/cancel، ثمD085durablejournal/103PG وactual0612enable→disable بنفسالهوية/PID،دونرسائل؛الحالةالنهائيةfalse. كلردمازاليحتاجإقرارًاخاصلَه.
 - [x] I-048 ترميز SSH العربي: UTF-8 fix/c7effe5/Windows0610، actual-child regression وnative PASS.069 ليست المعتمدة؛ Desktop0610 والتطبيق متصل مفتوح على المجموعات دون حوار.
-- [ ] OWNER_SETUP_LATER: المجموعات والقواعد والقوالب يضبطها المالك عند تفرغه؛ ثم قبول workflow الفعلي.
+- [ ] OWNER_SETUP_CONTINUES: أضاف المالك مجموعة ثانية ونوع مهمة ثانيًا؛ يضبط الباقي حسب حاجته ثم يقبل workflow الفعلي. لا تُعد إعداداته إلى baseline التنظيف القديم.
 - [x] خطر قتلroot قبل القرار عولج D-085 بأربع نقاطSIGKILL وrestart معزول؛ بعدCOMMITTED اقرأ النتيجة، لا ادعاءrollback مضمون أوmutation replay. قبول عمل المالك يبقىلاحقًا.
 
 ## Prior checkpoints (historical; current API086/Windows0612 above)

@@ -2,7 +2,18 @@
 
 **آخر تحديث:** 2026-11-15. الحالة التشغيلية الأحدث في tracking/PROJECT_STATE.md؛ نقاط التحقق القديمة أدناه تاريخية. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
 
-## استكمال المالك D-086/D-087 — جارٍ
+## D-086/D-087 — FINAL 087/0614 / 2026-11-15
+API087/source3919 منشور وWindows0614/source8b مثبت وعلى سطح المكتب؛ CI43752697349 و43755691954 Backend+Windows SUCCESS (cachee4/43753958494 أيضًاSUCCESS).47Node/113PG/47offlineC#/build/publish PASS. المالك أضاف مجموعة ثانية ونوع مهمة ثانيًا؛ احفظهما وأي أعمال جديدة. آخرactual:2groups/2types/0rules/0accounts/tasks/replies/oneIGNORED/rawNULL/auth834AEAD-valid ونفس الهوية،mockfalse/COMMITTEDfalse. لاcleanup أوverifier قديم يفرض1group/zero counts.
+
+سبب الرسالة الحالية مؤكد: وصلتACCEPTED_TEXT/notify وصارتingressDONE ثم تجاهلها label-onlyparser086 وأزالraw؛ لا يمكن استرجاعها منhash، وتحتاج إرسالًا جديدًا.087 يقبلS2 كاملًا وكلمة مرور وترتيبات الاسم/المواد دون تسميات؛ الاسم اختياري وعنوانهاليوزر عندغيابه. الناقص/المتعدد/المتعارض يبقىREVIEW مشفرًا؛ لا تخمين أرقام أو استبدال سري. AI fallback مفعّل علىdeepseek-flash/20requests/10000tokens، metadata/indices فقط دونقيم، one durable attempt/source/settings version، ولاحفظ أوإرسال أوحذفآلي. اقتراحه يعبأ محليًا بعدreauth ويحتاج مراجعة.
+
+Nativee4 أثبت GETcache1→1، تجاهلclientchatter، تحديثbusiness للقسم المتأثر، بقاءبطاقات ومسودة خلالread3.5s والتنقل بلاGETإضافي، وAIreview/save صحيح. مراجعةالكود كشفتI053:rawtimerكانيمحوالاعتماد؛0614فصل عمرالنصعنمحررPasswordBoxالمخفي معfinallycleanup. بعد32s rawhidden/passwordmasked ثمSave أثبت matchingcredential،isolated5accounts/5tasks/0review/replies/auth0/2fakeAIrequests. Cachecodeلميتغيرفي8b. التطبيق الشخصي614 متصل ومفتوح علىالمجموعات دونmodal/busy،نافذة2493646/CUAowner614؛ احتفظبعميله ونفقه والجلسة30دقيقةطبيعية. Desktopبلاargs،530ملفمطابق،ZIP97550667bytes/SHA14cac4e2f98abfb4670c714cb4a52612595fe6e48f89aa7074c464f7d26ded80،لاrebuildبعدnative؛النسخالأقدممحفوظة.
+
+تجربةDeepSeekحيةواحدةبتركيب اصطناعي نجحت بربطكلالحقول:182/26tokens/estimate0.0000858USD(جدول14نوفمبر)/reportedNULL؛سُجلت usageحقيقية sourceNULL،الإجمالي3historical actual rows. لا businessfixturesشخصية أوWhatsAppmessages. pre087backup310369bytes استعيد معزولًا13migrations/0business/SENDING قبل014،كلbaselineIDsوالهوية/env/journal محفوظة و42خدمةأخرىunchangedعندcutover. لاحقًاخدمةأخرىactiveتغيرPIDها؛لمتُمسولاسببمفترض. Sandboxونفق18241أوقفا،DBالاختبارباقية.
+
+آخرoffhostoffhost-20261115195706946.tpg311741bytes/SHA649e000c1dbca379c063812133c213b1fbce6f06dffa3d20619411e304a18204؛restoreNOT_RUN. آخرfullkit/Driveprovenهو086historicalلا087/currentdata. D076daily03:15/manualDriveثابت،D080freshmachine/cutoverمؤجل،24hwaived/الراويمستبعدوالشكلياتمؤجلة. المتبقيقبولرسالةمالكجديدةومزيدإعدادهومصفوفاتأوسع؛لاادعاءكلالصيغأوجاهزيةشاملة،وI025القديممجهول. الأدلةفيtracking/evidence/student-reception-ai-navigation-087-0614-20261115.json.
+
+## نقطة التطوير السابقة — تاريخية
 بدأ المالك الإعداد وأصبح هناك مجموعتان فعليتان. رسالته الجديدة وصلتACCEPTED_TEXT/notify وصارتingressDONE لكن086label-only تجاهلها وأزالraw؛0accounts/tasks عندالفحص. أصلحنا candidate087 باستخراجS2 والترتيبات المختلفة، دون اشتراطاسمحقل أو اسمشخص، مع استبعادالمواد منالاعتمادات وحفظالناقص والملتبس للمراجعة. AIيستقبل وصفتركيب/مواضع فقط ويقترحindices لقيممحلية معمراجعة، وautomaticFallback مستقلتحتالموافقةوالحدود وطلبواحدلكلsource/settingsversion.46Node/113PGisolatedPASS. Windows0613cache/quietstagedrefresh/draftfence/protectedprefill و47offline/buildPASS؛native/deploy/Desktoppending. **احفظ المجموعةالثانية وأيعمل جديد؛لاcleanup ولاoldonegroupzerocountverify.** النصالمحذوفلايسترجعمنالبصمة،وسببI025القديممازالمجهولًا. Live086/Desktop0612باقيانحتىالقبولوالنشرالجديدين.
 
 ## D-085 مكتمل ضمن النطاق المختبر — 2026-11-15

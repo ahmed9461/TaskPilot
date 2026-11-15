@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [API0.8.7 / Windows0.6.14 accepted personal] — 2026-11-15
+- Unlabelled S2 intake and encrypted ambiguous review deployed; safe structural AI fallback enabled under current limits. Real synthetic DeepSeek probe verified/accounted without exporting secret values.
+- Cached navigation and selective staged background refresh verified natively; drafts survive slow reads/navigation.0614 fixes delayed review save losing its prefilled password;32second native save retained the matching encrypted credential while raw expired.
+- Exact530-file0614 package/Desktop delivered and all source CI runs successful; owner groups/identity preserved/sendfalse, sandbox/tunnel stopped. Current offhost copied/restoreNOT_RUN; real owner post-fix message acceptance remains unobserved.
+
 ## [API0.8.7 deployed / Windows0.6.13 candidate] — 2026-11-15
 - Fix confirmed accepted-but-ignored unlabelled S2 accounts; retain partial/ambiguous messages for encrypted review. Course codes are not passwords; exact secrets/order-independent input supported within conservative bounds.
 - Add opt-in automatic structural AI fallback, no raw values, one durable attempt/version, budgets and review-only field pointers. Migration014; current provider/limits preserved.47Node/113PG and exact backendCI43752697349 both jobs SUCCESS; predeploy encrypted backup/isolated restore/owner identity+two groups preserved/42other services unchanged.
