@@ -4,7 +4,7 @@
 - [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (candidate086/0611,38Node/103PG).
 - [x] Guarded API086 deployment/bootstrap, same identity/auth833,42other services unchanged.
 - [ ] Windows0611 native acceptance/Desktop delivery (candidate published).
-- [ ] Fresh clean encrypted packet + current public app kit + extracted independent app restore.
+- [x] Fresh clean packet/API086 kit, local extracted restore and private Drive readback/fresh extracted restore PASS;0external calls.
 - [ ] Live Windows enable/disable with same identity, then sendingfalse and bounded evidence. No business group setup.
 
 ## أولوية العمل الحالية D-083 — تحديث نهائي

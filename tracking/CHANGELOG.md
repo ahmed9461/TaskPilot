@@ -1,5 +1,9 @@
 # سجل التغيير
 
+## [Independent recovery refresh086 verified] — 2026-11-15
+- Current clean encrypted snapshot and API086 public app/root operators in5005-entry kit, all hashes verified. Local and private Drive readback fresh-folder independent app restores PASS,0originalAPIkeys/DPAPI/SSH/providers/outbound; old copy retained.
+- Current destination/daily runner unchanged. Same-user isolated proof; fresh machine and production cutover remain deferred.
+
 ## [API0.8.6 / Windows0.6.11 candidate] — 2026-11-15
 - Add fsynced pending/committed root journal and synchronous committed sending guard; read-back operation/phase and explicit disabled recovery UI. Preserve single-use authorization, no mutation/send replay, no extra service.
 -38Node/103isolatedPG/build PASS; deployment/native/recovery/live-control pending.

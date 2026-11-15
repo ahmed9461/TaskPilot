@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-15",
+  "phase": "D-085 recovery refresh",
+  "apiVersion": "0.8.6",
+  "apiSource": "8909bae7aee0ec979b0695292465d51aeac26093",
+  "snapshot": {
+    "bytes": 306804,
+    "sha256": "fbcc69cd0150a970ea5013e8d619cf9e32c7baafb70ff34881586e65947dc996"
+  },
+  "kit": {
+    "bytes": 19012089,
+    "files": 5005,
+    "sha256": "5205c377085ddef50ed6b378e3d8ac2c555be32ae79582b0e15ecf09d67840f5",
+    "entryHashesVerified": true,
+    "recoveryCodeIncluded": false,
+    "plaintextKeysIncluded": false
+  },
+  "cloud": {
+    "samePrivateDestination": true,
+    "shared": false,
+    "ownerOnly": true,
+    "oldCopyRetained": true,
+    "readbackHashMatched": true
+  },
+  "restores": {
+    "freshLocalExtract": "PASS",
+    "freshCloudReadbackExtract": "PASS",
+    "accounts": 0,
+    "assignments": 0,
+    "migrations": 13,
+    "authRows": 833,
+    "encryptedAuthValid": true,
+    "dpapiCalls": 0,
+    "sshCalls": 0,
+    "providerConnections": 0,
+    "outboundMessages": 0,
+    "plaintextDumpOnDisk": false,
+    "application": {
+      "application": "PASS",
+      "apiVersion": "0.8.6",
+      "migrations": 13,
+      "restoredAccounts": 0,
+      "restoredTasks": 0,
+      "restoredAuth": 833,
+      "actualIdentityCiphertextUnchanged": true,
+      "apiListen": "isolated loopback only",
+      "networkInterfaces": "loopback only",
+      "httpAuth": "PASS",
+      "maskedReads": "PASS",
+      "mockIngestion": "PASS",
+      "duplicateInserted": 0,
+      "completionWithoutAutomaticReply": true,
+      "mockReplies": 1,
+      "approvalReplayExtraReplies": 0,
+      "providerConnections": 0,
+      "externalMessages": 0,
+      "aiCalls": 0,
+      "schemaWrites": 0,
+      "originalApiKeysUsed": false,
+      "originalWindowsProfileUsed": false
+    }
+  },
+  "scope": "same Windows user, independent encrypted kit; fresh machine and real server cutover remain deferred"
+}
