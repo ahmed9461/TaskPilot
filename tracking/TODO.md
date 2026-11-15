@@ -111,4 +111,4 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] Atomic rule sourceCI/deployAPI082; native067 invalid/valid/cancel/reopen/mock group enable workflows.
 - [x] API0834477d34 CI43661156807/deploy + same-input native routing/account and task filters/status/app restart, scoped067 cleanup and exact tested ZIP.
 - [x] Existing latest encrypted packet independent DB+API/business workflow; direct and fresh full-kit extract PASS, DPAPI0/SSH0/no real provider. No new backup destination D-076.
-- [ ] Recovery-source hosted CI; live API stays4477d34 and accepted Windows0677082fcf, daily runner staysb876096.
+- [x] Recovery source53a971e hosted CI43664456529 Backend+Windows SUCCESS; live API stays4477d34 and accepted Windows0677082fcf, daily runner staysb876096.

@@ -97,5 +97,11 @@
     "two early isolated-container failures with no captured inner cause; TCP readiness added, no confirmed causal attribution",
     "synthetic bootstrap probe8samples reached finalTCP; prematureUnix-only readiness NOT_OBSERVED",
     "initial final live-counter assertion used folded camel-case alias; corrected lowercase counters all PASS"
-  ]
+  ],
+  "source": "53a971e33b2fb03b0dada1119a920b1173b927c1",
+  "ci": {
+    "id": 43664456529,
+    "backend": "SUCCESS",
+    "windows": "SUCCESS"
+  }
 }
