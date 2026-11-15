@@ -1,4 +1,12 @@
-# خطة التنفيذ والتتبع — 2026-11-15
+# خطة التنفيذ والتتبع — 2026-11-16
+
+## D-088 completed owner request — 2026-11-16
+- [x] Existing durable controller enabled real sending with current client/single-use reauth; final COMMITTED/ready/true, no existing jobs/messages, same API process/identity and42other services.
+- [x] Disabled informational preview has one Close action. Enabled approval keeps Send+Cancel; native isolated preview2/approve0/jobs0/auth0/provider0.
+- [x] Windows0615/6dab572 build/offline47/publish/package/native/installed/Desktop PASS;530matching files, CI43772342807 bothSUCCESS. Owner app left connected on Dashboard/sendallowed.
+- [x] Post087 actual intake observed:2newPROCESSED sources with2accounts/credentials/assignments. Owner data retained; old raw was not recovered.
+- [x] Memory/tracking/evidence and scoped commits updated. Never restore historical false/zero-business baselines.
+- [ ] OWNER_REPLY_ACCEPTANCE: actual business reply preview/approval/delivery by owner; no business reply was sent by the agent in this round.
 
 ## D-086/D-087 completed owner fixes — 2026-11-15
 - [x] Diagnose accepted but ignored unlabelled message without exposing raw credentials; preserve newly added second real group.
@@ -7,7 +15,7 @@
 - [x] Guarded087/3919 deployment, encrypted prebackup/isolated restore,014 applied; owner rows/identity/env/journal preserved,42other services unchanged atcutover. Requested fallback enabled with same provider/limits.
 - [x] Native0613 cache/request-count/draft/quiet refresh and AI review/save PASS.0614 fixes I053; native32second save retained matching encrypted credential. Exact0614/8b installed/Desktop updated, CI43755691954 bothSUCCESS; owner app connected/Groups/no modal/sendfalse.
 - [x] Final evidence/readback/memory; genuine DeepSeek structural probe recorded without raw values/business fixtures/WhatsApp messages. New offhost311741byte packet copied, restoreNOT_RUN; old086fullkit remains historical.
-- [ ] OWNER_MESSAGE_ACCEPTANCE: discarded old raw needs a new message ID/send; no real post-fix business message has yet been observed.
+- [x] OWNER_MESSAGE_ACCEPTANCE (bounded2026-11-16): two new actual sources PROCESSED with two persisted accounts/credentials/assignments. Old raw not recovered; full owner workflow/all-format coverage not claimed.
 
 ## D-085 completed priority — 2026-11-15
 - [x] Crash-safe sending implementation and isolated SIGKILL/restart/fault proof (deployed086/currentWindows0612,38Node/103PG).

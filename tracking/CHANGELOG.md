@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [Windows0.6.15 / owner real sending enabled] — 2026-11-16
+- Enable real manual sending at owner's explicit request through existing durable root controller: COMMITTED/ready/true; no restart/messages, owner data/identity and42other services preserved. API087 unchanged.
+- Remove duplicate Close/Cancel from disabled informational preview. Enabled approval retains Send+Cancel/reauth. Build/offline47/publish/package/native/Desktop PASS; source6dab572, CI43772342807 bothSUCCESS,530matching installed files. Rollback artifacts retained.
+- Observe two actual post087 messages processed into2accounts/credentials/assignments. Update current status/memory/evidence; no new business reply delivery, arbitrary-format or all-project-ready claim.
+
 ## [API0.8.7 / Windows0.6.14 accepted personal] — 2026-11-15
 - Unlabelled S2 intake and encrypted ambiguous review deployed; safe structural AI fallback enabled under current limits. Real synthetic DeepSeek probe verified/accounted without exporting secret values.
 - Cached navigation and selective staged background refresh verified natively; drafts survive slow reads/navigation.0614 fixes delayed review save losing its prefilled password;32second native save retained the matching encrypted credential while raw expired.

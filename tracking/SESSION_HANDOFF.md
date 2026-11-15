@@ -1,4 +1,17 @@
-# TaskPilot handoff — 2026-11-15
+# TaskPilot handoff — 2026-11-16
+
+## D-088 CURRENT — overrides the historical checkpoint below
+Owner explicitly enabled real sending. API087/source3919 is unchanged, but durable policy is COMMITTED/ready/enabled=true. Never force the prior false baseline. Current actual owner data:2accounts/2credentials/2assignments/2groups/0rules/3sources(2PROCESSED,1oldIGNORED/rawNULL),0replyJobs/unsettled,834AEAD-valid auth rows/same paired connected identity. Two newly received messages establish post087 intake within this observed scope. No business cleanup or messages initiated by this agent. Every reply still needs individual preview/reauth/approval; no automatic completion send.
+
+Windows0.6.15/source6dab572dc26eaea835989267c4e5db8cda6ca9ee is installed in C:\Users\user\AppData\Local\TaskPilot\versions\0.6.15-6dab572 and Desktop TaskPilot.lnk. Owner window6750742/CUA binding owner615 is LEFT OPEN connected on Dashboard/sendallowed/no modal. Preserve its client/tunnel; session remains temporary30minutes. Old614 and candidate windows are closed. CUA completion summary emitted.
+
+Native615: disabled informational preview had one Close action; enabled approval had Send+Cancel and was canceled. Isolated retained taskpilot_student_native_087_test DB only, synthetic session/template, no real connector instantiated, auth0/jobs0/preview2/approve0/provider0. Own taskpilot-native-088 transient service and SSH18241 tunnel STOPPED/listeners0; isolated DB retained. External helpers: enable-owner-sending-088.mjs (apply is single-use; use verify only), native-reply-088.mjs. Root private marker /var/lib/taskpilot/deployments/owner-sending-088.json retains baseline/evidence; never print secrets or blindly rerun apply.
+
+Build/offline47/publish/package PASS; CI43772342807 Backend+Windows SUCCESS. All530installed files match accepted publication. outputs/TaskPilot-Windows-x64-0.6.15-personal-6dab572.zip:97550750bytes/SHA2563c3d547fe34782ec674a770cda6cf4a300c88804dd3949e058a64ba06efacc1a. No rebuild after native. Prior versions/packages and outputs/TaskPilot-before-0.6.15.lnk retained. API PID/invocation and42other services unchanged; owner IDs/credential ciphertext/identity and other env unchanged.
+
+Current evidence: tracking/evidence/owner-sending-single-close-088-0615-20261116.json. No new recovery kit/provider call/fresh-machine drill/business reply acceptance in this round. Existing backup strategy and deferred/waived gates unchanged. Do not call all-project-ready.
+
+## Historical checkpoint — 2026-11-15 (superseded where stated above)
 
 ## Current releases
 API0.8.7/source3919a0b3c4ee07d356fbd9aead6b623626100f1a is deployed on New-VPS, schema014, own taskpilot.service/loopback8240 and PostgreSQL15488. Windows0.6.14/source8b3d7f473af2e9ae76ecbd4e2366ac6d5639adba is installed in the versioned per-user folder and Desktop shortcut. CI43752697349 and43755691954: Backend+Windows SUCCESS; cache sourcee4/CI43753958494 also SUCCESS.47Node/113PG/47offlineC# groups and WinUI build/publish/package checks passed.

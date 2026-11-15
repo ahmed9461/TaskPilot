@@ -1,5 +1,8 @@
 # سجل المشكلات
 
+I-054 VERIFIED_NATIVE615/6dab572: disabled informational reply preview reused the mutation dialog helper and showed Close+Cancel for the same action. Dedicated close-only ContentDialog now has one CloseButton/no PrimaryButton; native PASS. Enabled approval still has Send+Cancel and was canceled without any approve call/job. Desktop615 delivered.
+I-051 VERIFIED_LIVE_INTAKE087 (bounded2026-11-16): two new actual ACCEPTED_TEXT/notify receipts became DONE/PROCESSED with2accounts/credentials/assignments. Old raw remains unavailable; historical I025 still unconfirmed. This supersedes the no-new-message observation below, not a claim of all-format coverage or actual reply delivery.
+
 I-051 DEPLOYED087/3919: current label-parser defect fixed with isolated/replay/native proof. Old discarded raw is unavailable; new real post-fix message acceptance has not yet been observed. Preserve the owner's two groups/new data; historical I025 stays separate.
 I-052 VERIFIED_NATIVE613/e4 / CARRIED_UNCHANGED614: cache/quiet refresh/draft request-count proof in final JSON. Initial reads/TTL-expired/manual refresh may legitimately load; no zero-network-forever claim.
 I-053 VERIFIED_NATIVE614/8b: raw hidden after32seconds while password stayed masked; nativeSave persisted the matching credential in isolatedDB. Explicit dialog cleanup; final Desktop614. Previous0613 proof only covered saving before expiry.

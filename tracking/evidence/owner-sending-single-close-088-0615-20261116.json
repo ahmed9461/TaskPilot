@@ -1,0 +1,112 @@
+{
+  "date": "2026-11-16",
+  "timezone": "Asia/Riyadh",
+  "scope": "D-088 owner-authorized real sending and single-close reply preview",
+  "api": {
+    "version": "0.8.7",
+    "source": "3919a0b3c4ee07d356fbd9aead6b623626100f1a",
+    "codeDeploymentChanged": false,
+    "restarted": false
+  },
+  "windows": {
+    "version": "0.6.15",
+    "source": "6dab572dc26eaea835989267c4e5db8cda6ca9ee",
+    "ci": {
+      "id": 43772342807,
+      "backend": "SUCCESS",
+      "windows": "SUCCESS"
+    },
+    "releaseBuild": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "offlineCSharpChecksAndGroups": 47,
+    "publish": "PASS",
+    "portableResources": "PASS",
+    "installedFileHashesMatched": 530,
+    "productVersion": "0.6.15+6dab572dc26eaea835989267c4e5db8cda6ca9ee",
+    "zipBytes": 97550750,
+    "zipSha256": "3c3d547fe34782ec674a770cda6cf4a300c88804dd3949e058a64ba06efacc1a",
+    "desktopUpdated": true,
+    "shortcutArguments": "",
+    "priorArtifactsRetained": true,
+    "rebuiltAfterNativeAcceptance": false,
+    "ownerView": "Dashboard, connected, sending allowed after approval, no modal",
+    "onlyOneTaskPilotWindow": true
+  },
+  "activation": {
+    "authorizedByOwner": true,
+    "method": "existing root SSH controller, current temporary client, preview and single-use reauth",
+    "beforeEnabled": false,
+    "afterEnabled": true,
+    "phase": "COMMITTED",
+    "ready": true,
+    "preexistingReplyJobs": 0,
+    "finalReplyJobs": 0,
+    "unsettled": 0,
+    "apiProcessUnchanged": true,
+    "otherEnvUnchanged": true,
+    "protectedOtherServices": 42,
+    "changedOtherServices": 0,
+    "missingOwnerRows": 0,
+    "credentialCiphertextsUnchanged": true,
+    "identityPreserved": true,
+    "encryptedAuthRowsValid": 834,
+    "paired": 1,
+    "connected": 1,
+    "realMessagesInitiated": 0,
+    "perReplyApprovalRequired": true
+  },
+  "actualIntake": {
+    "acceptedTextNotify": 2,
+    "newSourcesProcessed": 2,
+    "accounts": 2,
+    "credentials": 2,
+    "assignments": 2,
+    "groups": 2,
+    "rules": 0,
+    "totalSources": 3,
+    "oldIgnoredSource": 1,
+    "oldRawRecovered": false,
+    "ingressDone": 8,
+    "mock": false,
+    "aiConfigurationChanged": false,
+    "providerCallsThisRound": 0
+  },
+  "native": {
+    "environment": "retained isolated application database; no real connector or provider sockets",
+    "disabledPreview": {
+      "closeButtons": 1,
+      "primaryButtons": 0,
+      "cancelButtons": 0,
+      "closedWithoutApproval": true
+    },
+    "syntheticEnabledPreview": {
+      "sendButtonVisible": true,
+      "cancelButtonVisible": true,
+      "canceled": true
+    },
+    "previewCalls": 2,
+    "approveCalls": 0,
+    "replyJobs": 0,
+    "authRows": 0,
+    "connectorSockets": 0,
+    "providerCalls": 0,
+    "customTitlebarCloseGeometryUnavailable": true,
+    "standardAltF4ClosedOwnedWindows": true
+  },
+  "cleanup": {
+    "ownSandboxStopped": true,
+    "ownTunnelListeners": 0,
+    "isolatedDatabaseRetained": true,
+    "previousOwnerWindowClosedAfterReadOnlyCheck": true,
+    "finalOwnerClientPreserved": true
+  },
+  "limits": [
+    "Enabling capability does not send a reply; each business reply requires its own preview and approval",
+    "No actual business reply approved or sent by the agent in this round",
+    "Two real processed sources establish bounded post087 intake, not all-format or complete owner workflow acceptance",
+    "No new recovery kit or recovery drill; previous snapshots remain historical",
+    "Existing backup strategy and deferred or waived test scope unchanged"
+  ]
+}

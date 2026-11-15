@@ -1,6 +1,15 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
-**آخر تحديث:** 2026-11-15. الحالة التشغيلية الأحدث في tracking/PROJECT_STATE.md؛ نقاط التحقق القديمة أدناه تاريخية. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
+## D-088 — إرسال حقيقي مفعّل / Desktop0615 / 2026-11-16
+طلب المالك صراحة تفعيل الإرسال وإزالة تكرارClose/Cancel. فعّلنا بالمسار الحالي preview→client/reauth→durableCOMMITTED، وقرأنا ready=true/enabled=true. لا تفرضfalse التاريخي. API087/source3919 لم يتغير ولم يُعد تشغيله. لم يرسل الوكيل أي رسالة؛0jobs/unsettled. كل رد ما زال يحتاج معاينة وإقرارًا مستقلًا.
+
+البيانات الحالية2accounts/2credentials/2assignments/2groups/0rules/3sources(2PROCESSED+1oldIGNORED/rawNULL)،834auth صالح ونفس الهوية. هذه قرينة استقبال فعلي جديد بعد087، وليست استرجاعraw القديم أو قبول كل الصيغ/الردود. لاcleanup أوoldzerocountverifier.
+
+Windows0615/source6dab572dc26eaea835989267c4e5db8cda6ca9ee: disabled informational preview لهClose واحد؛ enabled approval يحتفظSend+Cancel. Native معDB اصطناعية retained فقط: preview2/approve0/jobs0/auth0/provider0/socket0، ثم أوقف testunit088/tunnel18241/listeners0. Build/offline47/publish/packagePASS؛CI43772342807bothSUCCESS.530ملف تثبيت مطابق،ZIP97550750bytes/SHA3c3d547fe34782ec674a770cda6cf4a300c88804dd3949e058a64ba06efacc1a، لاrebuild بعدnative. سطح المكتب يشغّل0615 والتطبيق مفتوح Dashboard/connected/sendallowed؛old614/testclosed. احفظ عميله ونفقه؛ جلسة مؤقتة30دقيقة.42خدمة أخرى/APIprocess/ownerIDs/credentialciphertexts/identity/otherenvunchanged. لم تُحدّث النسخ/D076/D080 في هذه الجولة. Evidence: owner-sending-single-close-088-0615-20261116.json.
+
+## نقاط تحقق سابقة (تتجاوزها الحالة أعلاه)
+
+**آخر تحديث:** 2026-11-16. الحالة التشغيلية الأحدث في tracking/PROJECT_STATE.md؛ نقاط التحقق القديمة أدناه تاريخية. يهدف هذا الملف لتثبيت قرارات المشروع بعيدًا عن سجل المحادثات.
 
 ## D-086/D-087 — FINAL 087/0614 / 2026-11-15
 API087/source3919 منشور وWindows0614/source8b مثبت وعلى سطح المكتب؛ CI43752697349 و43755691954 Backend+Windows SUCCESS (cachee4/43753958494 أيضًاSUCCESS).47Node/113PG/47offlineC#/build/publish PASS. المالك أضاف مجموعة ثانية ونوع مهمة ثانيًا؛ احفظهما وأي أعمال جديدة. آخرactual:2groups/2types/0rules/0accounts/tasks/replies/oneIGNORED/rawNULL/auth834AEAD-valid ونفس الهوية،mockfalse/COMMITTEDfalse. لاcleanup أوverifier قديم يفرض1group/zero counts.

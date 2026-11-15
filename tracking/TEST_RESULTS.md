@@ -1,7 +1,11 @@
 # نتائج الاختبار الفعلية
 
-## D-088 Windows0.6.15 candidate / owner sending activation — 2026-11-16
-Release build: 0 errors/warnings; 47 offline C# checks/groups PASS. Disabled-send informational preview now has one Close button; mutation confirmation dialogs retain Cancel. Native/publish/Desktop acceptance pending.
+## D-088 Windows0.6.15 delivered / owner sending activation — 2026-11-16
+Release build0warnings/errors,47offlineC# checks/groups, publish/portable PASS. CI43772342807/source6dab572dc26eaea835989267c4e5db8cda6ca9ee: Backend+Windows SUCCESS.
+
+Native exact publication against retained isolatedDB: disabled preview had one CloseButton/no Primary/Cancel; closing produced no approve/job. Synthetic mode then advertised enabled; fresh read showed allowed-after-approval and native Send+Cancel dialog, then canceled. Final2preview/0approve/0jobs/auth0/connector sockets0/provider0. Initial AX reads preceded async renders; fresh observations verified them. Custom titlebar Close reported geometry-unavailable; standard Alt+F4 closed own test/old614 after read-only/no-modal checks. No shell UI automation. Own test unit/tunnel stopped/listeners0, DB retained.
+
+530installed files match publication, no rebuild after native. ZIP97550750bytes/SHA2563c3d547fe34782ec674a770cda6cf4a300c88804dd3949e058a64ba06efacc1a; ProductVersion0615+6dab572dc26eaea835989267c4e5db8cda6ca9ee. Desktop target/workingdirectory/icon/noarguments checked; prior shortcut/packages retained. Final installed owner app connected/Dashboard/sendallowed/no modal; one TaskPilot window remains. No actual business reply approved/sent by agent.
 
 Existing API087 activated through current temporary client, single-use SSH reauth and the durable policy controller: COMMITTED/ready/enabled=true. Before/after: 2 actual accounts, 2 assignments, 2 groups, 3 sources, 0 reply jobs/unsettled jobs; identity preserved and 834 auth rows AEAD-valid. No missing owner rows, credential ciphertexts unchanged, other env unchanged, same API PID/invocation and 42 other services unchanged. No real messages initiated. The two PROCESSED sources with persisted accounts/credentials establish new-message reception after087, within this observed scope.
 
