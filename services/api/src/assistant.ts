@@ -436,7 +436,17 @@ export class AssistantService {
         });
       } else if (plan.tool === "overview" || plan.tool === "suggestions") {
         result.summary = `لديك ${counts.accounts} حسابًا، ${counts.open} مهمة مفتوحة، ${counts.reviews} رسالة للمراجعة، و${counts.pendingReplies} ردًا يحتاج متابعة.`;
-        const daily = Object.values(riyadhRange("TODAY", row.anchor));
+        const workRange = riyadhRange(
+          plan.period === "ALL" ? "TODAY" : plan.period,
+          row.anchor,
+        );
+        const daily = Object.values(workRange);
+        const dayStart = new Date(Date.parse(workRange.start!) + 10800000)
+          .toISOString()
+          .slice(0, 10);
+        const dayEnd = new Date(Date.parse(workRange.end!) + 10800000 - 1)
+          .toISOString()
+          .slice(0, 10);
         const stats = (
           await db.query(
             "SELECT count(*) FILTER(WHERE t.priority>=50 AND t.status NOT IN ('COMPLETED','CANCELED'))::int urgent,count(*) FILTER(WHERE t.created_at<now()-interval '7 days' AND t.status NOT IN ('COMPLETED','CANCELED'))::int old,count(*) FILTER(WHERE t.status='COMPLETED' AND t.completed_at >= $1 AND t.completed_at < $2)::int completed FROM assignments t WHERE ($3::uuid IS NULL OR t.account_id=$3) AND ($4::uuid IS NULL OR EXISTS(SELECT 1 FROM assignment_sources az JOIN source_messages s ON s.id=az.source_message_id WHERE az.assignment_id=t.id AND s.group_id=$4))",
@@ -450,7 +460,7 @@ export class AssistantService {
           )
         ).rows[0].count;
         sections.push({
-          title: "يوم العمل بتوقيت الرياض",
+          title: `حركة العمل من ${dayStart} إلى ${dayEnd} (الرياض)`,
           items: [
             {
               title: `حسابات مستلمة: ${received}`,

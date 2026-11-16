@@ -516,6 +516,9 @@ test("project secretary grounded reads, privacy, shared budget and atomic comman
       });
       assert.equal(completed.sections[0].total, 1);
       assert.ok(completed.summary.includes("وقت الإكمال"));
+      const yesterday = await ask("ملخص العمل أمس");
+      assert.equal(yesterday.sections[0].items[0].title, "حسابات مستلمة: 0");
+      assert.equal(yesterday.sections[0].items[1].title, "مهام اكتملت: 0");
       const open = await ask("ما المهام غير المكتملة؟");
       assert.equal(open.action, null);
       assert.equal(open.sections[0].total, 1);
