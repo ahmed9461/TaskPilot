@@ -7,6 +7,6 @@ foreach ($required in @('TaskPilot.Windows.exe', 'TaskPilot.Windows.dll', 'TaskP
         throw "PORTABLE_RESOURCE_MISSING: $required"
     }
 }
-$forbidden = Get-ChildItem -LiteralPath $packageDirectory -Recurse -File | Where-Object { $_.Name -match '^\.env' -or $_.Extension -in @('.key','.pem','.pfx','.db','.sqlite','.tpg','.log') }
+$forbidden = Get-ChildItem -LiteralPath $packageDirectory -Recurse -File | Where-Object { $_.Name -match '^\.env' -or $_.Name -match '\.dpapi($|\.)' -or $_.Extension -in @('.key','.pem','.pfx','.db','.sqlite','.tpg','.log') }
 if ($forbidden) { throw 'PORTABLE_RUNTIME_DATA_FORBIDDEN' }
 Write-Output 'PASS: portable app resources present; forbidden runtime data absent. Native startup acceptance remains separate.'

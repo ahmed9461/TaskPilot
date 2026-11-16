@@ -12,6 +12,7 @@ for (const file of files) {
     blocked.push(file);
   if (/\.(pem|key|pfx|p12|dump|backup|sqlite|db|log)$/.test(file))
     blocked.push(file);
+  if (/\.dpapi(?:\.|$)/i.test(file)) blocked.push(file);
   if (/\.(png|ico)$/.test(file)) continue;
   let data;
   try {
