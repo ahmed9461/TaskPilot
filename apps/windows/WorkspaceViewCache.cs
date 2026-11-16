@@ -35,6 +35,7 @@ public sealed class WorkspaceViewCache<T>(TimeProvider? clock = null)
     }
     public static bool Affects(string type, string page)
     {
+        if (page == "assistant") return type is "ACCOUNTS_PURGED" or "ASSIGNMENT_PURGED";
         if (page is "audit" or "operations") return true;
         if (page == "notifications") return ChangeFeed.NeedsAttention(type);
         if (type.StartsWith("CLIENT_", StringComparison.Ordinal) || type is "REVIEW_REVEALED" or "CREDENTIAL_REVEALED" or "REPORT_EXPORTED") return false;

@@ -23,6 +23,7 @@ public sealed partial class MainPage : Page
         if (shuttingDown)
             return;
         shuttingDown = true;
+        ClearAssistant();
         viewCache.Clear();
         timer.Stop();
         sshConnection?.StopTunnel();
@@ -38,6 +39,13 @@ public sealed partial class MainPage : Page
     private static string FriendlyError(string code) => code switch
     {
         "CONFLICT" or "STALE_PREVIEW" => "تغيرت البيانات. حدّث القائمة وأنشئ معاينة جديدة.",
+        "ASSISTANT_CREDENTIAL_INPUT_REJECTED" => "لا تلصق كلمات المرور في المحادثة. استخدم اسم الحساب أو اليوزر للسؤال عن العمل.",
+        "ASSISTANT_ONE_ACCOUNT_AT_A_TIME" => "حدد حسابًا واحدًا في البحث، أو استخدم نطاق المجموعة لتجهيز تغيير عدة مهام.",
+        "ASSISTANT_REQUEST_PENDING" => "تحقق من نتيجة الطلب السابق قبل إرسال طلب آخر.",
+        "ASSISTANT_ACTION_PENDING" => "تحقق من إيصال التغيير السابق قبل تجهيز تغيير آخر.",
+        "ASSISTANT_IDEMPOTENCY_CONFLICT" or "ASSISTANT_CONTEXT_UNAVAILABLE" => "تعذر استخدام سياق الطلب. ابدأ محادثة جديدة أو تحقق من النتيجة السابقة.",
+        "ASSISTANT_NO_CHANGES" => "المهام المحددة تحمل القيمة المطلوبة بالفعل؛ لا يوجد تغيير لتطبيقه.",
+        "APPROVAL_EXPIRED" => "انتهت المعاينة أو استُخدمت. حدّث المحادثة وأنشئ معاينة جديدة.",
         "LIVE_WHATSAPP_NOT_AUTHORIZED" => "الاتصال الحقيقي معطّل على الخادم بانتظار موافقتك المنفصلة.",
         "LIVE_SENDING_NOT_AUTHORIZED" => "الإرسال الحقيقي معطّل. لم يُعتمد الرد.",
         "REPLY_NOT_PENDING" => "الرد لم يعد منتظرًا؛ حدّث السجل لمعرفة نتيجته. لا يُلغى إرسال بدأ بالفعل.",
@@ -291,6 +299,7 @@ public sealed partial class MainPage : Page
             if (shuttingDown || !connectionState.TrySucceeded(revision))
                 return;
             var batch = changes.Consume(n);
+            if (changes.FreshTypes.Any(type => type is "ACCOUNTS_PURGED" or "ASSIGNMENT_PURGED")) { ClearAssistant(); if (page == "assistant") { hasDraft = false; visibleContent?.Children.Clear(); } }
             viewCache.Invalidate(changes.FreshTypes);
             pendingChanges |= batch.NewItems > 0 && changes.FreshTypes.Any(type => WorkspaceViewCache<StackPanel>.Affects(type, page));
             UpdateUnread(notificationState);
@@ -379,7 +388,7 @@ public sealed partial class MainPage : Page
         Connection.Severity = InfoBarSeverity.Success;
         Connection.Title = "متصل بالخادم";
         Connection.Message = TransportSummary;
-        PageBody.Children.Add(Button("تحديث", Render));
+        PageBody.Children.Add(target == "dashboard" ? Toolbar(Button("تحديث", Render), Button("اسأل المساعد", () => OpenSection("assistant"))) : Button("تحديث", Render));
         switch (target)
         {
             case "dashboard":
@@ -415,6 +424,9 @@ public sealed partial class MainPage : Page
             case "ai":
                 await AiSettings();
                 break;
+            case "assistant":
+                await Assistant();
+                break;
             case "operations":
                 await Operations();
                 break;
@@ -428,7 +440,7 @@ public sealed partial class MainPage : Page
         var alias = Field("اسم اتصال SSH المحفوظ", lastSshAlias ?? "New-VPS");
         Card("اتصال دائم عبر Tailscale", sshConnection?.Persistent == true ? "هذا الجهاز مرتبط. يتصل التطبيق تلقائيًا عند فتحه ويستعيد الاتصال عند عودة الشبكة، دون مهلة للجلسة." : "اربط هذا الجهاز مرة واحدة عبر اتصالك الموثوق. يلزم تشغيل Tailscale على الجهاز والخادم.", alias, Button("ربط هذا الجهاز عبر Tailscale", async () => { await ConnectTailscale(alias.Text); SelectDashboard(); await Render(); }));
         if (api.Connected)
-            PageBody.Children.Add(Button("تسجيل الخروج من هذا الجهاز", async () => { if (sshConnection is not null) await sshConnection.Revoke(); profileStore.Clear(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); syncWorkspace = null; changes.Seed("0"); UnreadBadge.Visibility = Visibility.Collapsed; ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
+            PageBody.Children.Add(Button("تسجيل الخروج من هذا الجهاز", async () => { if (sshConnection is not null) await sshConnection.Revoke(); profileStore.Clear(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); ClearAssistant(); syncWorkspace = null; changes.Seed("0"); UnreadBadge.Visibility = Visibility.Collapsed; ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
         var address = Field("عنوان الخدمة الآمن", api.Address);
         address.FlowDirection = FlowDirection.LeftToRight;
         var token = Secret("رمز وصول المالك");

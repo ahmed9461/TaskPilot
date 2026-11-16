@@ -11,6 +11,7 @@ public sealed partial class MainPage
     private string? syncWorkspace;
     private async Task InitializeSync(string workspace)
     {
+        if (assistantRevision != connectionState.Revision || syncWorkspace != workspace) ClearAssistant();
         var state = await api.Send("GET", "/v1/notifications/state");
         if (syncWorkspace != workspace)
         {

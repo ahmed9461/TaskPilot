@@ -12,8 +12,8 @@ public sealed partial class MainPage
         var usage = await api.Send("GET", "/v1/ai/usage");
         var provider = new ComboBox { Header = "المزود", ItemsSource = new[] { "deepseek", "openrouter" }, SelectedItem = V(c,"provider") };
         var model = new ComboBox { Header = "النموذج", ItemsSource = new[] { V(c,"model") }, SelectedIndex = 0 };
-        var enabled = new CheckBox { Content = "تفعيل اقتراحات AI", IsChecked = c["enabled"]?.GetValue<bool>() };
-        var outbound = new CheckBox { Content = "السماح بإرسال رموز المهام ووصف تركيب الحقول فقط", IsChecked = c["outboundApproved"]?.GetValue<bool>() };
+        var enabled = new CheckBox { Content = "تفعيل AI للمساعد واقتراحات الوارد", IsChecked = c["enabled"]?.GetValue<bool>() };
+        var outbound = new CheckBox { Content = "السماح بالتحليل المنقّح ومفردات المساعد المحددة", IsChecked = c["outboundApproved"]?.GetValue<bool>() };
         var automatic = new CheckBox { Content = "تحليل الرسائل الملتبسة تلقائيًا للمراجعة", IsChecked = c["automaticFallback"]?.GetValue<bool>() };
         var requests = new NumberBox { Header = "الحد اليومي للطلبات (UTC)", Minimum = 1, Maximum = 100, Value = c["dailyRequestLimit"]!.GetValue<int>() };
         var tokens = new NumberBox { Header = "حد التوكنات والحجوزات يوميًا", Minimum = 1000, Maximum = 100000, Value = c["dailyTokenLimit"]!.GetValue<int>() };
@@ -33,7 +33,7 @@ public sealed partial class MainPage
             })));
         var today=usage["today"]!;
         Card("استخدام اليوم (UTC)",$"الطلبات: {V(today,"requests")} • نجحت: {V(today,"succeeded")}\nتوكنات المزود: إدخال {V(today,"promptTokens")} / إخراج {V(today,"completionTokens")}\nحجوزات لم تُحسم: {V(today,"unresolvedReservedTokens")} توكن\nالتكلفة التقديرية: {Money(today["estimatedCostUsd"])}\nتكلفة أبلغ بها المزود: {Money(today["reportedCostUsd"])}\nالتقدير بسعر الذروة المتحقق في 2026-11-14، وليس مبلغًا مفوترًا. الحجز ليس إنفاقًا فعليًا.");
-        foreach(var row in usage["recent"]!.AsArray()) Card(V(row,"model")+" • "+V(row,"status"),$"{V(row,"created_at")}\nرمز المهمة المقترحة: {SuggestionLabel(row?["task_code"])} • الثقة: {V(row,"confidence")}\nالتقدير: {Money(row?["estimated_cost_usd"])} • المبلغ الذي أبلغه المزود: {Money(row?["reported_cost_usd"])}");
+        foreach(var row in usage["recent"]!.AsArray()) if(V(row,"request_purpose")=="ASSISTANT") Card("المساعد الشخصي • "+V(row,"status"),$"{V(row,"created_at")}\n{V(row,"model")}\nالتقدير: {Money(row?["estimated_cost_usd"])} • مبلغ المزود: {Money(row?["reported_cost_usd"])}"); else Card(V(row,"model")+" • "+V(row,"status"),$"{V(row,"created_at")}\nرمز المهمة المقترحة: {SuggestionLabel(row?["task_code"])} • الثقة: {V(row,"confidence")}\nالتقدير: {Money(row?["estimated_cost_usd"])} • المبلغ الذي أبلغه المزود: {Money(row?["reported_cost_usd"])}");
     }
     private async Task AiSuggest(JsonNode source)
     {

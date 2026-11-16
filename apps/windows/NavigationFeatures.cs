@@ -12,7 +12,7 @@ public sealed partial class MainPage
     private DateTimeOffset identityReadAt;
     private long draftRevision;
     private void MarkDraft() { hasDraft = true; draftRevision++; }
-    private static string PageTitle(string value) => value switch { "dashboard" => "لوحة التحكم", "accounts" => "الحسابات", "account-details" => "تفاصيل الحساب", "assignments" => "المهام", "inbox" => "صندوق المراجعة", "replies" => "الردود والقوالب", "groups" => "المجموعات", "sessions" => "الجلسات", "notifications" => "الإشعارات", "audit" => "سجل النشاط", "ai" => "الذكاء الاصطناعي", "operations" => "المراقبة", "privacy" => "الخصوصية والاحتفاظ", _ => "الإعدادات" };
+    private static string PageTitle(string value) => value switch { "dashboard" => "لوحة التحكم", "accounts" => "الحسابات", "account-details" => "تفاصيل الحساب", "assignments" => "المهام", "inbox" => "صندوق المراجعة", "replies" => "الردود والقوالب", "groups" => "المجموعات", "sessions" => "الجلسات", "notifications" => "الإشعارات", "audit" => "سجل النشاط", "assistant" => "المساعد الشخصي", "ai" => "إعدادات الذكاء الاصطناعي", "operations" => "المراقبة", "privacy" => "الخصوصية والاحتفاظ", _ => "الإعدادات" };
     private StackPanel PageBody => buildingContent ?? visibleContent ?? Body;
     private void RememberCurrentView()
     {
