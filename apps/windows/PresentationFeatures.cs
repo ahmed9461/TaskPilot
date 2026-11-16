@@ -50,7 +50,7 @@ public sealed partial class MainPage
         {
             var value = V(state, key); if (value == "") value = "0";
             var number = Text(value, 48); number.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold; number.HorizontalAlignment = HorizontalAlignment.Center;
-            IconElement symbol = key == "unread" ? new FontIcon { Glyph = "\uE7F4", FontFamily = new FontFamily("Segoe Fluent Icons"), FontSize = 27, Foreground = new SolidColorBrush(accent), Width = 27, Height = 27 } : new SymbolIcon(icon) { Foreground = new SolidColorBrush(accent), Width = 27, Height = 27 };
+            IconElement symbol = key == "unread" ? new FontIcon { Glyph = "\uEA8F", FontFamily = new FontFamily("Segoe Fluent Icons"), FontSize = 27, Foreground = new SolidColorBrush(accent), Width = 27, Height = 27 } : new SymbolIcon(icon) { Foreground = new SolidColorBrush(accent), Width = 27, Height = 27 };
             var badge = new Border { Child = symbol, Padding = new Thickness(13), CornerRadius = new CornerRadius(16), Background = new SolidColorBrush(Color.FromArgb(30, accent.R, accent.G, accent.B)), HorizontalAlignment = HorizontalAlignment.Center };
             var title = Text(label, 19); title.HorizontalAlignment = HorizontalAlignment.Center; title.TextAlignment = TextAlignment.Center;
             var content = Stack(number, badge, title); content.Spacing = 8; content.HorizontalAlignment = HorizontalAlignment.Center; content.VerticalAlignment = VerticalAlignment.Center;
