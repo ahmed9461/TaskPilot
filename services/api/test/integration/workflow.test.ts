@@ -1035,19 +1035,19 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
           assert.equal((await activity.inject({ url })).statusCode, 401);
         const before = await request("GET", "/v1/notifications/state");
         await pool.query(
-          "INSERT INTO notifications(type) SELECT 'SYNTHETIC_ACTIVITY_TEST' FROM generate_series(1,530)",
+          "INSERT INTO notifications(type) SELECT 'AI_SUGGESTION_READY' FROM generate_series(1,530)",
         );
         const state = await request("GET", "/v1/notifications/state");
         const first = await request(
           "GET",
-          "/v1/notifications?page=true&type=SYNTHETIC_ACTIVITY_TEST&limit=50",
+          "/v1/notifications?page=true&type=AI_SUGGESTION_READY&limit=50",
         );
         assert.equal(first.total, 530);
         assert.equal(first.items.length, 50);
         assert.equal(first.items[0].id, state.newestId);
         const tail = await request(
           "GET",
-          "/v1/notifications?page=true&type=SYNTHETIC_ACTIVITY_TEST&limit=50&offset=500",
+          "/v1/notifications?page=true&type=AI_SUGGESTION_READY&limit=50&offset=500",
         );
         assert.equal(tail.items.length, 30);
         assert.notEqual(tail.items[0].id, first.items[0].id);
@@ -1091,7 +1091,7 @@ test("PostgreSQL synthetic end-to-end and adversarial workflows", async (t) => {
           (
             await request(
               "GET",
-              "/v1/notifications?page=true&type=SYNTHETIC_ACTIVITY_TEST&read=unread",
+              "/v1/notifications?page=true&type=AI_SUGGESTION_READY&read=unread",
             )
           ).total,
           525,

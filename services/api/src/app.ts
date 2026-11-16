@@ -1,4 +1,8 @@
 import {
+  notificationTypes,
+  notificationDetails,
+} from "./notification-catalog.js";
+import {
   ruleEditor,
   saveGroupRules,
   createGroupRule,
@@ -235,12 +239,17 @@ export async function createApp(
     "/v1/dashboard",
     async () =>
       (
-        await pool.query(`SELECT
+        await pool.query(
+          `SELECT
     (SELECT count(*)::int FROM accounts WHERE archived_at IS NULL) accounts,
     (SELECT count(*)::int FROM assignments WHERE status NOT IN ('COMPLETED','CANCELED')) open,
     (SELECT count(*)::int FROM assignments WHERE status='COMPLETED') completed,
     (SELECT count(*)::int FROM source_messages WHERE state='REVIEW') review,
-    (SELECT count(*)::int FROM reply_jobs WHERE status='UNKNOWN_DELIVERY') unknown_delivery`)
+    (SELECT count(*)::int FROM reply_jobs WHERE status='UNKNOWN_DELIVERY') unknown_delivery,
+(SELECT count(*)::int FROM groups WHERE enabled) groups,
+(SELECT count(*)::int FROM notifications WHERE read_at IS NULL AND type=ANY($1::text[])) unread`,
+          [notificationTypes],
+        )
       ).rows[0],
   );
   app.get(
@@ -1021,10 +1030,10 @@ export async function createApp(
     const { cursor } = cursorQuery.parse(req.query);
     return (
       await pool.query(
-        "SELECT * FROM notifications WHERE id>$1 ORDER BY id LIMIT 500",
-        [cursor],
+        "SELECT * FROM notifications WHERE id>$1 AND type=ANY($2::text[]) ORDER BY id LIMIT 500",
+        [cursor, notificationTypes],
       )
-    ).rows;
+    ).rows.map((row) => ({ ...row, ...notificationDetails(row.type) }));
   });
   app.get("/v1/notifications/state", async () => notificationState(pool));
   app.post("/v1/notifications/read", async (req) => {
@@ -1040,8 +1049,8 @@ export async function createApp(
       .strict()
       .parse(req.body);
     const result = await pool.query(
-      "UPDATE notifications SET read_at=COALESCE(read_at,now()) WHERE id=ANY($1::bigint[]) RETURNING id",
-      [ids],
+      "UPDATE notifications SET read_at=COALESCE(read_at,now()) WHERE id=ANY($1::bigint[]) AND type=ANY($2::text[]) RETURNING id",
+      [ids, notificationTypes],
     );
     return { updated: result.rowCount };
   });
@@ -1056,9 +1065,10 @@ export async function createApp(
         id: z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER),
       })
       .parse(req.params);
-    await pool.query("UPDATE notifications SET read_at=now() WHERE id=$1", [
-      p.id,
-    ]);
+    await pool.query(
+      "UPDATE notifications SET read_at=now() WHERE id=$1 AND type=ANY($2::text[])",
+      [p.id, notificationTypes],
+    );
     return { ok: true };
   });
   app.get("/v1/changes", async (req) => {

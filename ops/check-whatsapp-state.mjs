@@ -15,9 +15,10 @@ try {
       ]),
   );
   const expected = process.argv.includes("--expect-connection");
+  const expectedSending = process.argv.includes("--expect-sending");
   if (
-    (env.WHATSAPP_CONNECTION_ENABLED === "true") !== expected ||
-    env.WHATSAPP_SENDING_ENABLED !== "false"
+    env.WHATSAPP_CONNECTION_ENABLED !== String(expected) ||
+    env.WHATSAPP_SENDING_ENABLED !== String(expectedSending)
   )
     throw Error();
   const pid = execFileSync(
@@ -89,7 +90,7 @@ try {
       check: "PASS",
       databaseScope: restoreArg ? "isolated restore drill" : "pilot",
       connectionEnabled: expected,
-      sendingEnabled: false,
+      sendingEnabled: expectedSending,
       providerOutputDiscarded: true,
       authRows: rows.length,
       encryptedAuthValid: true,

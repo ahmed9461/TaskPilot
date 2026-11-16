@@ -2,6 +2,10 @@ import { z } from "zod";
 import type pg from "pg";
 import { transaction } from "./db.js";
 import { id } from "../../../packages/contracts/src/index.js";
+import {
+  notificationTypes,
+  notificationDetails,
+} from "./notification-catalog.js";
 
 const eventCode = z.string().regex(/^[A-Z_]{1,80}$/);
 const page = z.object({
@@ -38,6 +42,7 @@ export async function queryActivity(
     return "$" + params.length;
   };
   if ("read" in p) {
+    conditions.push(`type=ANY(${add(notificationTypes)}::text[])`);
     if (p.type) conditions.push(`type=${add(p.type)}`);
     if (p.read !== "all")
       conditions.push(
@@ -67,27 +72,37 @@ export async function queryActivity(
         [...params, p.limit, p.offset],
       )
     ).rows;
-    return { items, total, limit: p.limit, offset: p.offset };
+    return {
+      items:
+        kind === "notifications"
+          ? items.map((row) => ({ ...row, ...notificationDetails(row.type) }))
+          : items,
+      total,
+      limit: p.limit,
+      offset: p.offset,
+    };
   });
 }
 
 export async function notificationState(pool: pg.Pool) {
   return (
     await pool.query(
-      `SELECT (SELECT COALESCE(max(id),0)::text FROM notifications) "newestId",(SELECT count(*)::int FROM notifications WHERE read_at IS NULL) "unreadCount"`,
+      `SELECT (SELECT COALESCE(max(id),0)::text FROM notifications) "newestId",(SELECT count(*)::int FROM notifications WHERE read_at IS NULL AND type=ANY($1::text[])) "unreadCount"`,
+      [notificationTypes],
     )
   ).rows[0];
 }
 
 export async function operationsSnapshot(pool: pg.Pool) {
   const snapshot = (
-    await pool.query(`SELECT now() "observedAt",
+    await pool.query(
+      `SELECT now() "observedAt",
     (SELECT count(*)::int FROM schema_migrations) migrations,
     json_build_object(
       'accounts',(SELECT count(*)::int FROM accounts),
       'assignments',(SELECT count(*)::int FROM assignments),
       'review',(SELECT count(*)::int FROM source_messages WHERE state='REVIEW'),
-      'unread',(SELECT count(*)::int FROM notifications WHERE read_at IS NULL),
+      'unread',(SELECT count(*)::int FROM notifications WHERE read_at IS NULL AND type=ANY($1::text[])),
       'approvedReplies',(SELECT count(*)::int FROM reply_jobs WHERE status='APPROVED'),
       'sendingReplies',(SELECT count(*)::int FROM reply_jobs WHERE status='SENDING'),
       'unknownReplies',(SELECT count(*)::int FROM reply_jobs WHERE status='UNKNOWN_DELIVERY'),
@@ -98,7 +113,9 @@ export async function operationsSnapshot(pool: pg.Pool) {
       'connectedSessions',(SELECT count(*)::int FROM whatsapp_sessions WHERE provider='baileys' AND status='CONNECTED')
     ) counts,
     COALESCE((SELECT greatest(0,floor(extract(epoch FROM now()-min(received_at))))::int FROM source_messages WHERE state='REVIEW'),0) "oldestReviewSeconds",
-    COALESCE((SELECT greatest(0,floor(extract(epoch FROM now()-min(approved_at))))::int FROM reply_jobs WHERE status='APPROVED'),0) "oldestApprovedSeconds"`)
+    COALESCE((SELECT greatest(0,floor(extract(epoch FROM now()-min(approved_at))))::int FROM reply_jobs WHERE status='APPROVED'),0) "oldestApprovedSeconds"`,
+      [notificationTypes],
+    )
   ).rows[0];
   return {
     ...snapshot,

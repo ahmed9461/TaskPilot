@@ -1,7 +1,10 @@
 import { readFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
-import { createPool, transaction, event } from "./db.js";
-import { hash, token } from "./security.js";
+import { createPool } from "./db.js";
+import {
+  issueClientSession,
+  issueClientReauth,
+  tailscaleAddress,
+} from "./client-sessions.js";
 // This CLI is reachable through an already-authenticated SSH channel, never through HTTP.
 // It never reads/exports the permanent owner API or reauthentication keys.
 if (process.getuid?.() !== 0) throw new Error("LOCAL_ROOT_REQUIRED");
@@ -14,32 +17,23 @@ try {
   if (mode === "--reauth") {
     const id = process.argv[3];
     if (!id || !/^[a-f0-9-]{36}$/.test(id)) throw Error("INVALID_SESSION");
-    const grant = token();
-    const row = (
-      await pool.query(
-        "UPDATE client_sessions SET reauth_hash=$2,reauth_expires_at=now()+interval '60 seconds' WHERE id=$1 AND revoked_at IS NULL AND expires_at>now() RETURNING reauth_expires_at",
-        [id, hash(grant)],
-      )
-    ).rows[0];
-    if (!row) throw Error("SESSION_EXPIRED");
-    process.stdout.write(
-      JSON.stringify({ grant, expiresAt: row.reauth_expires_at }),
-    );
+    process.stdout.write(JSON.stringify(await issueClientReauth(pool, id)));
   } else if (mode === undefined) {
-    const id = randomUUID(),
-      value = token();
-    const row = await transaction(pool, async (c) => {
-      const r = (
-        await c.query(
-          "INSERT INTO client_sessions(id,token_hash,expires_at) VALUES($1,$2,now()+interval '30 minutes') RETURNING expires_at",
-          [id, hash(value)],
-        )
-      ).rows[0];
-      await event(c, "CLIENT_SESSION_CREATED", id);
-      return r;
-    });
+    process.stdout.write(JSON.stringify(await issueClientSession(pool)));
+  } else if (
+    (mode === "--persistent" || mode === "--connection-info") &&
+    process.argv.length === 3
+  ) {
+    const profile = JSON.parse(
+      await readFile("/etc/taskpilot/desktop-connection.json", "utf8"),
+    );
+    const address = tailscaleAddress(profile.address);
     process.stdout.write(
-      JSON.stringify({ id, token: value, expiresAt: row.expires_at }),
+      JSON.stringify(
+        mode === "--connection-info"
+          ? { address }
+          : await issueClientSession(pool, address),
+      ),
     );
   } else throw Error("INVALID_MODE");
 } catch {
