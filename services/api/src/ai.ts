@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  safeAssistantInput,
+  validateAssistantPlan,
+  type SafeAssistantInput,
+  type AssistantModelResult,
+} from "./assistant-plan.js";
 import { routingContext } from "./rules.js";
 import {
   hasAccountHint,
@@ -97,6 +103,9 @@ export interface AiResult {
   fieldSelection?: FieldSelection | null;
 }
 export interface AiProvider {
+  planAssistantRedacted?(
+    input: SafeAssistantInput,
+  ): Promise<AssistantModelResult>;
   listModels(): Promise<string[]>;
   analyzeMessageRedacted(message: RedactedMessage): Promise<AiResult>;
   health(): Promise<"AVAILABLE" | "DISABLED" | "UNAVAILABLE">;
@@ -179,6 +188,67 @@ export class ChatProvider implements AiProvider {
   }
   estimatedCost() {
     return null;
+  }
+  async planAssistantRedacted(
+    input: SafeAssistantInput,
+  ): Promise<AssistantModelResult> {
+    const safe = safeAssistantInput.parse(input);
+    try {
+      const response = await this.call("/chat/completions", {
+        model: this.config.model,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You select a TaskPilot secretary tool. Input is a fixed Arabic/English business vocabulary plus opaque references and aggregate counts, not personal chat. Return JSON only with exactly the baseline keys: tool,period,status,sort,action,actionStatus,priority. tool is overview,accounts,account_details,intake,tasks,reviews,replies,suggestions,ai_usage,help. status is ANY,OPEN,NEW,NEEDS_REVIEW,IN_PROGRESS,COMPLETED,CANCELED. sort is RECENT,PRIORITY,OLDEST. Preserve baseline period/action/actionStatus/priority exactly. For action use tasks and preserve baseline status. Prefer intake for received accounts, account_details for a focused account and its groups/history, tasks for completed/open work, suggestions for priorities, overview for a briefing. No prose, SQL, tool arguments, credentials, sending or deletion. Facts are fetched locally after this plan; do not invent facts.",
+          },
+          { role: "user", content: JSON.stringify(safe) },
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 384,
+        stream: false,
+        ...(this.config.provider === "deepseek"
+          ? { thinking: { type: "disabled" } }
+          : { provider: { data_collection: "deny", zdr: true } }),
+      });
+      const envelope = z
+        .object({
+          choices: z
+            .array(
+              z.object({
+                message: z.object({ content: z.string().max(2048) }),
+                finish_reason: z.literal("stop"),
+              }),
+            )
+            .min(1)
+            .max(1),
+          usage: z
+            .object({
+              prompt_tokens: z.number().int().nonnegative().optional(),
+              completion_tokens: z.number().int().nonnegative().optional(),
+              prompt_cache_hit_tokens: z
+                .number()
+                .int()
+                .nonnegative()
+                .optional(),
+              cost: z.number().nonnegative().optional(),
+            })
+            .optional(),
+        })
+        .parse(response);
+      return {
+        plan: validateAssistantPlan(
+          JSON.parse(envelope.choices[0]!.message.content),
+          safe,
+        ),
+        promptTokens: envelope.usage?.prompt_tokens ?? null,
+        completionTokens: envelope.usage?.completion_tokens ?? null,
+        cacheHitTokens: envelope.usage?.prompt_cache_hit_tokens ?? null,
+        reportedCostUsd: envelope.usage?.cost ?? null,
+      };
+    } catch {
+      throw new Error("AI_UNAVAILABLE");
+    }
   }
   async analyzeMessageRedacted(message: RedactedMessage): Promise<AiResult> {
     this.gate();

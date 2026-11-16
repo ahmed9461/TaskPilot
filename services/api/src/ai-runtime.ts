@@ -11,6 +11,11 @@ import { parseMessage, selectedMessageFields } from "./parser.js";
 import { Vault, hash } from "./security.js";
 import { transaction, event } from "./db.js";
 import { Fault } from "./service.js";
+import {
+  safeAssistantInput,
+  validateAssistantPlan,
+  type SafeAssistantInput,
+} from "./assistant-plan.js";
 type ProviderName = "deepseek" | "openrouter";
 type FactoryConfig = ConstructorParameters<typeof ChatProvider>[0];
 export const aiSettingsInput = z
@@ -104,6 +109,8 @@ export class AiRuntime {
       dailyTokenLimit: c.daily_token_limit,
       keyConfigured: configured,
       privacy: "task-codes-and-structural-indices-only",
+      assistantPrivacy:
+        "fixed-domain-vocabulary-enums-opaque-references-and-aggregate-counts-only",
       automaticActions: false,
       automaticFallback: c.automatic_fallback,
     };
@@ -438,6 +445,93 @@ export class AiRuntime {
       while (running) await new Promise((r) => setTimeout(r, 20));
     };
   }
+  async assistantPlan(input: SafeAssistantInput, turnId: string) {
+    const safe = safeAssistantInput.parse(input),
+      cfg = await this.cfg();
+    if (!cfg.enabled || !cfg.outbound_approved)
+      throw new Fault("AI_DISABLED", 403);
+    const provider = await this.provider(cfg.provider, cfg.model);
+    const reserved = Buffer.byteLength(JSON.stringify(safe), "utf8") + 1800;
+    const selected = await transaction(this.pool, async (db) => {
+      await db.query("SELECT pg_advisory_xact_lock(8240007)");
+      const prior = (
+        await db.query("SELECT * FROM ai_requests WHERE idempotency_hash=$1", [
+          hash(`assistant:${turnId}`),
+        ])
+      ).rows[0];
+      if (prior) return { row: prior, reused: true };
+      const current = (
+        await db.query("SELECT * FROM ai_settings WHERE id=true FOR SHARE")
+      ).rows[0];
+      if (
+        current.version !== cfg.version ||
+        !current.enabled ||
+        !current.outbound_approved
+      )
+        throw new Fault("CONFLICT");
+      const spent = (
+        await db.query(
+          "SELECT count(*)::int requests,COALESCE(sum(CASE WHEN prompt_tokens IS NOT NULL AND completion_tokens IS NOT NULL THEN prompt_tokens+completion_tokens ELSE reserved_tokens END),0)::int tokens FROM ai_requests WHERE status<>'ABSTAINED' AND created_at>=date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'",
+        )
+      ).rows[0];
+      if (
+        spent.requests >= cfg.daily_request_limit ||
+        spent.tokens + reserved > cfg.daily_token_limit
+      )
+        throw new Fault("AI_DAILY_LIMIT", 429);
+      const row = (
+        await db.query(
+          "INSERT INTO ai_requests(id,idempotency_hash,source_version,settings_version,provider,model,status,candidate_codes,reserved_tokens,request_purpose) VALUES($1,$2,0,$3,$4,$5,'REQUESTED','[]',$6,'ASSISTANT') RETURNING *",
+          [
+            randomUUID(),
+            hash(`assistant:${turnId}`),
+            cfg.version,
+            cfg.provider,
+            cfg.model,
+            reserved,
+          ],
+        )
+      ).rows[0];
+      return { row, reused: false };
+    });
+    if (selected.reused)
+      return {
+        requestId: selected.row.id,
+        status: selected.row.status,
+        plan: selected.row.assistant_plan
+          ? validateAssistantPlan(selected.row.assistant_plan, safe)
+          : null,
+      };
+    try {
+      if (!provider.planAssistantRedacted) throw Error("AI_UNAVAILABLE");
+      const result = await provider.planAssistantRedacted(safe),
+        plan = validateAssistantPlan(result.plan, safe);
+      await this.pool.query(
+        "UPDATE ai_requests SET status='SUCCEEDED',assistant_plan=$2,prompt_tokens=$3,completion_tokens=$4,estimated_cost_usd=$5,reported_cost_usd=$6,completed_at=now() WHERE id=$1 AND status='REQUESTED'",
+        [
+          selected.row.id,
+          JSON.stringify(plan),
+          result.promptTokens,
+          result.completionTokens,
+          estimatedAiCost(
+            cfg.provider,
+            cfg.model,
+            result.promptTokens,
+            result.completionTokens,
+            result.cacheHitTokens ?? null,
+          ),
+          result.reportedCostUsd ?? null,
+        ],
+      );
+      return { requestId: selected.row.id, status: "SUCCEEDED", plan };
+    } catch {
+      await this.pool.query(
+        "UPDATE ai_requests SET status='UNAVAILABLE',error_code='AI_UNAVAILABLE',completed_at=now() WHERE id=$1 AND status='REQUESTED'",
+        [selected.row.id],
+      );
+      return { requestId: selected.row.id, status: "UNAVAILABLE", plan: null };
+    }
+  }
   async usage() {
     const today = (
       await this.pool.query(
@@ -446,7 +540,7 @@ export class AiRuntime {
     ).rows[0];
     const recent = (
       await this.pool.query(
-        "SELECT id,status,provider,model,task_code,confidence,prompt_tokens,completion_tokens,estimated_cost_usd,reported_cost_usd,created_at FROM ai_requests ORDER BY created_at DESC LIMIT 20",
+        "SELECT id,status,provider,model,task_code,confidence,prompt_tokens,completion_tokens,estimated_cost_usd,reported_cost_usd,request_purpose,created_at FROM ai_requests ORDER BY created_at DESC LIMIT 20",
       )
     ).rows;
     return {

@@ -166,3 +166,5 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [ ] Explain answers with current record references and time; never invent facts or expose stored credentials to the provider.
 - [ ] Prepare bounded actions at owner's command with preview/confirmation and existing authorization/version safeguards; no blind mutation replay or autonomous sends/deletes.
 - [ ] Use existing provider configuration/budgets, encrypted local-to-project conversation storage where needed, and isolated/native acceptance. Update memory/tracking/commits per stage.
+
+D-091 IN_PROGRESS: backend and Windows assistant implemented;14newPG/4newNode pass. Native/hosted/guarded deployment/Desktop and final evidence remain open.

@@ -1,5 +1,8 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
+## D-091 IN_PROGRESS — project secretary
+Backend0.8.9/migration015 implemented: private safe tool plans, account/group/task/intake/briefing/review/reply/usage reads, current-record history and bounded atomic status/priority actions with reauth/version/receipt guards. Shared configured AI provider/budgets, no raw chat/identities/credentials forwarded or duplicated in history. Local fallback is explicit. New secretary14isolatedPG and4Node tests PASS; existing local total53Node/build PASS, WinUI build/52offlineC# PASS at intermediate source. Full isolated sweep134:131PASS, AI cleanup hook failed due new FK (test cleanup corrected), diagnostic10001-row fixture hit15s statement timeout; focused follow-up pending. No production deployment, live AI call or native secretary acceptance yet. Current delivered API088/Windows070 and owner data/sending=true remain unchanged. Windows080 source exists but is not delivered. Continue functional/native acceptance, then guarded deployment/Desktop/evidence. See docs/17_PROJECT_SECRETARY.md and D-091; no all-project-ready claim.
+
 ## D-089/D-090 — current delivered088/070; AI secretary next
 API088/source1075953 and Windows070/source4351335 deployed/installed/Desktop; CI43939578667/43942980111 Backend+Windows SUCCESS.49Node/121uniquePG/52C#/publish/native PASS. Current owner3accounts/credentials/tasks/groups,0rules/2types/1template/4sources(3PROCESSED+oldIGNORED/rawNULL)/1SENTreply/0unsettled/3AIusage/845valid auth/same connected identity. Sending=true/COMMITTED, mock=false; ownerIDs/credentials/env/journal/42other services preserved. Never restore prior false/zero counters.
 

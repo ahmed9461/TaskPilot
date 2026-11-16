@@ -58,7 +58,7 @@ test("AI manual runtime privacy, budget and replay acceptance", async (t) => {
   );
   const app = await createApp(pool, config, undefined, ai);
   t.after(async () => {
-    await pool.query("TRUNCATE ai_requests");
+    await pool.query("TRUNCATE assistant_turns,ai_requests");
     await pool.query(
       "UPDATE ai_settings SET enabled=false,outbound_approved=false",
     );

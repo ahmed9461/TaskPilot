@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { AiRuntime } from "./ai-runtime.js";
+import { AssistantService } from "./assistant.js";
 import { createPool } from "./db.js";
 import { createApp } from "./app.js";
 import { startMockWorker } from "./outbox.js";
@@ -21,6 +22,8 @@ const pool = createPool(process.env.DATABASE_URL ?? "");
 const encryptionKey = await secret("TASKPILOT_ENCRYPTION_KEY");
 const ai = new AiRuntime(pool, new Vault(encryptionKey));
 await ai.recoverInterrupted();
+const assistant = new AssistantService(pool, ai);
+await assistant.recoverInterrupted();
 const whatsapp = new WhatsAppConnector(pool, new Vault(encryptionKey), {
   connectionEnabled: process.env.WHATSAPP_CONNECTION_ENABLED === "true",
   sendingEnabled: false,
@@ -55,6 +58,7 @@ const app = await createApp(
   },
   whatsapp,
   ai,
+  assistant,
 );
 const stop = await startMockWorker(pool, new MockTransport());
 // Recover interrupted live SENDING jobs even when live use is disabled.

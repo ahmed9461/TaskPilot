@@ -10,6 +10,7 @@ import {
 } from "./group-rules.js";
 import release from "../../../package.json" with { type: "json" };
 import { accountDetails } from "./account-details.js";
+import { AssistantService } from "./assistant.js";
 import { AiRuntime } from "./ai-runtime.js";
 import { PrivacyService } from "./privacy.js";
 import type { SendingState } from "./sending-policy.js";
@@ -70,6 +71,7 @@ export async function createApp(
   config: AppConfig,
   whatsapp?: WhatsAppConnector,
   ai = new AiRuntime(pool, new Vault(config.encryptionKey)),
+  assistant = new AssistantService(pool, ai),
 ) {
   if (
     config.apiToken.length < 32 ||
@@ -182,6 +184,25 @@ export async function createApp(
     ),
   );
   app.get("/v1/ai/usage", () => ai.usage());
+  app.post("/v1/assistant/turns", (req) => assistant.ask(req.body));
+  app.get("/v1/assistant/turns/:id", (req) =>
+    assistant.turn(uuidParam.parse(req.params).id),
+  );
+  app.get("/v1/assistant/threads", () => assistant.threads());
+  app.get("/v1/assistant/threads/:id", (req) =>
+    assistant.history(uuidParam.parse(req.params).id),
+  );
+  app.post("/v1/assistant/actions/preview", (req) =>
+    assistant.previewAction(req.body),
+  );
+  app.post("/v1/assistant/actions/apply", async (req) => {
+    await reauth(req);
+    return assistant.applyAction(req.body);
+  });
+  app.get("/v1/assistant/actions/:id", (req) =>
+    assistant.actionReceipt(uuidParam.parse(req.params).id),
+  );
+  app.get("/v1/assistant/actions", () => assistant.receipts());
   app.post("/v1/inbox/:id/ai-preview", async (req) =>
     ai.preview(uuidParam.parse(req.params).id),
   );

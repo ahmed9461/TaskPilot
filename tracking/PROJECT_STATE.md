@@ -1,5 +1,8 @@
 # الحالة الحالية — 2026-11-16 (Asia/Riyadh)
 
+## D-091 IN_PROGRESS — project secretary
+Backend0.8.9/migration015 implemented: private safe tool plans, account/group/task/intake/briefing/review/reply/usage reads, current-record history and bounded atomic status/priority actions with reauth/version/receipt guards. Shared configured AI provider/budgets, no raw chat/identities/credentials forwarded or duplicated in history. Local fallback is explicit. New secretary14isolatedPG and4Node tests PASS; existing local total53Node/build PASS, WinUI build/52offlineC# PASS at intermediate source. Full isolated sweep134:131PASS, AI cleanup hook failed due new FK (test cleanup corrected), diagnostic10001-row fixture hit15s statement timeout; focused follow-up pending. No production deployment, live AI call or native secretary acceptance yet. Current delivered API088/Windows070 and owner data/sending=true remain unchanged. Windows080 source exists but is not delivered. Continue functional/native acceptance, then guarded deployment/Desktop/evidence. See docs/17_PROJECT_SECRETARY.md and D-091; no all-project-ready claim.
+
 ## D-089/D-090 — CURRENT / DEPLOYED / VERIFIED_BOUNDED
 API **0.8.8/source1075953991c7dd528562fbd26470f155558d51ba** on New-VPS, schema14 unchanged. Windows **0.7.0/source43513350d52f96333baf0c99915b44a48a17ebd6** installed and Desktop updated. CI43939578667 and43942980111 both Backend+Windows SUCCESS. Build/publish/portable,49Node,121unique isolatedPG,52offlineC# checks/groups PASS.
 

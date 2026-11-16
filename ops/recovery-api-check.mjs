@@ -63,7 +63,7 @@ try {
       "SELECT name,checksum FROM schema_migrations ORDER BY name",
     )
   ).rows;
-  assert.equal(migrations.length, 14);
+  assert.equal(migrations.length, 15);
   assert.deepEqual(
     recorded.map((x) => x.name),
     migrations,
