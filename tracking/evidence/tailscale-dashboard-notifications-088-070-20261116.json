@@ -1,0 +1,167 @@
+{
+  "date": "2026-11-16",
+  "timezone": "Asia/Riyadh",
+  "scope": "D-089/D-090 Tailscale device connection, dashboard and user notifications",
+  "api": {
+    "version": "0.8.8",
+    "source": "1075953991c7dd528562fbd26470f155558d51ba",
+    "migrations": 14,
+    "schemaChanged": false,
+    "ci": {
+      "id": 43939578667,
+      "backend": "SUCCESS",
+      "windows": "SUCCESS"
+    }
+  },
+  "windows": {
+    "version": "0.7.0",
+    "source": "43513350d52f96333baf0c99915b44a48a17ebd6",
+    "ci": {
+      "id": 43942980111,
+      "backend": "SUCCESS",
+      "windows": "SUCCESS"
+    },
+    "nodeTests": 49,
+    "isolatedPostgresUniqueTests": 121,
+    "offlineCSharpChecksAndGroups": 52,
+    "nativeDpapiTest": true,
+    "publish": "PASS",
+    "portable": "PASS",
+    "installedFileHashesMatched": 530,
+    "zipBytes": 97562543,
+    "zipSha256": "dd9fbf4bb3a36701874005cbf14b3fd26e797b477676a92210ee10b79bb6c988",
+    "productVersion": "0.7.0+43513350d52f96333baf0c99915b44a48a17ebd6",
+    "desktopUpdated": true,
+    "priorArtifactsRetained": true,
+    "rebuiltAfterAcceptance": false
+  },
+  "tailscale": {
+    "privateHttpsPort": 9443,
+    "apiLoopbackPort": 8240,
+    "ownFunnelEnabled": false,
+    "priorServeAndFunnelHandlersUnchanged": true,
+    "normalTlsCertificateValidation": "PASS",
+    "trustedSshOverTailnet": "PASS",
+    "deviceExpiry": "infinity",
+    "savedProfileProtection": "Windows current-user DPAPI",
+    "activePersistentDevicesBeforeAndAfterRestart": 1,
+    "deviceIssueEventsBeforeAndAfterRestart": 1,
+    "protectedProfileHashUnchangedOnRestart": true,
+    "appRestartWithoutBootstrapEnvironment": "PASS",
+    "actualSensitiveReauth": "PASS",
+    "nonexistentApprovalRefused": 409,
+    "reauthReplayRefused": 403,
+    "actualBusinessJobCreatedByProbe": false,
+    "nodeKeyExpiryDisabled": false
+  },
+  "native": {
+    "scope": "isolated synthetic DB without real connector or provider calls",
+    "dashboard": {
+      "columns": 3,
+      "cards": 6,
+      "allCardsVisibleAtDefaultWindow": true,
+      "windowPixels": [
+        1233,
+        696
+      ],
+      "counts": {
+        "accounts": 3,
+        "open": 2,
+        "completed": 1,
+        "review": 1,
+        "groups": 2,
+        "unread": 4
+      }
+    },
+    "notifications": {
+      "technicalEventVisible": false,
+      "listGetsBeforeTechnical": 1,
+      "listGetsAfterTechnical": 1,
+      "listGetsAfterBusiness": 2,
+      "unreadBefore": 4,
+      "unreadAfterTechnical": 4,
+      "unreadAfterBusiness": 5,
+      "openReviewDestinationVerified": true,
+      "unreadAfterOpening": 4,
+      "auditTechnicalRowsRetained": 13
+    },
+    "final": {
+      "accounts": 3,
+      "tasks": 3,
+      "review": 2,
+      "userNotificationRows": 5,
+      "technicalRows": 13,
+      "replyJobs": 0,
+      "authRows": 0,
+      "providerCalls": 0,
+      "connectorSockets": 0
+    },
+    "settings": {
+      "persistentConnectionCard": true,
+      "normalSessionCountdownAbsent": true
+    }
+  },
+  "deployment": {
+    "encryptedPreBackupBytes": 324550,
+    "isolatedRestore": "PASS",
+    "restoredAccounts": 3,
+    "restoredAssignments": 3,
+    "restoredMigrations": 14,
+    "restoredSending": 0,
+    "providerStartedDuringRestore": false,
+    "missingOwnerRows": 0,
+    "credentialCiphertextsUnchanged": true,
+    "identityPreserved": true,
+    "encryptedAuthRowsValid": 845,
+    "envJournalServeUnitUnchanged": true,
+    "protectedOtherServices": 42,
+    "changedOtherServicesAtCutover": 0,
+    "changedOtherServicesAtFinalReadback": 0
+  },
+  "finalLive": {
+    "accounts": 3,
+    "assignments": 3,
+    "groups": 3,
+    "rules": 0,
+    "sourceMessages": 4,
+    "replyTemplates": 1,
+    "replyJobs": 1,
+    "replyStatus": "SENT",
+    "unsettled": 0,
+    "aiUsageRows": 3,
+    "paired": 1,
+    "connected": 1,
+    "mock": false,
+    "sending": true,
+    "phase": "COMMITTED",
+    "activePersistentDevices": 1,
+    "userUnread": 4,
+    "agentMessagesSent": 0,
+    "agentPersonalFixturesCreated": 0,
+    "ownerView": "Dashboard, connected over Tailscale, no modal",
+    "onlyOneTaskPilotWindow": true,
+    "persistentDeviceKeptAuthorized": true
+  },
+  "offhost": {
+    "existingDestination": true,
+    "packet": "pre-desktop-088-20261116.tpg",
+    "bytes": 324550,
+    "sha256": "a37683220d31f3573daaf43124c2010d71e9944918eaa62bf1e9bf67071fa2b2",
+    "serverIsolatedDatabaseRestore": "PASS",
+    "independentFullKitRefreshed": false,
+    "dailyRunnerAndDriveStrategyUnchanged": true
+  },
+  "cleanup": {
+    "nativeServiceStopped": true,
+    "tunnel18241Listeners": 0,
+    "isolatedFixtureDatabasesRetained": true,
+    "previousOwnerWindowClosedAfterSavedSettingsReadback": true
+  },
+  "limits": [
+    "App authorization has no time expiry; Tailscale node key expiry remains an external tailnet setting and was not disabled",
+    "Real network-wide outage was not injected; read retry was checked with controlled clock/transport, plus actual app restart/resume",
+    "One existing owner SENT reply was preserved; the agent did not send a new message",
+    "No new independent full recovery kit or fresh-machine/cutover drill in this phase",
+    "AI secretary is the next authorized stage and is not implemented by this evidence"
+  ]
+}

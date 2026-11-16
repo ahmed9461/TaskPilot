@@ -1,5 +1,16 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
+## D-089/D-090 — current delivered088/070; AI secretary next
+API088/source1075953 and Windows070/source4351335 deployed/installed/Desktop; CI43939578667/43942980111 Backend+Windows SUCCESS.49Node/121uniquePG/52C#/publish/native PASS. Current owner3accounts/credentials/tasks/groups,0rules/2types/1template/4sources(3PROCESSED+oldIGNORED/rawNULL)/1SENTreply/0unsettled/3AIusage/845valid auth/same connected identity. Sending=true/COMMITTED, mock=false; ownerIDs/credentials/env/journal/42other services preserved. Never restore prior false/zero counters.
+
+Tailscale privateHTTPS9443→8240; no own Funnel, existing handlers unchanged. Device credential expires_at=infinity and Windows user DPAPI profile; no permanent owner key exported. Actual trusted SSH-over-tailnet one-use reauth accepted(missing preview409)/replay403, no job/message. Native close/reopen WITHOUT bootstrap/config env kept same file hash/one active device/one issue event. Explicit logout must revoke; offline failure keeps profile. Preserve current DPAPI device! Final app window9767146/resumedOwner070 left connected Dashboard, CUA completion recorded. Node-key expiry external(clientJan30/serverFeb7 2027) NOT disabled; app TTL removed, no real shared-network outage injection.
+
+Six dashboard cards fit default1233x696. Notifications are real work catalog only: native4ignoredtechnical(GET1stable), new review5(GET2), destinationInbox2/readbadge4; Audit13tech rows retained. Sandbox089/tunnel18241 stopped; nativeDB088b retained(first failed fixture088 kept). Injected config isolates profile path and skips personal autoload. Accepted530files/ZIP97562543/SHAdd9fbf4bb3a36701874005cbf14b3fd26e797b477676a92210ee10b79bb6c988; no rebuild, old versions/shortcut saved.
+
+Prebackup324550 encrypted restored isolated3accounts/tasks/14migrations/0SENDING/provider0; offhost same destination SHAa37683220d31f3573daaf43124c2010d71e9944918eaa62bf1e9bf67071fa2b2. Full086kit remains historical, strategy/deferred/waived gates unchanged. Evidence tailscale-dashboard-notifications-088-070-20261116.json.
+
+Owner added AI secretary request WHILE work ongoing, explicitly AFTER these changes finish. That phase is now next; no secretary code yet. Implement actual project-grounded answers(search account/group/tasks/history/today intake/blocked work/replies/priorities), useful next actions beyond examples, evidence links/time and bounded confirmed execution at owner's command. Keep stored credentials/raw messages out of provider and preserve existing20requests/10000tokens/config/shared usage/idempotency. No automatic business sends/deletes. Continue implementation, not plans only.
+
 ## D-088 — إرسال حقيقي مفعّل / Desktop0615 / 2026-11-16
 طلب المالك صراحة تفعيل الإرسال وإزالة تكرارClose/Cancel. فعّلنا بالمسار الحالي preview→client/reauth→durableCOMMITTED، وقرأنا ready=true/enabled=true. لا تفرضfalse التاريخي. API087/source3919 لم يتغير ولم يُعد تشغيله. لم يرسل الوكيل أي رسالة؛0jobs/unsettled. كل رد ما زال يحتاج معاينة وإقرارًا مستقلًا.
 

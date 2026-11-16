@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [API0.8.8 / Windows0.7.0 delivered] — 2026-11-16
+- Persistent revocable Tailscale device connection with DPAPI-protected restart resume; retain per-action short reauth and per-reply approval. No own Funnel; shared handlers untouched.
+- Six responsive dashboard cards and consistent shared controls/toolbars; contextual user notifications separated from complete technical audit/change stream.
+- Exact native435/CI43942980111 and API107/CI43939578667 passed; Desktop updated, owner data and sending=true preserved, backup/restore/offhost proof recorded. No new real message sent. AI secretary is next authorized work, not part of this release.
+
 ## [Windows0.6.15 / owner real sending enabled] — 2026-11-16
 - Enable real manual sending at owner's explicit request through existing durable root controller: COMMITTED/ready/true; no restart/messages, owner data/identity and42other services preserved. API087 unchanged.
 - Remove duplicate Close/Cancel from disabled informational preview. Enabled approval retains Send+Cancel/reauth. Build/offline47/publish/package/native/Desktop PASS; source6dab572, CI43772342807 bothSUCCESS,530matching installed files. Rollback artifacts retained.

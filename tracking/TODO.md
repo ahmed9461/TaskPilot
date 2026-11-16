@@ -1,5 +1,14 @@
 # خطة التنفيذ والتتبع — 2026-11-16
 
+## D-089/D-090 delivered — 2026-11-16
+- [x] API088/1075953 deployed; persistent root-issued revocable device auth and user-notification catalog, same14migrations.
+- [x] Private Tailscale HTTPS9443/no own Funnel; trusted SSH route, previous handlers and42other services preserved.
+- [x] Desktop070/4351335, responsive cards/shared layout/notification explanations and destinations; native functional acceptance and exact530file delivery.
+- [x] DPAPI opaque/tamper check, actual one-use reauth409/403, close/reopen same device without bootstrap/no TTL. Keep actual permanent device authorized.
+- [x]49Node/121uniquePG/52C# and exact hosted Backend+Windows CI SUCCESS; encrypted prebackup/isolated restore/current-destination offhost copy.
+- [x] Preserve3owner accounts/tasks/groups and existingSENT reply; no test messages/personal fixtures. Track evidence/memory and retain rollback artifacts.
+- [ ] AI_SECRETARY: next authorized stage now; implement grounded search/briefing/priorities/history and bounded confirmed actions, then test/deploy.
+
 ## D-088 completed owner request — 2026-11-16
 - [x] Existing durable controller enabled real sending with current client/single-use reauth; final COMMITTED/ready/true, no existing jobs/messages, same API process/identity and42other services.
 - [x] Disabled informational preview has one Close action. Enabled approval keeps Send+Cancel; native isolated preview2/approve0/jobs0/auth0/provider0.

@@ -1,5 +1,16 @@
 # نتائج الاختبار الفعلية
 
+## D-089/D-090 final088/070 — DEPLOYED / VERIFIED_BOUNDED2026-11-16
+Exact API107/CI43939578667 and Windows435/CI43942980111: both Backend+Windows SUCCESS.49Node/121unique isolatedPG/52C# checks-groups/build/publish/portable PASS. Actual DPAPI synthetic file opaque at rest/reload/tamper/removal PASS.
+
+Native final435 isolated: six cards visible at default1233x696; initial220height clipped second row, adaptive176compact rows fixed it. Initial wrong icon corrected to documented RingerEA8F before acceptance. Notifications4/listGET1 ignored new technical event, then review event5/listGET2; link openedInbox2/readbadge4. Audit retained13technical events. Settings primary persistent card/no countdown. Final fake counts3accounts/tasks/2review/5userNotifications/13technical/0jobs/auth/provider/socket. First guarded seed helper failed; fresh088b fixture with distinct group external-ID parameter completed; failed test DB retained, no production fixture.
+
+Actual installed070 linked via trusted Tailscale SSH/validated private HTTPS, DPAPI profile stored; same device/filehash resumed after close/reopen without bootstrap/env. DB infinity device count1/issue events1 both before/after. Actual protected request with nonexistent reply token409, same grant403 on replay; no job/message or policy change. Existing actual1SENT reply preserved. Normal actual settings showed linked/no countdown; final Dashboard connected. One TaskPilot window remains. Real shared-network outage not injected; controlled read retry/clock checks and actual restart were tested.
+
+530installed hashes match publication, ZIP97562543/SHAdd9fbf4bb3a36701874005cbf14b3fd26e797b477676a92210ee10b79bb6c988; no rebuild. Previous versions/shortcut retained; package/repository guards now exclude DPAPI profiles too.
+
+Guarded deployment:3owner accounts/credentials/tasks/groups,4sources/1template/1SENT reply/3AIusage/845AEAD-valid auth/same identity, no missing baseline/credential change. Env/journal/serve/unit and42other services unchanged; sending=true/COMMITTED/mockfalse. Encrypted324550byte prebackup restored separately(3accounts/tasks/14migrations/0SENDING/provider0) and copied existing offhost destination SHAa37683220d31f3573daaf43124c2010d71e9944918eaa62bf1e9bf67071fa2b2. No fullkit refresh/new-machine test. Own sandbox/tunnel stopped, DBs retained. Node-key expiry remains external/not disabled. AI secretary remains next stage.
+
 ## D-088 Windows0.6.15 delivered / owner sending activation — 2026-11-16
 Release build0warnings/errors,47offlineC# checks/groups, publish/portable PASS. CI43772342807/source6dab572dc26eaea835989267c4e5db8cda6ca9ee: Backend+Windows SUCCESS.
 

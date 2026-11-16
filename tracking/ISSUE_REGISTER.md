@@ -1,5 +1,9 @@
 # سجل المشكلات
 
+I-055 VERIFIED_NATIVE070/435 + DEPLOYED088/107: notifications previously displayed every internal audit/change event, duplicating the technical log and inflating unread counts. A bounded work-notification catalog now filters lists/read counts/dashboard/desktop attention; complete cursor/audit and historical rows remain. Native tech event GET1stable/badge4, review eventGET2/badge5, action opensInbox/read4; Audit13tech rows.
+I-056 VERIFIED_NATIVE_PERSISTENT070/435: old default30minute client flow replaced in ordinary use with revocable infinity device+current-user DPAPI/Tailscale HTTPS. Actual no-env reopen same profile/device and one-use reauth409/403 passed; no actual business message. External Tailscale node-key expiry is not app TTL and was not disabled.
+I-057 VERIFIED_NATIVE070/435: vertical dashboard replaced by six responsive real-value cards; default viewport row clipping corrected with adaptive compact height, proper bell glyph and TaskPilot title. Exact installed native acceptance passed. No Narrator or broad scaling matrix claim.
+
 I-054 VERIFIED_NATIVE615/6dab572: disabled informational reply preview reused the mutation dialog helper and showed Close+Cancel for the same action. Dedicated close-only ContentDialog now has one CloseButton/no PrimaryButton; native PASS. Enabled approval still has Send+Cancel and was canceled without any approve call/job. Desktop615 delivered.
 I-051 VERIFIED_LIVE_INTAKE087 (bounded2026-11-16): two new actual ACCEPTED_TEXT/notify receipts became DONE/PROCESSED with2accounts/credentials/assignments. Old raw remains unavailable; historical I025 still unconfirmed. This supersedes the no-new-message observation below, not a claim of all-format coverage or actual reply delivery.
 

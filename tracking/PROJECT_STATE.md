@@ -1,5 +1,20 @@
 # الحالة الحالية — 2026-11-16 (Asia/Riyadh)
 
+## D-089/D-090 — CURRENT / DEPLOYED / VERIFIED_BOUNDED
+API **0.8.8/source1075953991c7dd528562fbd26470f155558d51ba** on New-VPS, schema14 unchanged. Windows **0.7.0/source43513350d52f96333baf0c99915b44a48a17ebd6** installed and Desktop updated. CI43939578667 and43942980111 both Backend+Windows SUCCESS. Build/publish/portable,49Node,121unique isolatedPG,52offlineC# checks/groups PASS.
+
+Tailscale HTTPS9443 forwards only within the tailnet to loopback8240. Its Funnel is off; prior Serve/Funnel handlers remain unchanged. Certificate validation and trusted SSH over Tailscale PASS. The desktop uses a revocable device credential with infinity expiry and a current-user DPAPI profile, not an exported owner key. Closing/reopening without bootstrap/config environment resumed the same device:1active/1issue event, protected-file hash unchanged. Actual protected probe: nonexistent reply preview409, same reauth replay403, no job or message. Existing short per-action approvals remain. Tailscale node-key expiry is a separate external setting, NOT disabled; no claim that all infrastructure authorization can never expire.
+
+Actual owner snapshot:3accounts/credentials/assignments/groups,2task types,0rules,4sources(3PROCESSED+1oldIGNORED/rawNULL),1template,1previous SENT reply,0unsettled,3actual AI usage rows,845valid encrypted auth rows and same paired connected identity. Sending=true/COMMITTED, mock=false; env/journal unchanged. No owner row removed, credential ciphertexts unchanged,42other services unchanged at cutover and final readback. Do not run historical zero-business/false-policy cleanup verifiers.
+
+Native final435 source: six responsive cards fit the default1233x696 view. Isolated notification count4 ignored a technical event and listGET remained1; real synthetic review event gave5/listGET2. Opening its action reached Inbox(2reviews) and marked it read, badge4. Audit retained13technical events. Settings showed persistent connection without ordinary session countdown. No connector/provider socket,0jobs/auth in isolated fixtures. Root sandbox089 and test tunnel18241 stopped; DB fixtures retained. Old615 and candidate windows closed; final installed window9767146/binding resumedOwner070 is LEFT OPEN on Dashboard connected via Tailscale/no modal. Keep its device/profile authorized.
+
+All530installed files match accepted publication; ProductVersion0.7.0+43513350d52f96333baf0c99915b44a48a17ebd6. ZIP97562543bytes/SHA256dd9fbf4bb3a36701874005cbf14b3fd26e797b477676a92210ee10b79bb6c988, no rebuild after acceptance; old artifacts/shortcut retained. Prebackup324550encrypted bytes restored into separate DB:3accounts/tasks,14migrations,0SENDING/provider0. Same packet copied to existing offhost destination, SHA256a37683220d31f3573daaf43124c2010d71e9944918eaa62bf1e9bf67071fa2b2. Full086kit remains historical; no full-kit refresh/new-machine drill. Backup strategy/deferred/waived scope unchanged.
+
+Evidence: evidence/tailscale-dashboard-notifications-088-070-20261116.json. NEXT AUTHORIZED STAGE: project-grounded AI secretary, after this delivered phase. It is not implemented by this checkpoint. No all-project-ready claim.
+
+## Prior checkpoints — superseded where stated above
+
 ## D-088 — الحالة الأحدث المثبتة
 API0.8.7/source3919 كما هو؛ **الإرسال الحقيقي مفعّل** بطلب المالك عبر preview وعميل مؤقت وreauth لمرة واحدة وقرار COMMITTED. قراءة نهائية: ready=true/enabled=true، دون إعادة تشغيل API أو تغيير الهوية. لا ترجع إلى sending=false التاريخي أدناه. كل رد يحتاج معاينة واعتمادًا مستقلًا؛ إكمال المهمة لا يرسل.
 
