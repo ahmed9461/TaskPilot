@@ -31,3 +31,6 @@ Windows App SDK/WinUI 3، .NET حديث مدعوم، Backend TypeScript، Postgr
 
 ## الحدود بين الوحدات
 تعامل provider adapters مع DTOs محددة مسبقًا. يمنع استدعاء واجهة واتساب مباشرة من منطق المهام أو UI، ويمنع وضع مفتاح الذكاء الاصطناعي أو بيانات الدخول داخل Windows installer.
+
+## Grounded secretary boundary (D091)
+AssistantService resolves entities locally, builds strict safe planner input, invokes the existing AiRuntime/shared ledger and executes bounded read projections. ChatProvider returns only a typed plan. Facts/actions come from local records, never model SQL or free-form factual text. Snapshot readers reuse their transaction connection, including AI usage/settings. Writes are a separate frozen preview/reauth/atomic receipt path; no model transport or credential tool. Windows keeps composer text in session memory and fences obsolete results by connection and conversation generation.

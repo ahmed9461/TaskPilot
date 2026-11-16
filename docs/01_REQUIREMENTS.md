@@ -50,3 +50,6 @@ NFR-03: تشغيل متين على VPS وتعافٍ من انقطاع واتسا
 NFR-04: صلاحية التوسع لأكثر من رقم، ولكل جلسة إعداداتها ومجموعاتها.  
 NFR-05: مراقبة وتشخيص دون تسجيل بيانات اعتماد أو نصوص خاصة.  
 NFR-06: تحديثات قابلة للعودة ونسخ احتياطية مثبتة الاستعادة.
+
+## D-091 accepted personal secretary scope
+Grounded account/source-group/task lookup, Riyadh intake/briefing/priorities/reviews/reply follow-up/shared AI usage and evidence links. Coherent account focus and explicit ambiguity selection; useful next actions. Prepare and confirm at most20assignment status/priority edits with versioned atomic receipts. No automatic messaging/deletion/credential reveal or unrestricted model SQL. Privacy/history/acceptance limits follow docs17 and D091 evidence.

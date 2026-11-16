@@ -363,3 +363,8 @@ Personal handoff VERIFIED2026-11-15: API08417baf55/Windows068544748e; CI43709853
 
 ## [API0.8.9 / Windows0.8.0 IN_PROGRESS] — 2026-11-16
 Grounded secretary tools, safe-plan history and confirmed atomic status/priority actions with durable receipts. See D091/docs17. Not deployed or native-accepted at this checkpoint.
+
+## [API0.8.9 / Windows0.8.0 delivered] — 2026-11-17
+- Grounded secretary tools/current evidence links/Riyadh intake and briefing/shared AI budget, no personal provider payload or raw chat history.
+- Confirmed atomic status/priority batches with frozen versions and durable receipts; no send/delete/reveal tool. Native synthetic action and actual Tailscale/DeepSeek aggregate briefing accepted.
+- Fix single-connection usage starvation and yesterday briefing period with RED->GREEN tests.53Node/136PG/52C#, exact hosted/native/Desktop and encrypted restore/offhost evidence. Owner data/sending/identity preserved; later external-service drift diagnosed read-only and separate baseline retained. See D091 evidence for limits.

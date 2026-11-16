@@ -65,3 +65,6 @@ Windows0.6.6/D-067: heading/banner/body share a scroll surface so large text in 
 
 ## Windows0.7.0 direction — D-089/D-090
 Responsive six-card dashboard uses real accounts/open/completed/review/groups/unread counts, semantic accents and clear section shortcuts. Shared cards/toolbars/inputs use consistent spacing and grouped settings. Normal connection setup is a persistent Tailscale device profile; countdown and manual owner-token controls move out of the ordinary flow. Advanced SSH/manual connection remains diagnostic. Notification cards show work result/review explanation and a destination; audit continues to show redacted technical event code/time/record. Exact native acceptance and installed source are recorded in PROJECT_STATE, not assumed by this design note.
+
+## Personal secretary (Windows0.8.0)
+Dedicated المساعد الشخصي nav and dashboard entry; AI provider/budget settings renamed إعدادات الذكاء الاصطناعي. Question/ask controls visible at default1233x696; collapsible conversation/group/privacy controls and quick prompts. Evidence-linked current reports, account focus/ambiguity choice, scrollable before/after confirmation, single-close receipt and persisted receipt list. Original question stays in RAM; server history displays safe intent/current records. Gregorian dates explicitly use Riyadh time.

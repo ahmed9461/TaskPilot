@@ -1,4 +1,4 @@
-# خطة التنفيذ والتتبع — 2026-11-16
+# خطة التنفيذ والتتبع — 2026-11-17
 
 ## D-089/D-090 delivered — 2026-11-16
 - [x] API088/1075953 deployed; persistent root-issued revocable device auth and user-notification catalog, same14migrations.
@@ -7,7 +7,7 @@
 - [x] DPAPI opaque/tamper check, actual one-use reauth409/403, close/reopen same device without bootstrap/no TTL. Keep actual permanent device authorized.
 - [x]49Node/121uniquePG/52C# and exact hosted Backend+Windows CI SUCCESS; encrypted prebackup/isolated restore/current-destination offhost copy.
 - [x] Preserve3owner accounts/tasks/groups and existingSENT reply; no test messages/personal fixtures. Track evidence/memory and retain rollback artifacts.
-- [ ] AI_SECRETARY: next authorized stage now; implement grounded search/briefing/priorities/history and bounded confirmed actions, then test/deploy.
+- [x] AI_SECRETARY D091: deployed API089/d740d03 and Desktop080/6beb13a; grounded tools, safe-plan history and bounded confirmed status/priority actions.53Node/136PG/52C#/native/live aggregate AI/backup restore evidence recorded.
 
 ## D-088 completed owner request — 2026-11-16
 - [x] Existing durable controller enabled real sending with current client/single-use reauth; final COMMITTED/ready/true, no existing jobs/messages, same API process/identity and42other services.
@@ -160,11 +160,11 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] Existing latest encrypted packet independent DB+API/business workflow; direct and fresh full-kit extract PASS, DPAPI0/SSH0/no real provider. No new backup destination D-076.
 - [x] Recovery source53a971e hosted CI43664456529 Backend+Windows SUCCESS; live API stays4477d34 and accepted Windows0677082fcf, daily runner staysb876096.
 
-## Queued owner request — AI secretary (after D-089/D-090 delivery)
-- [ ] Add a project-grounded assistant in Windows after the current Tailscale/dashboard/notification changes are delivered.
-- [ ] Account/group/task search, account task history, today's received work, priorities, pending reviews and reply queue; add useful next actions beyond the owner's examples.
-- [ ] Explain answers with current record references and time; never invent facts or expose stored credentials to the provider.
-- [ ] Prepare bounded actions at owner's command with preview/confirmation and existing authorization/version safeguards; no blind mutation replay or autonomous sends/deletes.
-- [ ] Use existing provider configuration/budgets, encrypted local-to-project conversation storage where needed, and isolated/native acceptance. Update memory/tracking/commits per stage.
+## Delivered D-091 — project secretary (2026-11-17)
+- [x] Add a project-grounded assistant in Windows after the current Tailscale/dashboard/notification changes are delivered.
+- [x] Account/group/task search, account task history, today's received work, priorities, pending reviews and reply queue; add useful next actions beyond the owner's examples.
+- [x] Explain answers with current record references and time; never invent facts or expose stored credentials to the provider.
+- [x] Prepare bounded actions at owner's command with preview/confirmation and existing authorization/version safeguards; no blind mutation replay or autonomous sends/deletes.
+- [x] Use existing provider configuration/budgets, safe-plan/UUID history without raw chat retention, and isolated/native acceptance. Update memory/tracking/commits per stage.
 
-D-091 IN_PROGRESS: backend and Windows assistant implemented;14newPG/4newNode pass. Native/hosted/guarded deployment/Desktop and final evidence remain open.
+D-091 DEPLOYED/VERIFIED_BOUNDED:53Node/136PG/52C#, exact native/Desktop and hosted checks, one live aggregate DeepSeek request, encrypted pre/post isolated restores/offhost copies PASS. Supported actions are status/priority; business writes tested only in fixtures. Remaining/deferred scope and evidence are in PROJECT_STATE and docs17.
