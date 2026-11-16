@@ -47,6 +47,7 @@ try
 catch (InvalidOperationException e) { if (e.Message != "REAUTH_REQUIRED") throw; }
 Console.WriteLine("PASS: 6 client checks (transport, address, auth, response, errors); no network used.");
 await SshEncodingChecks.Run();
+await PersistentConnectionChecks.Run();
 await ClientReliabilityChecks.Run();
 ChangeFeedChecks.Run();
 WorkspaceViewChecks.Run();

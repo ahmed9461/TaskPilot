@@ -11,7 +11,7 @@ public sealed partial class MainPage
     private bool liveSendingEnabled;
     private bool liveConnectionEnabled;
     private bool mockToolsEnabled;
-    private string TransportSummary => $"المزامنة تعمل • اتصال واتساب {(liveConnectionEnabled ? "مسموح" : "متوقف")} • الإرسال الحقيقي {(liveSendingEnabled ? "مسموح بعد الإقرار" : "متوقف")}";
+    private string TransportSummary => $"{(sshConnection?.Persistent == true ? "Tailscale • اتصال دائم • " : "")}المزامنة تعمل • اتصال واتساب {(liveConnectionEnabled ? "مسموح" : "متوقف")} • الإرسال الحقيقي {(liveSendingEnabled ? "مسموح بعد الإقرار" : "متوقف")}";
     private static string SessionState(string code) => code switch
     {
         "MOCK" => "محاكاة", "STOPPED" => "متوقفة", "CONNECTING" => "جارٍ الاتصال",

@@ -67,9 +67,10 @@ public sealed partial class MainPage
     private async Task Notifications()
     {
         const string resource = "notifications";
+        PageBody.Children.Add(Text("تنبيهات العمل ونتائج الردود وما يحتاج مراجعتك. يمكنك فتح القسم المعني مباشرةً.", 16));
         var read = Choice("حالة القراءة", [("all", "الكل"), ("unread", "غير مقروء"), ("read", "مقروء")], Filter(resource, "read"));
         TrackDraft(read);
-        PageBody.Children.Add(Stack(read, Button("تطبيق حالة القراءة", async () => { filters[resource] = new() { ["read"] = Selected(read) }; offsets[resource] = 0; await Render(); })));
+        PageBody.Children.Add(Toolbar(read, Button("تطبيق التصفية", async () => { filters[resource] = new() { ["read"] = Selected(read) }; offsets[resource] = 0; await Render(); })));
         var result = await PageData(resource);
         var rows = result["items"]!.AsArray();
         if (rows.Count > 0)
@@ -77,8 +78,13 @@ public sealed partial class MainPage
         foreach (var row in rows)
         {
             var n = row!;
-            Card(ActivityLabel(V(n, "type")), $"{V(n, "created_at")} • {(V(n, "read_at") == "" ? "غير مقروء" : "مقروء")}",
-                Button("تمت القراءة", async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); await Render(); }));
+            var destination = V(n, "destination");
+            var actions = new List<UIElement>();
+            if (destination is "assignments" or "inbox" or "accounts" or "replies")
+                actions.Add(Button("فتح " + PageTitle(destination), async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); currentViewBuiltAt = DateTimeOffset.MinValue; await OpenSection(destination); }));
+            if (V(n, "read_at") == "") actions.Add(Button("تمت القراءة", async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); await Render(); }));
+            var time = DateTimeOffset.TryParse(V(n, "created_at"), out var timestamp) ? timestamp.ToLocalTime().ToString("dd MMM، HH:mm") : "";
+            Card(V(n, "title") is { Length: > 0 } title ? title : ActivityLabel(V(n, "type")), V(n, "detail") + $"\n{time} • {(V(n, "read_at") == "" ? "غير مقروء" : "مقروء")}", actions.ToArray());
         }
         if (rows.Count == 0)
             PageBody.Children.Add(Text("لا توجد إشعارات مطابقة."));
@@ -96,7 +102,7 @@ public sealed partial class MainPage
             Button("تطبيق التصفية", async () => { filters[resource] = new() { ["action"] = Selected(action), ["targetId"] = target.Text.Trim() }; offsets[resource] = 0; await Render(); })));
         var result = await PageData(resource);
         foreach (var n in result["items"]!.AsArray())
-            Card(ActivityLabel(V(n, "action")), V(n, "created_at") + "\n" + V(n, "target_id"));
+            Card(ActivityLabel(V(n, "action")), V(n, "created_at") + "\n" + V(n, "action") + "\n" + V(n, "target_id"));
         if (result["items"]!.AsArray().Count == 0)
             PageBody.Children.Add(Text("لا يوجد نشاط مطابق."));
         Pager(resource, result);

@@ -15,6 +15,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Title = "TaskPilot";
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);

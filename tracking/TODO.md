@@ -150,3 +150,10 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] API0834477d34 CI43661156807/deploy + same-input native routing/account and task filters/status/app restart, scoped067 cleanup and exact tested ZIP.
 - [x] Existing latest encrypted packet independent DB+API/business workflow; direct and fresh full-kit extract PASS, DPAPI0/SSH0/no real provider. No new backup destination D-076.
 - [x] Recovery source53a971e hosted CI43664456529 Backend+Windows SUCCESS; live API stays4477d34 and accepted Windows0677082fcf, daily runner staysb876096.
+
+## Queued owner request — AI secretary (after D-089/D-090 delivery)
+- [ ] Add a project-grounded assistant in Windows after the current Tailscale/dashboard/notification changes are delivered.
+- [ ] Account/group/task search, account task history, today's received work, priorities, pending reviews and reply queue; add useful next actions beyond the owner's examples.
+- [ ] Explain answers with current record references and time; never invent facts or expose stored credentials to the provider.
+- [ ] Prepare bounded actions at owner's command with preview/confirmation and existing authorization/version safeguards; no blind mutation replay or autonomous sends/deletes.
+- [ ] Use existing provider configuration/budgets, encrypted local-to-project conversation storage where needed, and isolated/native acceptance. Update memory/tracking/commits per stage.

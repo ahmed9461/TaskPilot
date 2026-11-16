@@ -16,7 +16,7 @@ static class ChangeFeedChecks
         catch (InvalidOperationException) { return; }
         throw new Exception("Invalid feed accepted");
     }
-    static JsonNode Batch(int start, int count, string type = "ACCOUNT_SAVED") => new JsonObject
+    static JsonNode Batch(int start, int count, string type = "MESSAGE_PROCESSED") => new JsonObject
     {
         ["cursor"] = (start + count - 1).ToString(),
         ["items"] = new JsonArray(Enumerable.Range(start, count).Select(i => (JsonNode)new JsonObject { ["id"] = i.ToString(), ["type"] = type, ["untrustedBody"] = "synthetic-secret-name-password" }).ToArray())

@@ -9,6 +9,12 @@ public sealed partial class MainPage : Page
 {
     private readonly ApiClient api = new();
     private SshConnection? sshConnection;
+    private readonly ProtectedConnectionStore profileStore = new(IsolatedProfilePath());
+    private static string? IsolatedProfilePath()
+    {
+        var fixture = Environment.GetEnvironmentVariable("TASKPILOT_CLIENT_CONFIG_FILE");
+        return fixture is null ? null : System.IO.Path.GetFullPath(fixture) + ".dpapi";
+    }
     private readonly ClientConnectionState connectionState = new();
     private string? lastSshAlias;
     private bool shuttingDown;
@@ -67,6 +73,8 @@ public sealed partial class MainPage : Page
         "SECURE_CONNECTION_REQUIRED" => "استخدم HTTPS أو نفق SSH محليًا.",
         "INVALID_API_TOKEN" => "رمز الوصول غير مكتمل.",
         "CONNECTION_REQUIRED" => "أدخل بيانات الاتصال من الإعدادات.",
+        "DEVICE_PROFILE_UNAVAILABLE" => "تعذر قراءة ملف ربط الجهاز المحمي. افتح الإعدادات لإعادة الربط عبر Tailscale.",
+        "INVALID_DEVICE_PROFILE" => "ملف ربط الجهاز غير صالح. أعد الربط من الإعدادات.",
         _ => code.Any(c => c >= '\u0600' && c <= '\u06ff') ? code : "تعذرت العملية. تحقق من الاتصال والبيانات ثم أعد المحاولة."
     };
     private static string V(JsonNode? n, string key) => n?[key]?.ToString() ?? "";
@@ -74,7 +82,7 @@ public sealed partial class MainPage : Page
     private static TextBlock Text(string s, int size = 14) => new() { Text = s, FontSize = size, TextWrapping = TextWrapping.Wrap };
     internal static TextBox Field(string label, string s = "") => new() { Header = label, Text = s, MaxLength = 200 };
     private static PasswordBox Secret(string label) => new() { Header = label, PasswordRevealMode = PasswordRevealMode.Hidden };
-    private PasswordBox ReauthField() => new() { Header = sshConnection is null ? "سر إعادة التحقق" : "ستتم إعادة المصادقة عبر SSH عند الموافقة", IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
+    private PasswordBox ReauthField() => new() { Header = sshConnection is null ? "سر إعادة التحقق" : "ستُؤكد العملية تلقائيًا عبر الاتصال الخاص", IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
     private static StackPanel Stack(params UIElement[] items)
     {
         var p = new StackPanel { Spacing = 12 };
@@ -99,7 +107,9 @@ public sealed partial class MainPage : Page
         var row = new ActionFlowPanel { Spacing = 8 };
         foreach (var a in actions)
             row.Children.Add(a);
-        PageBody.Children.Add(new Border { Padding = new Thickness(20), CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1), BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"], Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"], Child = Stack(Text(title, 20), Text(detail), row) });
+        var heading = Text(title, 19); heading.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
+        var description = Text(detail); description.Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+        PageBody.Children.Add(new Border { Padding = new Thickness(22), CornerRadius = new CornerRadius(18), BorderThickness = new Thickness(1), BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"], Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"], Child = Stack(heading, description, row) });
     }
     private async Task Run(Func<Task> action, bool background = false)
     {
@@ -177,6 +187,18 @@ public sealed partial class MainPage : Page
             await Run(async () =>
         {
             var file = Environment.GetEnvironmentVariable("TASKPILOT_CLIENT_CONFIG_FILE");
+            var bootstrapAlias = Environment.GetEnvironmentVariable("TASKPILOT_TAILSCALE_ALIAS");
+            if (file is null && Environment.GetEnvironmentVariable("TASKPILOT_CLIENT_API_TOKEN") is null && Environment.GetEnvironmentVariable("TASKPILOT_SSH_ALIAS") is null)
+            {
+                var saved = profileStore.Load();
+                if (saved is not null)
+                {
+                    sshConnection = SshConnection.Resume(saved); lastSshAlias = saved.Alias;
+                    api.Configure(saved.Address, saved.Token); connectionState.Connected(null);
+                    await InitializeSync("tailscale:" + saved.Address);
+                }
+                else if (bootstrapAlias is not null) await ConnectTailscale(bootstrapAlias);
+            }
             if (file is not null)
             {
                 var n = JsonNode.Parse(await System.IO.File.ReadAllTextAsync(file))!;
@@ -218,19 +240,26 @@ public sealed partial class MainPage : Page
         {
             Connection.Severity = InfoBarSeverity.Warning;
             Connection.Title = "الاتصال متوقف مؤقتًا";
-            Connection.Message = "تُعاد محاولة القراءة تدريجيًا. العمليات التي تغيّر البيانات لا تُعاد تلقائيًا.";
+            Connection.Message = "سأستعيد الاتصال تلقائيًا عند عودة الشبكة. تبقى أعمالك محفوظة.";
         }
     }
     private async void Reconnect_Click(object sender, RoutedEventArgs args) => await Run(async () =>
     {
-        if (lastSshAlias is null)
+        if (lastSshAlias is null || (sshConnection?.Persistent == true && connectionState.Phase is ConnectionPhase.Unauthorized or ConnectionPhase.Expired))
         {
+            if (connectionState.Phase is ConnectionPhase.Unauthorized or ConnectionPhase.Expired) api.Disconnect();
             page = "settings";
             Heading.Text = "الإعدادات";
+            Nav.SelectedItem = Nav.SettingsItem;
             await Render();
             return;
         }
-        await ConnectSsh(lastSshAlias);
+        if (sshConnection?.Persistent == true)
+        {
+            connectionState.Connected(null);
+            await InitializeSync("tailscale:" + api.Address);
+        }
+        else await ConnectSsh(lastSshAlias);
         if (!Editing())
             await Render();
         else
@@ -266,7 +295,7 @@ public sealed partial class MainPage : Page
             pendingChanges |= batch.NewItems > 0 && changes.FreshTypes.Any(type => WorkspaceViewCache<StackPanel>.Affects(type, page));
             UpdateUnread(notificationState);
             if (batch.AttentionItems > 0) desktop.Show(batch.AttentionItems);
-            if (changes.FreshTypes.Any(type => type == "LIVE_SENDING_CHANGE_AUTHORIZED" || type.StartsWith("WHATSAPP_", StringComparison.Ordinal)))
+            if (identityRevision == -1 || changes.FreshTypes.Any(type => type == "LIVE_SENDING_CHANGE_AUTHORIZED" || type.StartsWith("WHATSAPP_", StringComparison.Ordinal)))
             {
                 await ReadWorkspaceIdentity(force: true);
                 if (shuttingDown || !connectionState.IsCurrent(revision)) return;
@@ -275,7 +304,8 @@ public sealed partial class MainPage : Page
             Connection.Severity = InfoBarSeverity.Success;
             Connection.Title = "متصل بالخادم";
             Connection.Message = TransportSummary;
-            if (pendingChanges && page != "settings" && !Editing())
+            if (visibleContent is null && !Editing()) await Run(RenderCore, background: true);
+            else if (pendingChanges && page != "settings" && !Editing())
                 await Run(RefreshFromChanges, background: true);
             else if (pendingChanges)
                 Connection.Message = "توجد تغييرات جديدة؛ اضغط تحديث بعد الانتهاء من التحرير.";
@@ -396,17 +426,16 @@ public sealed partial class MainPage : Page
     private void Settings()
     {
         var alias = Field("اسم اتصال SSH المحفوظ", lastSshAlias ?? "New-VPS");
-        PageBody.Children.Add(Stack(Text("اتصال خاص بجلسة مؤقتة", 24), Text("يتطلب اتصال SSH محفوظًا وموثوقًا. مدة الجلسة 30 دقيقة؛ الموافقة على العملية الحساسة تطلب تحققًا جديدًا عبر SSH."), alias, Button("اتصال عبر SSH", async () => { await ConnectSsh(alias.Text); SelectDashboard(); await Render(); })));
-        if (sshConnection is not null)
-            PageBody.Children.Add(Text("انتهاء الجلسة: " + sshConnection.ExpiresAt.ToLocalTime().ToString("HH:mm:ss")));
+        Card("اتصال دائم عبر Tailscale", sshConnection?.Persistent == true ? "هذا الجهاز مرتبط. يتصل التطبيق تلقائيًا عند فتحه ويستعيد الاتصال عند عودة الشبكة، دون مهلة للجلسة." : "اربط هذا الجهاز مرة واحدة عبر اتصالك الموثوق. يلزم تشغيل Tailscale على الجهاز والخادم.", alias, Button("ربط هذا الجهاز عبر Tailscale", async () => { await ConnectTailscale(alias.Text); SelectDashboard(); await Render(); }));
         if (api.Connected)
-            PageBody.Children.Add(Button("تسجيل الخروج", async () => { if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); syncWorkspace = null; changes.Seed("0"); UnreadBadge.Visibility = Visibility.Collapsed; ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
+            PageBody.Children.Add(Button("تسجيل الخروج من هذا الجهاز", async () => { if (sshConnection is not null) await sshConnection.Revoke(); profileStore.Clear(); sshConnection = null; lastSshAlias = null; api.Disconnect(); connectionState.Disconnect(); syncWorkspace = null; changes.Seed("0"); UnreadBadge.Visibility = Visibility.Collapsed; ReconnectButton.Visibility = Visibility.Collapsed; await Render(); }));
         var address = Field("عنوان الخدمة الآمن", api.Address);
         address.FlowDirection = FlowDirection.LeftToRight;
         var token = Secret("رمز وصول المالك");
         var theme = new ComboBox { Header = "المظهر", ItemsSource = new[] { "النظام", "داكن", "فاتح" }, SelectedIndex = 0 };
         theme.SelectionChanged += (_, _) => RequestedTheme = theme.SelectedIndex switch { 1 => ElementTheme.Dark, 2 => ElementTheme.Light, _ => ElementTheme.Default };
-        PageBody.Children.Add(Stack(Text("الاتصال بمساحة العمل", 24), Text("استخدم HTTPS أو نفق SSH محلي. لا تحفظ الواجهة بيانات الحسابات أو رمز الوصول على القرص."), address, token, theme, Button("اتصال", async () => { api.Configure(address.Text, token.Password); connectionState.Connected(null); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); SelectDashboard(); await Render(); })));
+        PageBody.Children.Add(theme);
+        PageBody.Children.Add(new Expander { Header = "خيارات اتصال متقدمة", HorizontalAlignment = HorizontalAlignment.Stretch, Content = Stack(Text("الاتصال اليدوي أو نفق SSH المؤقت بدائل للتشخيص. ملف الربط الدائم محمي بتشفير Windows لهذا المستخدم؛ لا تُحفظ بيانات الحسابات محليًا."), Button("اتصال SSH مؤقت", async () => { await ConnectSsh(alias.Text); SelectDashboard(); await Render(); }), address, token, Button("اتصال يدوي", async () => { api.Configure(address.Text, token.Password); connectionState.Connected(null); token.Password = ""; if (sshConnection is not null) await sshConnection.DisposeAsync(); profileStore.Clear(); sshConnection = null; lastSshAlias = null; syncWorkspace = null; ReconnectButton.Visibility = Visibility.Collapsed; await InitializeSync("manual:" + api.Address); SelectDashboard(); await Render(); })) });
         DesktopSettings();
     }
     private void SelectDashboard()
@@ -426,6 +455,7 @@ public sealed partial class MainPage : Page
         if (sshConnection is not null)
             await sshConnection.DisposeAsync();
         sshConnection = next;
+        profileStore.Clear();
         api.Configure(next.Address, next.Token, next.ExpiresAt);
         lastSshAlias = alias;
         connectionState.Connected(next.ExpiresAt);
@@ -436,15 +466,13 @@ public sealed partial class MainPage : Page
     private async Task Dashboard()
     {
         var n = await api.Send("GET", "/v1/dashboard");
-        Card("كل أعمالك في مكان واحد", "الحساب مستقل عن المهام؛ إكمال المهمة لا يرسل ردًا تلقائيًا.");
-        foreach (var (key, title) in new[] { ("accounts", "الحسابات"), ("open", "المهام المفتوحة"), ("completed", "المكتملة"), ("review", "بحاجة مراجعة"), ("unknown_delivery", "ردود تحتاج تحققًا") })
-            Card(V(n, key), title);
+        BuildDashboard(n);
     }
     private async Task Accounts()
     {
         AccountFilters();
         var selectedIds = new HashSet<string>();
-        PageBody.Children.Add(Stack(Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }), Button("معاينة حذف الكل", () => Purge(null))));
+        PageBody.Children.Add(Toolbar(Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }), Button("معاينة حذف الكل", () => Purge(null))));
         var result = await PageData("accounts");
         var rows = result["items"]!.AsArray();
         foreach (var r in rows)

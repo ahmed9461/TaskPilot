@@ -38,6 +38,8 @@ static class WorkspaceViewChecks
         Check(!cache.TryGet("accounts", 2, out _));
         Check(WorkspaceViewCache<object>.Affects("AI_SUGGESTION_READY", "inbox") && !WorkspaceViewCache<object>.Affects("AI_SUGGESTION_READY", "groups"));
         Check(WorkspaceViewCache<object>.Affects("NEW_UNKNOWN_EVENT", "accounts"));
+        Check(!WorkspaceViewCache<object>.Affects("CLIENT_DEVICE_CREATED", "notifications") && !ChangeFeed.NeedsAttention("REPORT_EXPORTED"));
+        Check(WorkspaceViewCache<object>.Affects("REPLY_FAILED", "notifications") && ChangeFeed.NeedsAttention("AI_SUGGESTION_READY"));
         var feed = new ChangeFeed();
         feed.Seed("1");
         feed.Consume(System.Text.Json.Nodes.JsonNode.Parse("{\"cursor\":\"2\",\"items\":[{\"id\":\"1\",\"type\":\"ACCOUNT_UPDATED\"},{\"id\":\"2\",\"type\":\"CLIENT_SESSION_CREATED\"}]}")!);

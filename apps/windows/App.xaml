@@ -10,7 +10,16 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+            <Style TargetType="Button">
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="14,9"/>
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="CornerRadius" Value="8"/>
+            </Style>
+            <Style TargetType="PasswordBox">
+                <Setter Property="CornerRadius" Value="8"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

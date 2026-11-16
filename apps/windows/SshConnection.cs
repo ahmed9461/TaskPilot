@@ -9,11 +9,13 @@ namespace TaskPilot_Windows;
 public sealed class SshConnection : IAsyncDisposable
 {
     private readonly string alias;
-    private readonly Process tunnel;
+    private readonly Process? tunnel;
+    public TailscaleProfile? Profile { get; }
+    public bool Persistent => Profile is not null;
     private readonly string sessionId;
     private int stopped;
     public string Alias => alias;
-    public bool IsTunnelAlive => Volatile.Read(ref stopped) == 0 && !tunnel.HasExited;
+    public bool IsTunnelAlive => Volatile.Read(ref stopped) == 0 && (tunnel is null || !tunnel.HasExited);
     public string Address
     {
         get;
@@ -22,7 +24,7 @@ public sealed class SshConnection : IAsyncDisposable
     {
         get;
     }
-    public DateTimeOffset ExpiresAt
+    public DateTimeOffset? ExpiresAt
     {
         get;
     }
@@ -35,7 +37,12 @@ public sealed class SshConnection : IAsyncDisposable
         Token = issued["token"]!.GetValue<string>();
         ExpiresAt = DateTimeOffset.Parse(issued["expiresAt"]!.GetValue<string>());
     }
-    internal static ProcessStartInfo Info(string alias, bool input = false)
+    private SshConnection(TailscaleProfile profile)
+    {
+        Profile = profile.Validate(); alias = profile.Alias; Address = profile.Address; sessionId = profile.Id; Token = profile.Token;
+    }
+    public static SshConnection Resume(TailscaleProfile profile) => new(profile);
+    internal static ProcessStartInfo Info(string alias, bool input = false, TailscaleProfile? route = null)
     {
         if (!Regex.IsMatch(alias, "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,80}$"))
             throw new InvalidOperationException("INVALID_SSH_ALIAS");
@@ -43,11 +50,16 @@ public sealed class SshConnection : IAsyncDisposable
         if (input) { info.RedirectStandardInput = true; info.StandardInputEncoding = new System.Text.UTF8Encoding(false); }
         foreach (var arg in new[] { "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=2" })
             info.ArgumentList.Add(arg);
+        if (route is not null)
+        {
+            route.Validate();
+            foreach (var arg in new[] { "-o", "Hostname=" + new Uri(route.Address).DnsSafeHost, "-o", "HostKeyAlias=" + route.HostKeyAlias }) info.ArgumentList.Add(arg);
+        }
         return info;
     }
-    private static async Task<JsonNode> Issue(string alias, string? id = null)
+    private static async Task<JsonNode> Issue(string alias, string? id = null, bool persistent = false, TailscaleProfile? route = null, bool connectionInfo = false)
     {
-        var info = Info(alias);
+        var info = Info(alias, route: route);
         info.ArgumentList.Add(alias);
         var command = "node /opt/taskpilot/current/dist/services/api/src/issue-client-session.js";
         if (id is not null)
@@ -56,6 +68,8 @@ public sealed class SshConnection : IAsyncDisposable
                 throw new InvalidOperationException("INVALID_SESSION");
             command += " --reauth " + id;
         }
+        else if (connectionInfo) command += " --connection-info";
+        else if (persistent) command += " --persistent";
         info.ArgumentList.Add(command);
         using var process = Process.Start(info) ?? throw new InvalidOperationException("SSH_UNAVAILABLE");
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(25));
@@ -70,6 +84,33 @@ public sealed class SshConnection : IAsyncDisposable
             return JsonNode.Parse(await output) ?? throw new InvalidOperationException("SSH_SESSION_FAILED");
         }
         catch { if (!process.HasExited) process.Kill(true); throw new InvalidOperationException("SSH_SESSION_FAILED"); }
+    }
+    private static async Task<string> KnownHostAlias(string alias)
+    {
+        var info = Info(alias); info.ArgumentList.Add("-G"); info.ArgumentList.Add(alias);
+        using var process = Process.Start(info) ?? throw new InvalidOperationException("SSH_UNAVAILABLE");
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var output = process.StandardOutput.ReadToEndAsync(deadline.Token); var error = process.StandardError.ReadToEndAsync(deadline.Token);
+        try
+        {
+            await process.WaitForExitAsync(deadline.Token); await error;
+            if (process.ExitCode != 0) throw new InvalidOperationException();
+            var values = (await output).Split('\n').Select(x => x.Trim().Split(' ', 2)).Where(x => x.Length == 2 && (x[0] is "hostname" or "hostkeyalias")).ToDictionary(x => x[0], x => x[1]);
+            return values.TryGetValue("hostkeyalias", out var host) && host != "none" ? host : values["hostname"];
+        }
+        catch { if (!process.HasExited) process.Kill(true); throw new InvalidOperationException("SSH_SESSION_FAILED"); }
+    }
+    public static async Task<SshConnection> ConnectPersistent(string alias)
+    {
+        var hostKeyAlias = await KnownHostAlias(alias);
+        var configuration = await Issue(alias, connectionInfo: true);
+        var routing = new TailscaleProfile(alias, configuration["address"]!.ToString(), Guid.NewGuid().ToString(), new string('x', 64), hostKeyAlias).Validate();
+        using (var probe = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) })
+            if (!(await probe.GetAsync(routing.Address + "/health")).IsSuccessStatusCode) throw new HttpRequestException("TAILSCALE_UNAVAILABLE");
+        var issued = await Issue(alias, persistent: true, route: routing);
+        if (issued["address"]!.ToString() != routing.Address) throw new InvalidOperationException("INVALID_DEVICE_PROFILE");
+        var profile = new TailscaleProfile(alias, issued["address"]!.ToString(), issued["id"]!.ToString(), issued["token"]!.ToString(), hostKeyAlias).Validate();
+        return Resume(profile);
     }
     public static async Task<SshConnection> Connect(string alias)
     {
@@ -115,7 +156,7 @@ public sealed class SshConnection : IAsyncDisposable
             throw new ApiFailure("SESSION_EXPIRED", 401);
         if (!IsTunnelAlive)
             throw new HttpRequestException("SSH_TUNNEL_FAILED");
-        return (await Issue(alias, sessionId))["grant"]!.GetValue<string>();
+        return (await Issue(alias, sessionId, route: Profile))["grant"]!.GetValue<string>();
     }
     public async Task<JsonNode> SendingPolicy(string action, bool? enabled = null, string? token = null, string? confirmation = null)
     {
@@ -125,7 +166,7 @@ public sealed class SshConnection : IAsyncDisposable
         if (enabled is not null) payload["enabled"] = enabled.Value;
         if (token is not null) payload["token"] = token;
         if (confirmation is not null) { payload["confirmation"] = confirmation; payload["reauth"] = await Reauthorize(); }
-        var info = Info(alias, input: true);
+        var info = Info(alias, input: true, route: Profile);
         info.ArgumentList.Add(alias);
         info.ArgumentList.Add("node /opt/taskpilot/current/ops/sending-policy.mjs");
         using var process = Process.Start(info) ?? throw new InvalidOperationException("SSH_UNAVAILABLE");
@@ -167,12 +208,19 @@ public sealed class SshConnection : IAsyncDisposable
         catch { /* Expiry is the fail-safe when the tunnel is lost. */ }
         StopTunnel();
     }
+    public async Task Revoke()
+    {
+        using var client = new ApiClient(); client.Configure(Address, Token);
+        try { await client.Send("POST", "/v1/client-session/revoke", new { }); }
+        catch (ApiFailure error) when (error.StatusCode == 401) { /* Already revoked. */ }
+        StopTunnel();
+    }
     public void StopTunnel()
     {
         if (Interlocked.Exchange(ref stopped, 1) != 0)
             return;
-        if (!tunnel.HasExited)
+        if (tunnel is not null && !tunnel.HasExited)
             tunnel.Kill(true);
-        tunnel.Dispose();
+        tunnel?.Dispose();
     }
 }
