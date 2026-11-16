@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using TaskPilot_Windows;
 if (args is ["--synthetic-utf8-echo"]) { Console.InputEncoding = new UTF8Encoding(false); Console.OutputEncoding = new UTF8Encoding(false); Console.Write(await Console.In.ReadToEndAsync()); return; }
+if (args is ["--verify-persistent-connection"]) { await PersistentServerChecks.Run(); return; }
 if (args is ["--verify-disabled-sending-control"])
 {
     await using var connection = await SshConnection.Connect("New-VPS");
