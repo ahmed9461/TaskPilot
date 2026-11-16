@@ -519,3 +519,5 @@ API088 local build and49Node tests PASS. Dedicated PG run:111tests passed; the s
 Windows candidate070: build0warnings/errors and52offline checks/groups PASS, including actual current-user DPAPI opaque storage/restart-read/tamper/removal on a synthetic profile. Further native/publish/Desktop acceptance remains pending.
 
 Tailscale additive setup LIVE: dedicated HTTPS9443 to existing API loopback8240, tailnet-only/no Funnel; previous Serve/Funnel handlers unchanged. Windows HTTPS probe passed normal certificate validation to API087. Persistent root issuance requires deployment of088 first. Existing sending=true and actual owner data(3accounts/tasks/groups,1reply at preflight) retained. Do not run old false/zero-count verifiers.
+
+D091 pool regression: actual isolated max1/300ms connection wait reproduced timeout in AiRuntime.usage while AssistantService held a snapshot. Passing the existing transaction to settings/usage made the same test pass;15secretaryPG/53Node PASS. Production patch and full hosted136suite pending at this checkpoint; Windows080binary unchanged.

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
+import pg from "pg";
 import { createPool } from "../../src/db.js";
 import { migrate } from "../../src/migrate.js";
 import { createApp } from "../../src/app.js";
@@ -549,6 +550,37 @@ test("project secretary grounded reads, privacy, shared budget and atomic comman
         ).statusCode,
         400,
       );
+    },
+  );
+  await t.test(
+    "usage report does not borrow another connection while holding its read snapshot",
+    async () => {
+      await pool.query("UPDATE ai_settings SET enabled=false");
+      const single = new pg.Pool({
+        connectionString: url,
+        max: 1,
+        connectionTimeoutMillis: 300,
+        statement_timeout: 1000,
+      });
+      try {
+        const runtime = new AiRuntime(
+          single,
+          new Vault(config.encryptionKey),
+          async () => "synthetic-only",
+        );
+        const secretary = new AssistantService(single, runtime);
+        const report = await secretary.ask({
+          requestId: randomUUID(),
+          threadId: randomUUID(),
+          question: "كم استهلاك الذكاء الاصطناعي اليوم",
+        });
+        assert.equal(report.title, "استهلاك الذكاء الاصطناعي");
+        assert.ok(report.summary.includes("الحد مشترك"));
+        assert.equal(report.modelStatus, "AI_DISABLED");
+      } finally {
+        await single.end();
+        await pool.query("UPDATE ai_settings SET enabled=true");
+      }
     },
   );
   await t.test(

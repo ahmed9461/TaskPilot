@@ -70,9 +70,8 @@ export class AiRuntime {
     private factory: (c: FactoryConfig) => AiProvider = (c) =>
       new ChatProvider(c),
   ) {}
-  private async cfg() {
-    return (await this.pool.query("SELECT * FROM ai_settings WHERE id=true"))
-      .rows[0];
+  private async cfg(db: pg.Pool | pg.PoolClient = this.pool) {
+    return (await db.query("SELECT * FROM ai_settings WHERE id=true")).rows[0];
   }
   async recoverInterrupted() {
     await this.pool.query(
@@ -93,8 +92,8 @@ export class AiRuntime {
       outboundApproved: true,
     });
   }
-  async settings() {
-    const c = await this.cfg();
+  async settings(db: pg.Pool | pg.PoolClient = this.pool) {
+    const c = await this.cfg(db);
     let configured = false;
     try {
       configured = !!(await this.key(c.provider));
@@ -532,14 +531,14 @@ export class AiRuntime {
       return { requestId: selected.row.id, status: "UNAVAILABLE", plan: null };
     }
   }
-  async usage() {
+  async usage(db: pg.Pool | pg.PoolClient = this.pool) {
     const today = (
-      await this.pool.query(
+      await db.query(
         "SELECT count(*) FILTER(WHERE status<>'ABSTAINED')::int requests,count(*) FILTER(WHERE status='SUCCEEDED')::int succeeded,COALESCE(sum(prompt_tokens),0)::int \"promptTokens\",COALESCE(sum(completion_tokens),0)::int \"completionTokens\",COALESCE(sum(reserved_tokens) FILTER(WHERE prompt_tokens IS NULL OR completion_tokens IS NULL),0)::int \"unresolvedReservedTokens\",sum(estimated_cost_usd) \"estimatedCostUsd\",sum(reported_cost_usd) \"reportedCostUsd\" FROM ai_requests WHERE created_at>=date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'",
       )
     ).rows[0];
     const recent = (
-      await this.pool.query(
+      await db.query(
         "SELECT id,status,provider,model,task_code,confidence,prompt_tokens,completion_tokens,estimated_cost_usd,reported_cost_usd,request_purpose,created_at FROM ai_requests ORDER BY created_at DESC LIMIT 20",
       )
     ).rows;

@@ -720,8 +720,8 @@ export class AssistantService {
           })),
         });
       } else if (plan.tool === "ai_usage") {
-        const usage = await this.ai.usage(),
-          settings = await this.ai.settings(),
+        const usage = await this.ai.usage(db),
+          settings = await this.ai.settings(db),
           today = usage.today;
         result.summary = `استخدام اليوم UTC: ${today.requests} طلبات من حد${settings.dailyRequestLimit}؛ نجحت ${today.succeeded}. الحد مشترك بين المساعد وتحليل الوارد.`;
         sections.push({
