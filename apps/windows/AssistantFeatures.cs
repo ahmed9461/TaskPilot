@@ -27,21 +27,20 @@ public sealed partial class MainPage
         var history = await api.Send("GET", "/v1/assistant/threads/" + assistantThread);
         if (!CurrentAssistant(revision)) return;
         if (assistantParent is null && history["items"]!.AsArray().LastOrDefault() is JsonNode last && V(last, "state") != "PLANNING") { assistantParent = V(last, "id"); assistantFocus = string.IsNullOrEmpty(V(last, "contextAccountId")) ? null : V(last, "contextAccountId"); }
-        PageBody.Children.Add(Text("مساعدك لإدارة العمل", 23));
         PageBody.Children.Add(Text("اسأل عن الحسابات ومجموعاتها ومهامها، أو اطلب ملخصًا وأولويات. الإجراءات تُعرض للتأكيد قبل تطبيقها."));
-        PageBody.Children.Add(new Expander { Header = "مصادر الإجابة والخصوصية", HorizontalAlignment = HorizontalAlignment.Stretch, Content = Text("الإجابات من سجلات TaskPilot الحالية مع وقت القراءة وروابطها. النموذج يستقبل مفردات عمل محددة ومؤشرات وأعدادًا فقط؛ لا يستقبل الأسماء أو اليوزرات أو كلمات المرور أو نصوص واتساب. يحفظ الخادم نوع الطلب ومراجع السجلات، وتُقرأ البيانات من جديد عند فتح المحادثة. نص سؤالك يبقى في ذاكرة التطبيق أثناء الاتصال؛ لا تلصق كلمات المرور هنا.") });
+        var privacy = Text("الإجابات من سجلات TaskPilot الحالية مع وقت القراءة وروابطها. النموذج يستقبل مفردات عمل محددة ومؤشرات وأعدادًا فقط؛ لا يستقبل الأسماء أو اليوزرات أو كلمات المرور أو نصوص واتساب. يحفظ الخادم نوع الطلب ومراجع السجلات، وتُقرأ البيانات من جديد عند فتح المحادثة. نص سؤالك يبقى في ذاكرة التطبيق أثناء الاتصال؛ لا تلصق كلمات المرور هنا.");
         var threads = await api.Send("GET", "/v1/assistant/threads");
         var selector = new ComboBox { Header = "محادثات سابقة", PlaceholderText = "اختر محادثة", HorizontalAlignment = HorizontalAlignment.Stretch };
         foreach (var thread in threads["items"]!.AsArray()) selector.Items.Add(new ComboBoxItem { Content = V(thread, "title") + " • " + LocalAssistantTime(V(thread, "updatedAt")), Tag = V(thread, "threadId") });
         selector.SelectionChanged += async (_, _) => { if (selector.SelectedItem is ComboBoxItem item) await Run(async () => { ClearAssistant(); assistantThread = item.Tag.ToString()!; await Render(); }); };
-        PageBody.Children.Add(Toolbar(Button("محادثة جديدة", async () => { ClearAssistant(); await Render(); }), selector));
+        PageBody.Children.Add(Button("محادثة جديدة", async () => { ClearAssistant(); await Render(); }));
         var groups = await api.Send("GET", "/v1/groups");
         var groupFilter = new ComboBox { Header = "نطاق المجموعة", HorizontalAlignment = HorizontalAlignment.Stretch };
         groupFilter.Items.Add(new ComboBoxItem { Content = "كل المجموعات", Tag = "" });
         foreach (var group in groups.AsArray()) groupFilter.Items.Add(new ComboBoxItem { Content = V(group, "title"), Tag = V(group, "id") });
         groupFilter.SelectedItem = groupFilter.Items.Cast<ComboBoxItem>().FirstOrDefault(x => x.Tag?.ToString() == (assistantGroup ?? "")) ?? groupFilter.Items[0];
         groupFilter.SelectionChanged += (_, _) => { assistantGroup = (groupFilter.SelectedItem as ComboBoxItem)?.Tag?.ToString(); if (assistantGroup == "") assistantGroup = null; MarkDraft(); };
-        PageBody.Children.Add(groupFilter);
+        PageBody.Children.Add(new Expander { Header = "المحادثات ونطاق العمل والخصوصية", HorizontalAlignment = HorizontalAlignment.Stretch, Content = Stack(selector, groupFilter, privacy) });
         if (assistantFocus is not null) PageBody.Children.Add(Toolbar(Text("متابعة الحساب المحدد في هذه المحادثة"), Button("إلغاء تحديد الحساب", async () => { assistantFocus = null; assistantParent = null; await Render(); })));
         var composer = new TextBox { Header = "اطلب من المساعد", PlaceholderText = "مثال: الحسابات التي وصلتني اليوم وما مهامها؟", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 1200, MinHeight = 88, MaxHeight = 180, Text = assistantDraft };
         AutomationProperties.SetName(composer, "اطلب من المساعد");
@@ -50,10 +49,14 @@ public sealed partial class MainPage
         foreach (var (label, question) in new[] { ("ملخص يومي", "ملخص العمل اليوم"), ("استقبال اليوم", "ماهي الحسابات التي استلمتها اليوم وما مهامها"), ("أولويات العمل", "اعرض المهام المفتوحة حسب الأولوية"), ("المراجعات", "ما الذي يحتاج مراجعة"), ("الردود", "اعرض الردود"), ("أعمال قديمة", "اقترح متابعة الأعمال القديمة"), ("الاستهلاك", "كم استهلاك الذكاء الاصطناعي اليوم") })
             quick.Children.Add(Button(label, () => { composer.Text = question; composer.Focus(FocusState.Programmatic); return Task.CompletedTask; }));
         PageBody.Children.Add(quick); PageBody.Children.Add(composer);
-        var askButton = Button("اسأل المساعد", async () => {
+        var pendingQuestion = Stack(Text("لم تُحسم نتيجة الطلب. لن يعاد استدعاء النموذج تلقائيًا."), Button("التحقق من نتيجة الطلب", CheckAssistantPending));
+        pendingQuestion.Visibility = assistantPendingTurn is null ? Visibility.Collapsed : Visibility.Visible;
+        Button? askButton = null;
+        askButton = Button("اسأل المساعد", async () => {
             if (string.IsNullOrWhiteSpace(composer.Text)) throw new InvalidOperationException("VALIDATION_ERROR");
             if (assistantPendingTurn is not null) throw new InvalidOperationException("ASSISTANT_REQUEST_PENDING");
             var requestId = Guid.NewGuid().ToString(); assistantPendingTurn = requestId;
+            askButton!.IsEnabled = false;
             assistantQuestions[requestId] = composer.Text;
             while (assistantQuestions.Count > 20) assistantQuestions.Remove(assistantQuestions.Keys.First());
             try {
@@ -61,16 +64,16 @@ public sealed partial class MainPage
                 if (!CurrentAssistant(revision)) return;
                 AcceptAssistantTurn(answer); await Render();
             } catch (ApiFailure e) when (e.StatusCode is >= 400 and < 500 && e.StatusCode != 408) {
-                if (CurrentAssistant(revision)) { assistantPendingTurn = null; assistantQuestions.Remove(requestId); }
+                if (CurrentAssistant(revision)) { assistantPendingTurn = null; assistantQuestions.Remove(requestId); askButton!.IsEnabled = true; if (e.Message == "ASSISTANT_CREDENTIAL_INPUT_REJECTED") { composer.Text = ""; assistantDraft = ""; } }
                 throw;
             } catch {
-                if (CurrentAssistant(revision)) await RenderAssistantPending();
+                if (CurrentAssistant(revision)) pendingQuestion.Visibility = Visibility.Visible;
                 throw;
             }
         });
         askButton.IsEnabled = assistantPendingTurn is null;
         PageBody.Children.Add(askButton);
-        if (assistantPendingTurn is not null) PageBody.Children.Add(Stack(Text("لم تُحسم نتيجة الطلب. لن يعاد استدعاء النموذج تلقائيًا."), Button("التحقق من نتيجة الطلب", CheckAssistantPending)));
+        PageBody.Children.Add(pendingQuestion);
         if (assistantPendingAction is not null) PageBody.Children.Add(Stack(Text("تحقق من إيصال التغيير السابق قبل أي تغيير آخر."), Button("التحقق من نتيجة التغيير", CheckAssistantAction)));
         var receipts = await api.Send("GET", "/v1/assistant/actions");
         if (!CurrentAssistant(revision)) return;
@@ -94,7 +97,7 @@ public sealed partial class MainPage
         catch (ApiFailure e) when (e.StatusCode == 404) { if (CurrentAssistant(revision)) assistantPendingTurn = null; else return; }
         if (CurrentAssistant(revision)) await Render();
     }
-    private static string LocalAssistantTime(string time) => DateTimeOffset.TryParse(time, out var value) ? value.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") + " (الرياض)" : time;
+    private static string LocalAssistantTime(string time) => DateTimeOffset.TryParse(time, out var value) ? value.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) + " (الرياض)" : time;
     private void AddAssistantTurn(JsonNode turn, long revision)
     {
         var id = V(turn, "id");
