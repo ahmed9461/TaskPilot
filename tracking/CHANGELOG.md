@@ -368,3 +368,7 @@ Grounded secretary tools, safe-plan history and confirmed atomic status/priority
 - Grounded secretary tools/current evidence links/Riyadh intake and briefing/shared AI budget, no personal provider payload or raw chat history.
 - Confirmed atomic status/priority batches with frozen versions and durable receipts; no send/delete/reveal tool. Native synthetic action and actual Tailscale/DeepSeek aggregate briefing accepted.
 - Fix single-connection usage starvation and yesterday briefing period with RED->GREEN tests.53Node/136PG/52C#, exact hosted/native/Desktop and encrypted restore/offhost evidence. Owner data/sending/identity preserved; later external-service drift diagnosed read-only and separate baseline retained. See D091 evidence for limits.
+
+## [Usage handbook] — 2026-11-17
+- Add standalone Arabic user handbook with21sections, linked contents, current procedures/examples/troubleshooting and bounded feature/recovery explanations. Link from README and deliver identical MD on Desktop.
+- Validate22unique anchors/42internal links/7closed code blocks/ordered sections and copy hash. No application build, live operation or server change.

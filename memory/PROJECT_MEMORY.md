@@ -1,5 +1,8 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
+## User handbook delivered — 2026-11-17 (documentation only)
+Added docs/18_USER_HANDBOOK_AR.md: standalone Arabic handbook for Windows0.8.0/API0.8.9,21numbered sections, clickable contents and return links. Covers setup/Tailscale/WhatsApp/groups/rules/message formats/review/accounts/tasks/replies/sending/secretary/AI/notifications/export/privacy/recovery/troubleshooting/daily use, with synthetic examples and explicit current limits. Matched current UI labels and code paths; no app/server behavior changed. Desktop copy TaskPilot-دليل-الاستخدام.md is hash-identical. Structure check:22unique anchors/42internal links/0missing targets/14balanced fence markers/703lines/57134bytes. Runtime tests not rerun for prose-only changes; no provider request, WhatsApp action, live-data mutation, deployment or profile change. Current code/artifact acceptance remains D091 below.
+
 ## D-091 CURRENT / DEPLOYED / VERIFIED_BOUNDED — 2026-11-17
 API0.8.9/source d740d03f8a50e71f2f4073262c98126cb0210f8c is current on New-VPS, schema15. Windows0.8.0/source6beb13af4b8232cab4c1904f533de3b0cce6d60a is installed at per-user versions/0.8.0-6beb13a and Desktop updated. Exact API CI43961376805 and Windows CI43956269591: Backend+Windows SUCCESS;53Node/136isolatedPG/52offlineC# checks-groups/build/publish/portable PASS.
 

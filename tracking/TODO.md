@@ -168,3 +168,5 @@ Queued native activation now carries its opt-in generation into DispatcherQueue;
 - [x] Use existing provider configuration/budgets, safe-plan/UUID history without raw chat retention, and isolated/native acceptance. Update memory/tracking/commits per stage.
 
 D-091 DEPLOYED/VERIFIED_BOUNDED:53Node/136PG/52C#, exact native/Desktop and hosted checks, one live aggregate DeepSeek request, encrypted pre/post isolated restores/offhost copies PASS. Supported actions are status/priority; business writes tested only in fixtures. Remaining/deferred scope and evidence are in PROJECT_STATE and docs17.
+
+- [x] USER_HANDBOOK2026-11-17: standalone Arabic MD/21sections/working TOC and back links; current UI/code reviewed, identical Desktop copy delivered. Documentation only; no runtime change.
