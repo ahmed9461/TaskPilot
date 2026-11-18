@@ -11,7 +11,10 @@ public sealed partial class MainPage
         ? "أدخل سر إعادة التحقق الخاص بالتطبيق."
         : "اضغط زر المتابعة. يتحقق التطبيق من هويتك عبر الاتصال الخاص.";
 
-    private DropDownButton MoreActions(params (string Label, Func<Task> Action)[] actions)
+    private DropDownButton MoreActions(params (string Label, Func<Task> Action)[] actions) =>
+        new() { Content = "المزيد", Flyout = ActionMenu(actions) };
+
+    private MenuFlyout ActionMenu(params (string Label, Func<Task> Action)[] actions)
     {
         var menu = new MenuFlyout();
         foreach (var (label, action) in actions)
@@ -20,7 +23,7 @@ public sealed partial class MainPage
             item.Click += async (_, _) => await Run(action);
             menu.Items.Add(item);
         }
-        return new DropDownButton { Content = "المزيد", Flyout = menu };
+        return menu;
     }
 
     private async Task ShowAccountCredentials(string id, string name, string username)

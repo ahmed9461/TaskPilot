@@ -144,6 +144,7 @@ public sealed partial class MainPage : Page
                 Connection.Title = "تعذر تنفيذ العملية";
                 Connection.Message = ex is InvalidOperationException ? FriendlyError(ex.Message) : "تعذر الاتصال بالخدمة. لم تُعد العملية تلقائيًا؛ حدّث البيانات قبل المحاولة.";
                 ShowConnectionProblem();
+                UpdateWorkspaceChrome();
             }
         }
         finally
@@ -316,6 +317,7 @@ public sealed partial class MainPage : Page
             Connection.Severity = InfoBarSeverity.Success;
             Connection.Title = "متصل بالخادم";
             Connection.Message = TransportSummary;
+            UpdateWorkspaceChrome();
             if (visibleContent is null && !Editing()) await Run(RenderCore, background: true);
             else if (pendingChanges && page != "settings" && !Editing())
                 await Run(RefreshFromChanges, background: true);

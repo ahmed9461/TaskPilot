@@ -15,6 +15,12 @@ public sealed partial class MainPage
     private void MarkDraft() { hasDraft = true; draftRevision++; }
     private static string PageTitle(string value) => value switch { "dashboard" => "لوحة التحكم", "accounts" => "الحسابات", "account-details" => "تفاصيل الحساب", "assignments" => "المهام", "inbox" => "صندوق المراجعة", "replies" => "الردود والقوالب", "groups" => "المجموعات", "sessions" => "الجلسات", "notifications" => "الإشعارات", "audit" => "سجل النشاط", "assistant" => "المساعد الشخصي", "ai" => "إعدادات الذكاء الاصطناعي", "operations" => "المراقبة", "privacy" => "الخصوصية والاحتفاظ", _ => "الإعدادات" };
     private StackPanel PageBody => buildingContent ?? visibleContent ?? Body;
+    private void UpdateWorkspaceChrome()
+    {
+        var chat = page == "assistant";
+        PageIntro.Visibility = chat && renderedPage == "assistant" ? Visibility.Collapsed : Visibility.Visible;
+        Connection.Visibility = chat && Connection.Severity == InfoBarSeverity.Success ? Visibility.Collapsed : Visibility.Visible;
+    }
     private void ShowSelectedSection()
     {
         if (renderedPage == page) return;
@@ -22,6 +28,7 @@ public sealed partial class MainPage
         Body.Children.Clear();
         visibleContent = null;
         renderedPage = null;
+        UpdateWorkspaceChrome();
         pendingChanges = false;
         hasDraft = false;
         Body.Children.Add(Text("جارٍ فتح " + PageTitle(page) + "…"));
@@ -40,6 +47,7 @@ public sealed partial class MainPage
         Body.Children.Add(visibleContent);
         renderedPage = page; currentViewBuiltAt = cached.BuiltAt;
         Heading.Text = PageTitle(page);
+        UpdateWorkspaceChrome();
         hasDraft = cached.HasDraft; pendingChanges = cached.Dirty;
         Connection.Message = pendingChanges ? "احتُفظ بما تحرره؛ توجد بيانات أحدث. اضغط تحديث بعد الانتهاء." : TransportSummary;
         ContentScroll.UpdateLayout();
@@ -97,6 +105,7 @@ public sealed partial class MainPage
             Body.Children.Add(content);
             visibleContent = content; renderedPage = target;
             Heading.Text = PageTitle(target);
+            UpdateWorkspaceChrome();
             currentViewBuiltAt = DateTimeOffset.UtcNow;
             pendingChanges = false; hasDraft = false;
             ContentScroll.ChangeView(null, 0, null, true);
