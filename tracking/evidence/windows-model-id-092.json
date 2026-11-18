@@ -1,0 +1,29 @@
+{
+  "release": "0.9.2",
+  "commit": "eb5c57cd3af00b227756764e6205462a671e1633",
+  "verifiedInstalledFiles": 530,
+  "zipSHA256": "7a520ecc20beb29ee4f72c6cecc416a20d32820c7c72985471553931f6caa8f2",
+  "shortcutTargetVerified": true,
+  "personalProcessCount": 1,
+  "deviceProfilePreserved": true,
+  "apiRelease": "0.9.1",
+  "apiCommit": "a29fdcb",
+  "windowsOfflineChecks": 52,
+  "buildWarnings": 0,
+  "buildErrors": 0,
+  "nativeFixture": {
+    "automaticExactInput": "FIXTURE/REASONER",
+    "appliedHeader": "OpenRouter • fixture/reasoner",
+    "settingsPartial": "FLA",
+    "settingsMatch": "deepseek-flash",
+    "unknownIdMessageObserved": true
+  },
+  "personalWindow": {
+    "tailscaleConnected": true,
+    "openRouterKeyConfigured": true,
+    "modelIdTyped": "openai/gpt-4o",
+    "liveCatalogExactMatch": true,
+    "selectionApplied": false,
+    "inferenceRequested": false
+  }
+}

@@ -1,5 +1,9 @@
 # نتائج الاختبار الفعلية
 
+## D-094 — Windows 0.9.2 — 2026-11-18
+
+Release build succeeded with zero warnings or errors. All 52 offline Windows checks/groups passed. In a fresh synthetic assistant picker, pasting `FIXTURE/REASONER` in automatic mode and clicking Use displayed `OpenRouter • fixture/reasoner` in the conversation header. In AI Settings the unavailable ID showed a no-match message, partial `FLA` showed the single matching suggestion, and the full uppercase ID resolved to `deepseek-flash`. The installed personal client connected over Tailscale and resolved `openai/gpt-4o` against the real key catalog. The personal dialog stayed open without applying the selection or running inference. [Release evidence](evidence/windows-model-id-092.json)
+
 ## D-093 — release a29fdcb — 2026-11-18
 
 54 unit tests, 140 isolated PostgreSQL tests and 52 offline Windows checks/groups passed. Windows Release built with zero warnings/errors. The key tests exercised reauthorization, valid replacement, rejected key, stale settings version, scoped decryption and key rotation. Native Windows fetched three synthetic models, filtered to one with uppercase partial input and displayed the selected model in the conversation header.

@@ -1,5 +1,9 @@
 # سجل التغيير
 
+## [Windows 0.9.2] — 2026-11-18
+
+Type or paste a model ID in the assistant or AI Settings. Exact input selects the canonical ID from the provider catalog. Partial input lists suggestions inline. Automatic mode resolves OpenRouter IDs with a vendor prefix. AI Settings retains the current default when opened.
+
 ## [0.9.1 deployed] — 2026-11-18
 
 - Added write-only OpenRouter key management in AI Settings. Reauthorization, provider validation and a settings version check precede replacement. The encrypted field participates in backup and key rotation.

@@ -1,5 +1,9 @@
 # TaskPilot handoff — 2026-11-18
 
+## D-094 — Windows 0.9.2 delivered
+
+The desktop shortcut opens Windows `eb5c57c`. The personal assistant picker was left open with the live OpenRouter match `openai/gpt-4o` for the owner to apply or replace. No personal default was saved and no inference was requested. The tool was applied to a conversation in the isolated fixture. The previous 0.9.1 client and its shortcut backup in `outputs/TaskPilot-before-0.9.2.lnk` are available. The production API is 0.9.1, schema 16. The temporary fixture process, unit and SSH forward were stopped.
+
 ## D-093 deployed
 
 API and Windows `a29fdcb` (0.9.1). The desktop shortcut opens the verified build. The new app is open on AI Settings, with the original Tailscale profile. Live OpenRouter setup is owner-managed. The previous 0.9.0 window was minimized and was left open to preserve any work. Rollback points are the previous API `7466881`, the 0.9.0 client and `outputs/TaskPilot-before-0.9.1.lnk`. Migration 016 adds a nullable column. Pre- and post-release database packets were restored separately and copied offhost.

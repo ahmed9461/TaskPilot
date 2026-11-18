@@ -1,5 +1,9 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
+## D-094 — اختيار نموذج بالمُعرّف في Windows 0.9.2
+
+يميّز التطبيق بين مفتاح OpenRouter المحفوظ في إعدادات المزود ومعرّف النموذج الذي يكتبه المستخدم في المساعد أو الإعدادات. لصق معرّف OpenRouter كاملًا في «تلقائي» يجلب النماذج المتاحة للمفتاح ويحدّد التطابق دون اختيار ثانٍ من قائمة. الكتابة الجزئية تعرض اقتراحات. الاختيار في المساعد يخص المحادثة، وحفظ الإعدادات يغير النموذج الافتراضي. تحقق المسار على سطح المكتب ومع دليل OpenRouter الحي.
+
 ## D-093 — 0.9.1 deployed — 2026-11-18
 
 The owner can add or replace the OpenRouter key from AI Settings and search the authenticated catalog from the assistant. The managed key is write-only, checked before replacement and encrypted with the rotated Vault key. Use the server file fallback for existing installations without a managed key. The assistant model selection applies to the current conversation for the Windows session. Dashboard Tailscale connection and the live add-key control were observed after the desktop upgrade. See TEST_RESULTS for the synthetic provider acceptance boundary.
