@@ -6,10 +6,27 @@ public sealed partial class MainPage
 {
     private static string Money(JsonNode? n) => n is null ? "غير معلومة" : n.ToString() + " USD";
     private static string SuggestionLabel(JsonNode? n) => string.IsNullOrWhiteSpace(n?.ToString()) ? "لم يرجّح النموذج مهمة؛ اخترها يدويًا." : n.ToString();
+    private async Task EditOpenRouterKey(int version)
+    {
+        var key = new PasswordBox { Header = "مفتاح OpenRouter الجديد", MaxLength = 512, PasswordRevealMode = PasswordRevealMode.Hidden };
+        var reauth = ReauthField();
+        try
+        {
+            if (!await Dialog("مفتاح OpenRouter", Stack(key, Text("يتحقق TaskPilot من المفتاح لدى OpenRouter ثم يحفظه مشفّرًا على الخادم."), reauth), "تحقق واحفظ",
+                () => string.IsNullOrWhiteSpace(key.Password) ? "أدخل مفتاح OpenRouter." : null)) return;
+            await api.Send("PUT", "/v1/ai/providers/openrouter/key", new { key = key.Password.Trim(), version }, await Reauth(reauth.Password));
+        }
+        finally { key.Password = ""; reauth.Password = ""; }
+        await Render();
+        await AssistantNotice("تم حفظ مفتاح OpenRouter", "يمكنك الآن جلب النماذج من المساعد الشخصي واختيار نموذج للمحادثة.");
+    }
     private async Task AiSettings()
     {
         var c = await api.Send("GET", "/v1/ai/config");
         var usage = await api.Send("GET", "/v1/ai/usage");
+        var keyConfigured = c["openRouterKeyConfigured"]?.GetValue<bool>() == true;
+        Card("مفتاح OpenRouter", keyConfigured ? "المفتاح مضبوط على الخادم." : "لم يُضف مفتاح بعد.",
+            Button(keyConfigured ? "تغيير مفتاح OpenRouter" : "إضافة مفتاح OpenRouter", () => EditOpenRouterKey(Ver(c))));
         var provider = new ComboBox { Header = "المزود", ItemsSource = new[] { "deepseek", "openrouter" }, SelectedItem = V(c,"provider") };
         var model = new ComboBox { Header = "النموذج", ItemsSource = new[] { V(c,"model") }, SelectedIndex = 0 };
         var enabled = new CheckBox { Content = "تفعيل AI للمساعد واقتراحات الوارد", IsChecked = c["enabled"]?.GetValue<bool>() };

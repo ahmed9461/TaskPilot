@@ -68,6 +68,8 @@ public sealed partial class MainPage : Page
         "PERMISSION_DENIED" or "SESSION_EXPIRED" => "انتهت جلسة الاتصال أو أُلغيت. أعد الاتصال للمتابعة.",
         "AI_DISABLED" => "فعّل الاقتراحات والموافقة على اتصال المزود من صفحة الذكاء الاصطناعي.",
         "AI_CONFIGURATION_REQUIRED" => "مفتاح المزود غير مضبوط على الخادم.",
+        "AI_KEY_REJECTED" => "رفض OpenRouter المفتاح أو صلاحيات الوصول إلى النماذج. تحقق من المفتاح وأعد المحاولة.",
+        "AI_CATALOG_UNAVAILABLE" => "تعذر التحقق لدى OpenRouter. حاول الحفظ مرة أخرى عند عودة الاتصال.",
         "AI_DAILY_LIMIT" => "بلغت الحد اليومي للطلبات أو حجز التوكنات. راجع الاستخدام والحدود.",
         "AI_UNAVAILABLE" or "AI_MODEL_UNAVAILABLE" => "تعذر استخدام المزود أو النموذج. تستمر القواعد والمراجعة المحلية.",
         "AI_REVIEW_SOURCE_REQUIRED" or "AI_IDEMPOTENCY_CONFLICT" => "تغير المصدر أو إعداد التحليل. حدّث صندوق المراجعة.",

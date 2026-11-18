@@ -40,7 +40,27 @@ public sealed partial class MainPage
         var load = ActionButton("جلب النماذج");
         string? loadedProvider = null;
         var loading = false;
-        providers.SelectionChanged += (_, _) => { models.Items.Clear(); models.IsEnabled = false; loadedProvider = null; };
+        var search = new TextBox { Header = "بحث عن نموذج", PlaceholderText = "اسم النموذج أو جزء من المعرّف", IsEnabled = false };
+        string[] catalog = [];
+        void FilterModels()
+        {
+            var previous = models.SelectedItem as string ?? (current?.Provider == loadedProvider ? current.Model : null);
+            var matches = catalog.Where(id => id.Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
+            models.ItemsSource = matches;
+            models.SelectedItem = matches.FirstOrDefault(id => id == previous);
+            models.IsEnabled = matches.Length > 0;
+            message.Text = catalog.Length == 0 ? "لم يُرجع المزود نماذج متاحة." : matches.Length == 0 ? "لا توجد نماذج تطابق البحث." : $"النماذج المطابقة: {matches.Length}";
+        }
+        search.TextChanged += (_, _) => { if (loadedProvider != null) FilterModels(); };
+        void ResetCatalog()
+        {
+            loadedProvider = null;
+            catalog = [];
+            search.Text = "";
+            models.ItemsSource = null;
+            search.IsEnabled = models.IsEnabled = false;
+        }
+        providers.SelectionChanged += (_, _) => { ResetCatalog(); message.Text = "اجلب النماذج المتاحة لهذا المزود."; };
         load.Click += async (_, _) =>
         {
             var provider = Selected(providers);
@@ -48,28 +68,25 @@ public sealed partial class MainPage
             if (!configured.Contains(provider)) { message.Text = "مفتاح هذا المزود غير مضبوط على الخادم."; return; }
             loading = true;
             load.IsEnabled = providers.IsEnabled = false;
-            models.IsEnabled = false;
-            models.Items.Clear();
-            loadedProvider = null;
+            ResetCatalog();
             message.Text = "جارٍ جلب النماذج…";
             try
             {
                 var result = await api.Send("GET", "/v1/ai/models?provider=" + provider);
                 if (!CurrentAssistant(revision)) return;
-                foreach (var item in result["models"]!.AsArray()) models.Items.Add(new ComboBoxItem { Content = item!.ToString(), Tag = item.ToString() });
-                models.SelectedItem = models.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag?.ToString() == current?.Model);
-                models.IsEnabled = models.Items.Count > 0;
+                catalog = result["models"]!.AsArray().Select(item => item!.ToString()).ToArray();
                 loadedProvider = provider;
-                message.Text = models.IsEnabled ? "اختر النموذج لهذه المحادثة." : "لم يُرجع المزود نماذج متاحة.";
+                search.IsEnabled = catalog.Length > 0;
+                FilterModels();
             }
             catch (Exception ex) { message.Text = FriendlyError(ex.Message); }
             finally { loading = false; load.IsEnabled = providers.IsEnabled = true; }
         };
-        if (!await Dialog("نموذج المحادثة", Stack(providers, load, message, models), "استخدام النموذج", () =>
-            loading ? "انتظر جلب النماذج." : Selected(providers) == "" || (Selected(providers) == loadedProvider && Selected(models) != "") ? null : "اجلب النماذج واختر أحدها.")) return;
+        if (!await Dialog("نموذج المحادثة", Stack(providers, load, search, models, message), "استخدام النموذج", () =>
+            loading ? "انتظر جلب النماذج." : Selected(providers) == "" || (Selected(providers) == loadedProvider && models.SelectedItem is string) ? null : "اجلب النماذج واختر أحدها.")) return;
         if (!CurrentAssistant(revision)) return;
         if (Selected(providers) == "") assistantModels.Remove(thread);
-        else assistantModels[thread] = new AssistantModelSelection(Selected(providers), Selected(models));
+        else assistantModels[thread] = new AssistantModelSelection(Selected(providers), (string)models.SelectedItem);
     }
 
     private async Task AssistantReceipts()

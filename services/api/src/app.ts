@@ -172,6 +172,15 @@ export async function createApp(
     return { status: "ready" };
   });
   app.get("/v1/ai/config", () => ai.settings());
+  app.put(
+    "/v1/ai/providers/openrouter/key",
+    { bodyLimit: 4096 },
+    async (req, res) => {
+      await reauth(req);
+      res.header("Cache-Control", "no-store");
+      return ai.saveOpenRouterKey(req.body);
+    },
+  );
   app.get("/v1/assistant/models", () => ai.assistantOptions());
   app.patch("/v1/ai/config", async (req) => {
     await reauth(req);

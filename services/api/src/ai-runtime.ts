@@ -90,7 +90,18 @@ export class AiRuntime {
       "UPDATE ai_requests SET status='UNAVAILABLE',error_code='AI_PROCESS_INTERRUPTED',completed_at=now() WHERE status='REQUESTED'",
     );
   }
-  private async configuredKey(p: ProviderName) {
+  private async configuredKey(
+    p: ProviderName,
+    settings?: { openrouter_key_ciphertext?: string },
+  ) {
+    if (p === "openrouter") {
+      const row = settings ?? (await this.cfg());
+      if (row.openrouter_key_ciphertext)
+        return this.vault.open(
+          row.openrouter_key_ciphertext,
+          "ai-provider:openrouter",
+        );
+    }
     let key = "";
     try {
       key = await this.key(p);
@@ -113,7 +124,7 @@ export class AiRuntime {
     const providers = await Promise.all(
       (["deepseek", "openrouter"] as const).map(async (provider) => ({
         provider,
-        configured: !!(await this.configuredKey(provider)),
+        configured: !!(await this.configuredKey(provider, cfg)),
       })),
     );
     return {
@@ -125,10 +136,14 @@ export class AiRuntime {
   }
   async settings(db: pg.Pool | pg.PoolClient = this.pool) {
     const c = await this.cfg(db);
-    let configured = false;
-    try {
-      configured = !!(await this.key(c.provider));
-    } catch {}
+    const openRouterKeyConfigured = !!(await this.configuredKey(
+      "openrouter",
+      c,
+    ));
+    const configured =
+      c.provider === "openrouter"
+        ? openRouterKeyConfigured
+        : !!(await this.configuredKey(c.provider, c));
     return {
       version: c.version,
       provider: c.provider,
@@ -138,12 +153,45 @@ export class AiRuntime {
       dailyRequestLimit: c.daily_request_limit,
       dailyTokenLimit: c.daily_token_limit,
       keyConfigured: configured,
+      openRouterKeyConfigured,
       privacy: "task-codes-and-structural-indices-only",
       assistantPrivacy:
         "fixed-domain-vocabulary-enums-opaque-references-and-aggregate-counts-only",
       automaticActions: false,
       automaticFallback: c.automatic_fallback,
     };
+  }
+  async saveOpenRouterKey(raw: unknown) {
+    const { key, version } = z
+      .object({
+        key: z
+          .string()
+          .trim()
+          .min(12)
+          .max(512)
+          .regex(/^[!-~]+$/),
+        version: z.number().int().positive(),
+      })
+      .strict()
+      .parse(raw);
+    try {
+      await (await this.provider("openrouter", "catalog", key)).listModels();
+    } catch (e) {
+      if (e instanceof Error && e.message === "AI_KEY_REJECTED")
+        throw new Fault("AI_KEY_REJECTED", 422);
+      throw new Fault("AI_CATALOG_UNAVAILABLE", 503);
+    }
+    const result = await transaction(this.pool, async (db) => {
+      const updated = await db.query(
+        "UPDATE ai_settings SET openrouter_key_ciphertext=$1,version=version+1,updated_at=now() WHERE id=true AND version=$2 RETURNING version",
+        [this.vault.seal(key, "ai-provider:openrouter"), version],
+      );
+      if (!updated.rowCount) throw new Fault("CONFLICT");
+      await event(db, "AI_PROVIDER_KEY_UPDATED");
+      return { configured: true, version: updated.rows[0].version };
+    });
+    this.catalogs.delete("openrouter");
+    return result;
   }
   async models(p: ProviderName) {
     try {

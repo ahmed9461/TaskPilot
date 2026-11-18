@@ -14,6 +14,12 @@ export async function rewrapFields(
     throw Error("KEY_VERSION_MUST_ADVANCE");
   const descriptors = [
     {
+      table: "ai_settings",
+      column: "openrouter_key_ciphertext",
+      keys: ["id"],
+      context: () => "ai-provider:openrouter",
+    },
+    {
       table: "account_credentials",
       column: "ciphertext",
       keys: ["account_id"],

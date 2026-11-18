@@ -12,7 +12,13 @@ if (!url || !new URL(url).pathname.endsWith("_test"))
 test("transactional encryption rotation with rollback and all AAD domains", async (t) => {
   await migrate(url);
   const pool = createPool(url);
-  t.after(() => pool.end());
+  t.after(async () => {
+    try {
+      await pool.query("UPDATE ai_settings SET openrouter_key_ciphertext=NULL");
+    } finally {
+      await pool.end();
+    }
+  });
   await pool.query(
     "TRUNCATE whatsapp_sessions,task_types,accounts,source_messages,key_rotation_runs CASCADE",
   );
@@ -103,6 +109,16 @@ test("transactional encryption rotation with rollback and all AAD domains", asyn
     "INSERT INTO whatsapp_auth(session_id,category,id_hash,encrypted_payload) VALUES($1,'creds',$2,$3)",
     [session, authId, old.seal(vectors[4]!.value, vectors[4]!.aad)],
   );
+  const providerKey = {
+    table: "ai_settings",
+    field: "openrouter_key_ciphertext",
+    aad: "ai-provider:openrouter",
+    value: "synthetic-provider-key",
+  };
+  vectors.push(providerKey);
+  await pool.query("UPDATE ai_settings SET openrouter_key_ciphertext=$1", [
+    old.seal(providerKey.value, providerKey.aad),
+  ]);
   async function ciphertext(v: (typeof vectors)[number]) {
     return (await pool.query(`SELECT ${v.field} value FROM ${v.table} LIMIT 1`))
       .rows[0].value;
@@ -176,7 +192,7 @@ test("transactional encryption rotation with rollback and all AAD domains", asyn
         const result = await rewrapFields(c, bridge, next, true);
         assert.equal(
           Object.values(result.counts).reduce((a, b) => a + b, 0),
-          5,
+          6,
         );
         await c.query(
           "INSERT INTO key_rotation_runs(id,key_version,counts) VALUES('rotation-123',2,$1)",

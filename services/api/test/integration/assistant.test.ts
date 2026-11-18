@@ -39,7 +39,11 @@ test("project secretary grounded reads, privacy, shared budget and atomic comman
     async () => "synthetic-only",
     (c) =>
       new ChatProvider(c, (async (url, init) => {
-        if (String(url).endsWith("/models"))
+        if (
+          String(url).endsWith(
+            c.provider === "openrouter" ? "/models/user" : "/models",
+          )
+        )
           return Response.json({
             data: [
               {

@@ -35,6 +35,21 @@ test("AI manual runtime privacy, budget and replay acceptance", async (t) => {
     async () => "synthetic-only",
     (c) =>
       new ChatProvider(c, (async (_url, init) => {
+        if (String(_url) === "https://openrouter.ai/api/v1/models/user") {
+          const key = new Headers(init?.headers).get("Authorization");
+          if (key === "Bearer synthetic-invalid-key")
+            return new Response(null, { status: 401 });
+          return Response.json({
+            data: [
+              {
+                id:
+                  key === "Bearer synthetic-key-first"
+                    ? "org/first"
+                    : "org/second",
+              },
+            ],
+          });
+        }
         if (!init?.body)
           return Response.json({ data: [{ id: "deepseek-flash" }] });
         calls++;
@@ -60,7 +75,7 @@ test("AI manual runtime privacy, budget and replay acceptance", async (t) => {
   t.after(async () => {
     await pool.query("TRUNCATE assistant_turns,ai_requests");
     await pool.query(
-      "UPDATE ai_settings SET enabled=false,outbound_approved=false",
+      "UPDATE ai_settings SET enabled=false,outbound_approved=false,openrouter_key_ciphertext=NULL",
     );
     await app.close();
     await pool.end();
@@ -80,6 +95,52 @@ test("AI manual runtime privacy, budget and replay acceptance", async (t) => {
     assert.equal(r.statusCode, 200, r.body);
     return r.json();
   }
+  await t.test(
+    "write-only OpenRouter key replacement validates, version-checks, persists and selects the authorized catalog",
+    async () => {
+      const path = "/v1/ai/providers/openrouter/key";
+      const version = (await ai.settings()).version;
+      const first = { key: "synthetic-key-first", version };
+      assert.equal((await req("PUT", path, first, false)).statusCode, 403);
+      const saved = await ok("PUT", path, first);
+      assert.deepEqual(saved, { configured: true, version: version + 1 });
+      assert.deepEqual((await ai.models("openrouter")).models, ["org/first"]);
+      assert.equal(
+        (
+          await req("PUT", path, {
+            key: "synthetic-invalid-key",
+            version: saved.version,
+          })
+        ).statusCode,
+        422,
+      );
+      assert.equal(
+        (await req("PUT", path, { key: "synthetic-key-second", version }))
+          .statusCode,
+        409,
+      );
+      assert.deepEqual((await ai.models("openrouter")).models, ["org/first"]);
+      await ok("PUT", path, {
+        key: "synthetic-key-second",
+        version: saved.version,
+      });
+      const after = await ai.settings();
+      assert.equal(after.openRouterKeyConfigured, true);
+      assert.ok(!JSON.stringify(after).includes("synthetic-key"));
+      const cipher = (
+        await pool.query(
+          "SELECT openrouter_key_ciphertext FROM ai_settings WHERE id",
+        )
+      ).rows[0].openrouter_key_ciphertext;
+      assert.ok(!cipher.includes("synthetic-key"));
+      assert.equal(
+        vault.open(cipher, "ai-provider:openrouter"),
+        "synthetic-key-second",
+      );
+      assert.deepEqual((await ai.models("openrouter")).models, ["org/second"]);
+      assert.equal(calls, 0);
+    },
+  );
   const session = await ok("POST", "/v1/sessions", { label: "AI synthetic" }),
     task = await ok("POST", "/v1/task-types", {
       code: "task_a",

@@ -145,7 +145,12 @@ export class ChatProvider implements AiProvider {
       signal: AbortSignal.timeout(10000),
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    if (!response.ok) throw new Error("AI_UNAVAILABLE");
+    if (!response.ok) {
+      await response.body?.cancel();
+      if (path === "/models/user" && [401, 403].includes(response.status))
+        throw new Error("AI_KEY_REJECTED");
+      throw new Error("AI_UNAVAILABLE");
+    }
     // Bound responses before JSON parsing. Never log provider bodies or return free-form reasoning.
     const reader = response.body?.getReader();
     if (!reader) throw new Error("AI_UNAVAILABLE");
@@ -155,7 +160,7 @@ export class ChatProvider implements AiProvider {
       const item = await reader.read();
       if (item.done) break;
       bytes += item.value.length;
-      if (bytes > 1024 * 1024) {
+      if (bytes > (path === "/models/user" ? 8 : 1) * 1024 * 1024) {
         await reader.cancel();
         throw new Error("AI_RESPONSE_TOO_LARGE");
       }
@@ -165,14 +170,17 @@ export class ChatProvider implements AiProvider {
   }
   async listModels() {
     try {
-      const result = await this.call("/models");
+      const result = await this.call(
+        this.config.provider === "openrouter" ? "/models/user" : "/models",
+      );
       return z
         .object({
           data: z.array(z.object({ id: z.string().max(200) })).max(10000),
         })
         .parse(result)
         .data.map((m) => m.id);
-    } catch {
+    } catch (e) {
+      if (e instanceof Error && e.message === "AI_KEY_REJECTED") throw e;
       throw new Error("AI_UNAVAILABLE");
     }
   }
