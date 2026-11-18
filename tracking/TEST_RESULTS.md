@@ -1,6 +1,10 @@
 # نتائج الاختبار الفعلية
 
-## D-092 — 0.9.0 candidate verification — 2026-11-18
+## D-092 — live deployment and shortcut acceptance — 2026-11-18
+
+API 0.9.0 readiness, correct service working directory and final owner-data checks passed. All 42 other baseline services retained their invocation and state. The pre-release encrypted backup restored in isolation with schema 15 and matched its offhost copy. All 530 installed Windows files matched the tested ZIP. Launch through the updated desktop shortcut showed a connected, synchronizing dashboard over persistent Tailscale. The assistant loaded its history, DeepSeek model and composer. The saved profile hash and single device issuance matched before and after. The live probe read provider configuration. No chat generation, credential display/export or WhatsApp message was needed for this deployment. [Evidence](evidence/workspace-090-deployment-20261118.json)
+
+## D-092 — earlier 0.9.0 candidate verification — 2026-11-18
 
 - Exact API feature source `7466881`: hosted run 44327965985 Windows and Backend succeeded. Backend logs contain 47 + 7 unit passes and 139 isolated PostgreSQL passes. Local targeted fixture suite 18/18; offline Windows checks 52 groups passed. No new schema migration.
 - Earlier 0.9.0 WinUI candidate with the same API/accounts/model implementation: protected reveal displayed the three fields and cleared the fixture password after 30 seconds. The save picker wrote a 133-byte UTF-8 Markdown fixture with 2 fenced account blocks and 1 separator, scoped to the selected group. Fake OpenRouter returned its catalog, allowed selecting its model and produced one report. Database/provider integration exercised protected export replay, model gating and local account operations.

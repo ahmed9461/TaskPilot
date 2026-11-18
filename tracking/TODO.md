@@ -4,7 +4,7 @@
 
 - [x] Protected account details and group Markdown export in isolated PostgreSQL and native Windows. Clean chat, immediate section selection, model options and history tested on Windows.
 - [x] Synthetic privacy and action tests, protected reveal, archive/restore stale-version handling, selected model and group scoping.
-- [ ] D092_RELEASE: guarded TaskPilot-only rollout and Desktop replacement with separate authorization, then read-only live capability checks and rollback evidence.
+- [x] D092_RELEASE deployed with owner authorization. Desktop shortcut launch, live Tailscale connection, assistant, encrypted backup restore, offhost copy and rollback points verified.
 
 ## D-089/D-090 delivered — 2026-11-16
 - [x] API088/1075953 deployed; persistent root-issued revocable device auth and user-notification catalog, same14migrations.

@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-18",
+  "release": "0.9.0",
+  "authorization": "Owner requested New-VPS deployment and Desktop upgrade",
+  "server": {
+    "commit": "746688177458e75bac7e3d2e61a7274f8810a92d",
+    "previous": "d740d03f8a50e71f2f4073262c98126cb0210f8c",
+    "schema": 15,
+    "systemd": "active",
+    "healthVersion": "0.9.0",
+    "checkedProcessDirectory": true,
+    "missingBaselineBusinessRows": 0,
+    "credentialsPreserved": true,
+    "pairedIdentityPreserved": true,
+    "otherActiveServicesChecked": 42,
+    "changedOtherServices": 0,
+    "sendingPolicy": "COMMITTED",
+    "sendingEnabled": true,
+    "unsettledReplies": 0
+  },
+  "windows": {
+    "commit": "cd557b4c95c9d6223c8b7ea9e00bec30ea06f597",
+    "previous": "0.8.0-6beb13a",
+    "filesMatchedToZip": 530,
+    "zipSha256": "dfa88069aa70dd50dff8913af4c351f7c02a17971da97606073c4d38c5d6f044",
+    "entryPoint": "Desktop TaskPilot.lnk",
+    "nativeChecks": [
+      "dashboard connected",
+      "persistent Tailscale sync active",
+      "assistant history, configured model and composer loaded",
+      "routine status strip hidden in chat"
+    ],
+    "respondingInstances": 1,
+    "profileHashMatched": true,
+    "activePersistentDevicesBeforeAfter": [
+      1,
+      1
+    ],
+    "deviceIssueEventsBeforeAfter": [
+      1,
+      1
+    ],
+    "previousShortcutRetained": true
+  },
+  "backup": {
+    "name": "pre-workspace-090-20261118.tpg",
+    "encryptedBytes": 338874,
+    "sha256": "09ad3d5c56a03f3d2e2a14b89bcdf742f80d3b8f5bf4f5872d99f2beba7b6044",
+    "isolatedRestore": "passed",
+    "restoredMigrations": 15,
+    "offhostChecksumMatched": true
+  },
+  "liveAssistant": {
+    "capabilitiesHttpStatus": 200,
+    "deepseekConfigured": true,
+    "openrouterConfigured": false,
+    "providerRequestsDuringCheck": 0
+  }
+}

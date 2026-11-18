@@ -1,8 +1,8 @@
 # الحالة الحالية — 2026-11-18 (Asia/Riyadh)
 
-## D-092 — 0.9.0 candidate verified in isolation
+## D-092 — 0.9.0 deployed and verified on Windows
 
-- API feature source `7466881`, schema 15. Windows candidate `cd557b4`. The installed Windows 0.8.0 and deployed API 0.8.9 remain at the D-091 baseline. The D-092 stage is built and tested, pending separately authorized production cutover under AGENTS.md.
+- API `7466881` is active on New-VPS with schema 15. The desktop shortcut launches Windows `cd557b4`. Verified the dashboard's persistent Tailscale connection and the new chat workspace against the live service. [Deployment evidence](evidence/workspace-090-deployment-20261118.json)
 - Windows has immediate section selection, a wider personal-assistant chat with compact history, bottom composer and no routine connection strip, a clearer account data view, and one-group Markdown export. Model choice, account reference and archive/restore proposal use existing authorization and AI limits.
 - API feature exact hosted run 44327965985 passed Windows and Backend, with 54 unit and 139 isolated PostgreSQL tests. Final WinUI package verified at 1233×696; earlier candidate exercised timed reveal, export file and fake OpenRouter selection. See TEST_RESULTS for verification boundaries.
 

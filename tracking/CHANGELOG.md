@@ -1,6 +1,8 @@
 # سجل التغيير
 
-## [0.9.0 verified candidate] — 2026-11-18
+## [0.9.0 deployed] — 2026-11-18
+
+- Released on New-VPS and replaced the Windows desktop shortcut. Verified native dashboard sync and assistant loading with the saved device.
 
 - Open separate assistant chat and history areas, place the composer at the bottom, and group scope/suggestions under a compact options menu. Hide routine connection status in the assistant and preserve problems as alerts.
 - Switch section identity and contents immediately, discard obsolete page reads, reuse recently built pages and retain independent writes.

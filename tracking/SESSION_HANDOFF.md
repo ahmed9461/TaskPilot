@@ -1,10 +1,10 @@
 # TaskPilot handoff — 2026-11-18
 
-## D-092 candidate ready for authorized release
+## D-092 released on New-VPS and Desktop
 
 Feature commit `7466881` and clean workspace commit `cd557b4` are on `feat/mvp-foundation`. Artifact `work/TaskPilot-0.9.0-win-x64-cd557b4.zip` is the packed native-checked candidate. The API stages and both synthetic DBs are separate from the owner service. The isolated listener and tunnel were stopped after verification.
 
-When authorized to deploy, recheck the active service, connector/account state and rollback points, take an encrypted TaskPilot backup, then cut over only TaskPilot. Publish the verified Windows bits after API health and compatibility checks. Preserve the saved Tailscale device profile and shortcut rollback. Demo provider catalogs used configured fake keys for DeepSeek/OpenRouter. Current live OpenRouter configuration and its model catalog were not checked. No live provider use, owner data mutation, connector work, or desktop replacement in D-092.
+The owner authorized deployment. The current server release is `7466881` and the installed Windows release is `0.9.0-cd557b4`. The app is open on the personal assistant with the original device profile. Read-only model capability checks found DeepSeek configured and OpenRouter without a key. Rollback points are API `d740d03`, the previous Windows version and `outputs/TaskPilot-before-0.9.0.lnk`. The pre-release encrypted packet has a verified offhost copy and restored successfully to an isolated database. [Deployment evidence](evidence/workspace-090-deployment-20261118.json)
 
 ## User handbook delivered — 2026-11-17 (documentation only)
 Added docs/18_USER_HANDBOOK_AR.md: standalone Arabic handbook for Windows0.8.0/API0.8.9,21numbered sections, clickable contents and return links. Covers setup/Tailscale/WhatsApp/groups/rules/message formats/review/accounts/tasks/replies/sending/secretary/AI/notifications/export/privacy/recovery/troubleshooting/daily use, with synthetic examples and explicit current limits. Matched current UI labels and code paths; no app/server behavior changed. Desktop copy TaskPilot-دليل-الاستخدام.md is hash-identical. Structure check:22unique anchors/42internal links/0missing targets/14balanced fence markers/703lines/57134bytes. Runtime tests not rerun for prose-only changes; no provider request, WhatsApp action, live-data mutation, deployment or profile change. Current code/artifact acceptance remains D091 below.
