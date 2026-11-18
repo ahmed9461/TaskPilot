@@ -1,5 +1,13 @@
 # API v1 — implementation reference (synthetic pilot)
 
+## Owner workflows in 0.10.0
+
+- `POST /v1/reply-batches/preview` accepts `groupId`, `templateId`, and optional `completedOnly`. Returns scope, account/skip counts, target texts and source times, and an approval token when there are eligible targets. A batch supports up to 100 scoped accounts. `POST /v1/reply-batches/approve` consumes the token after reauthorization, atomically queues the exact snapshot, and enforces live-send policy. `GET /v1/reply-batches/:id` reads delivery-state counts. Reauthorized `POST /v1/reply-batches/:id/cancel` cancels jobs still in APPROVED state.
+- Individual reply preview accepts optional `images` entries with `mime`, `size`, and `sha256`; approval accepts ordered Base64 bytes. The server checks the manifest and stores encrypted bytes only while pending or sending. Terminal state clears queue media. Text-only calls retain their original shape.
+- `GET/PATCH /v1/accounts/:id/followups` lists or changes active group follow-up. PATCH uses groupId, active and version (zero for a new link). `POST /v1/accounts/:id/followup-activities` accepts groupId, taskTypeId, activity and optional periodKey. Existing entries remain linked to their own source and status.
+- `GET /v1/workflows/briefing` accepts optional groupId. Inbox accepts optional reviewKind (`combined`, `routing`, `credential`, `suggested`). `POST /v1/workflows/tasks/preview` freezes one target per account; reauthorized `POST /v1/workflows/tasks/apply` verifies the snapshot and adds missing namespaced activities. `POST /v1/groups/:id/rules/simulate` returns before/after routes and groupVersion for the existing rule editor.
+- Reauthorized `POST /v1/assignments/:id/note/read` and `PUT /v1/assignments/:id/note` read and update the task's encrypted note and optional dueAt (ISO 8601 with offset), guarded by version. Due reminders produce one event linked to the assignment. Assignment list supports an exact assignmentId filter.
+
 ## API0.8.7 — unlabelled student accounts and structural AI
 Ingest accepts a unique complete S2-prefixed identifier (7–10 following digits), an unambiguous credential candidate and optional name in common orders/line endings, including separate course lines. An absent name uses the identifier as a display label. Password bytes are preserved; partial identifiers, multiple accounts/names/credentials and credential changes remain encrypted REVIEW. Account-like partial input is never silently IGNORED. Explicit labelled generic accounts remain supported. Course lines stay in task-routing context and cannot become passwords; identity/credential candidates cannot choose a task. Unknown formats remain reviewable, not fabricated.
 

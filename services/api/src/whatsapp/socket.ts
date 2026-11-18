@@ -1,4 +1,6 @@
+import type { ReplyImage } from "../reply-images.js";
 import type {
+  AnyMessageContent,
   AuthenticationState,
   AuthenticationCreds,
   WAMessage,
@@ -20,6 +22,10 @@ export interface SocketUpdate {
   qr?: string;
   code?: number;
 }
+export type ReplyMedia =
+  | { kind: "album"; imageCount: number }
+  | { kind: "image"; image: ReplyImage; albumParentId?: string };
+
 export interface LiveSocket {
   onUpdate(fn: (u: SocketUpdate) => void): void;
   onCreds(fn: (u: Partial<AuthenticationCreds>) => void): void;
@@ -28,8 +34,9 @@ export interface LiveSocket {
   send(
     jid: string,
     text: string,
-    key: QuoteKey,
+    key: QuoteKey | null,
     messageId: string,
+    media?: ReplyMedia,
   ): Promise<string>;
   end(): Promise<void>;
 }
@@ -201,18 +208,41 @@ export async function baileysFactory(): Promise<SocketFactory> {
             id: g.id,
             title: g.subject,
           })),
-        send: async (jid, text, key, messageId) => {
-          const result = await socket.sendMessage(
-            jid,
-            { text, linkPreview: null },
-            {
-              messageId,
-              quoted: {
-                key,
-                message: { conversation: "رسالة مصدر TaskPilot" },
+        send: async (jid, text, key, messageId, media) => {
+          let content: AnyMessageContent = { text, linkPreview: null };
+          if (media?.kind === "album")
+            content = {
+              album: {
+                expectedImageCount: media.imageCount,
+                expectedVideoCount: 0,
               },
-            },
-          );
+            };
+          else if (media?.kind === "image")
+            content = {
+              image: media.image.bytes,
+              mimetype: media.image.mime,
+              caption: text,
+              ...(media.albumParentId
+                ? {
+                    albumParentKey: {
+                      remoteJid: jid,
+                      fromMe: true,
+                      id: media.albumParentId,
+                    },
+                  }
+                : {}),
+            };
+          const result = await socket.sendMessage(jid, content, {
+            messageId,
+            ...(key
+              ? {
+                  quoted: {
+                    key,
+                    message: { conversation: "رسالة مصدر TaskPilot" },
+                  },
+                }
+              : {}),
+          });
           if (!result?.key.id) throw new Error("RELAY_RESULT_UNKNOWN");
           return result.key.id;
         },

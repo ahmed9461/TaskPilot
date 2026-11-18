@@ -337,6 +337,10 @@ export class PrivacyService {
         [p.id],
       );
       await c.query(
+        "UPDATE source_messages SET encrypted_payload=NULL,fragment_sender=NULL,fragment_role=NULL,fragment_expires=NULL,fragment_message_at=NULL WHERE session_id=$1 AND fragment_expires IS NOT NULL",
+        [p.sessionId],
+      );
+      await c.query(
         "UPDATE source_messages SET encrypted_transport_key=NULL,version=version+1 WHERE session_id=$1 AND encrypted_transport_key IS NOT NULL",
         [p.id],
       );
@@ -346,7 +350,7 @@ export class PrivacyService {
       );
       await c.query("DELETE FROM whatsapp_auth WHERE session_id=$1", [p.id]);
       await c.query(
-        "UPDATE approvals SET expires_at=LEAST(expires_at,now()) WHERE purpose='reply' AND payload->>'sessionId'=$1",
+        "UPDATE approvals SET expires_at=LEAST(expires_at,now()) WHERE purpose IN ('reply','reply-batch','group-work') AND payload->>'sessionId'=$1",
         [p.id],
       );
       await c.query(

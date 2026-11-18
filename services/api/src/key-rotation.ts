@@ -1,3 +1,5 @@
+import { noteContext } from "./task-reminders.js";
+import { imageContext } from "./reply-images.js";
 import type pg from "pg";
 import { Vault, hash } from "./security.js";
 // Operator passes an already-open transaction with all API/provider writers stopped.
@@ -13,6 +15,19 @@ export async function rewrapFields(
   )
     throw Error("KEY_VERSION_MUST_ADVANCE");
   const descriptors = [
+    {
+      table: "task_followup_notes",
+      column: "ciphertext",
+      keys: ["assignment_id"],
+      context: (r: { assignment_id: string }) => noteContext(r.assignment_id),
+    },
+    {
+      table: "reply_job_images",
+      column: "ciphertext",
+      keys: ["job_id"],
+      context: (r: { job_id: string }) => imageContext(r.job_id),
+    },
+
     {
       table: "ai_settings",
       column: "openrouter_key_ciphertext",

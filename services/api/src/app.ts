@@ -1,4 +1,32 @@
 import {
+  groupWorkInput,
+  previewGroupWork,
+  applyGroupWork,
+  workBriefing,
+  simulateRule,
+  trialRule,
+} from "./workflows.js";
+import { noteUpdate, readTaskNote, saveTaskNote } from "./task-reminders.js";
+import {
+  followupGroups,
+  followupState,
+  followupActivity,
+  setFollowup,
+  addFollowupActivity,
+} from "./followups.js";
+import {
+  imageManifest,
+  imageUploadLimit,
+  replyImageUploads,
+} from "./reply-images.js";
+import {
+  batchReplyInput,
+  previewReplyBatch,
+  approveReplyBatch,
+  getReplyBatch,
+  cancelPendingBatch,
+} from "./reply-batch.js";
+import {
   notificationTypes,
   notificationDetails,
 } from "./notification-catalog.js";
@@ -740,6 +768,24 @@ export async function createApp(
       return row;
     });
   });
+  app.get("/v1/accounts/:id/followups", (req) =>
+    followupGroups(pool, uuidParam.parse(req.params).id),
+  );
+  app.patch("/v1/accounts/:id/followups", (req) =>
+    setFollowup(
+      pool,
+      uuidParam.parse(req.params).id,
+      followupState.parse(req.body),
+    ),
+  );
+  app.post("/v1/accounts/:id/followup-activities", (req) =>
+    addFollowupActivity(
+      pool,
+      uuidParam.parse(req.params).id,
+      followupActivity.parse(req.body),
+    ),
+  );
+
   app.post("/v1/accounts/:id/reveal", async (req) => {
     await reauth(req);
     const { id: accountId } = uuidParam.parse(req.params);
@@ -930,26 +976,98 @@ export async function createApp(
         )
       ).rows,
   );
+  app.get("/v1/workflows/briefing", (req) =>
+    workBriefing(
+      pool,
+      z.object({ groupId: id.optional() }).strict().parse(req.query).groupId,
+    ),
+  );
+  app.post("/v1/workflows/tasks/preview", (req) =>
+    previewGroupWork(service, groupWorkInput.parse(req.body)),
+  );
+  app.post("/v1/workflows/tasks/apply", async (req) => {
+    await reauth(req);
+    return applyGroupWork(
+      service,
+      z.object({ approvalToken: text }).strict().parse(req.body).approvalToken,
+    );
+  });
+  app.post("/v1/groups/:id/rules/simulate", (req) =>
+    simulateRule(
+      pool,
+      uuidParam.parse(req.params).id,
+      trialRule.parse(req.body),
+    ),
+  );
+  app.post("/v1/assignments/:id/note/read", async (req) => {
+    await reauth(req);
+    return readTaskNote(service, uuidParam.parse(req.params).id);
+  });
+  app.put("/v1/assignments/:id/note", async (req) => {
+    await reauth(req);
+    return saveTaskNote(
+      service,
+      uuidParam.parse(req.params).id,
+      noteUpdate.parse(req.body),
+    );
+  });
+  app.post("/v1/reply-batches/preview", (req) =>
+    previewReplyBatch(service, batchReplyInput.parse(req.body)),
+  );
+  app.post("/v1/reply-batches/approve", async (req) => {
+    await reauth(req);
+    const { approvalToken } = z
+      .object({ approvalToken: text })
+      .strict()
+      .parse(req.body);
+    return approveReplyBatch(
+      service,
+      approvalToken,
+      whatsapp?.sendingEnabled === true,
+    );
+  });
+  app.post("/v1/reply-batches/:id/cancel", async (req) => {
+    await reauth(req);
+    z.object({}).strict().parse(req.body);
+    return cancelPendingBatch(service, uuidParam.parse(req.params).id);
+  });
+  app.get("/v1/reply-batches/:id", (req) =>
+    getReplyBatch(service, uuidParam.parse(req.params).id),
+  );
   app.post("/v1/reply-jobs/preview", async (req) =>
     service.replyPreview(
       z
-        .object({ assignmentId: id, sourceMessageId: id, templateId: id })
+        .object({
+          assignmentId: id,
+          sourceMessageId: id,
+          templateId: id,
+          images: imageManifest.optional(),
+        })
         .strict()
         .parse(req.body),
     ),
   );
-  app.post("/v1/reply-jobs/approve", async (req) => {
-    await reauth(req);
-    const p = z
-      .object({ approvalToken: text, idempotencyKey: text })
-      .strict()
-      .parse(req.body);
-    return service.approveReply(
-      p.approvalToken,
-      p.idempotencyKey,
-      whatsapp?.sendingEnabled === true,
-    );
-  });
+  app.post(
+    "/v1/reply-jobs/approve",
+    { bodyLimit: imageUploadLimit },
+    async (req) => {
+      await reauth(req);
+      const p = z
+        .object({
+          approvalToken: text,
+          idempotencyKey: text,
+          images: replyImageUploads.optional(),
+        })
+        .strict()
+        .parse(req.body);
+      return service.approveReply(
+        p.approvalToken,
+        p.idempotencyKey,
+        whatsapp?.sendingEnabled === true,
+        p.images,
+      );
+    },
+  );
   app.post("/v1/reply-jobs/:id/cancel", async (req) => {
     await reauth(req);
     z.object({}).strict().parse(req.body);

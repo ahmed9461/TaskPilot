@@ -1,5 +1,11 @@
 # سجل التغيير
 
+## [0.10.0 candidate]
+
+- Added approved and deduplicated one-reply-per-account batches, pending batch cancellation, and optional images in individual quoted replies.
+- Added supervised split-message intake and active account follow-up across distinct activities.
+- Added assistant work actions for review categories, group task creation, rule simulation, task reminders and Riyadh end-of-day briefings.
+
 ## [Windows 0.9.2] — 2026-11-18
 
 Type or paste a model ID in the assistant or AI Settings. Exact input selects the canonical ID from the provider catalog. Partial input lists suggestions inline. Automatic mode resolves OpenRouter IDs with a vendor prefix. AI Settings retains the current default when opened.

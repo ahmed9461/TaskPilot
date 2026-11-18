@@ -1,3 +1,5 @@
+import { decodeReplyImages, imageContext } from "./reply-images.js";
+import type { Vault } from "./security.js";
 import type pg from "pg";
 import { transaction, event } from "./db.js";
 import { DefinitelyNotSent, type WhatsAppTransport } from "./transport.js";
@@ -35,7 +37,11 @@ async function settle(pool: pg.Pool, outcome: Settlement) {
     if (changed.rowCount) await event(c, action[outcome.status], outcome.jobId);
   });
 }
-export async function dispatchOne(pool: pg.Pool, transport: WhatsAppTransport) {
+export async function dispatchOne(
+  pool: pg.Pool,
+  transport: WhatsAppTransport,
+  vault?: Vault,
+) {
   let claimed: string | undefined;
   let job;
   try {
@@ -74,6 +80,25 @@ export async function dispatchOne(pool: pg.Pool, transport: WhatsAppTransport) {
   if (!job) return null;
   let outcome: Settlement;
   try {
+    let images;
+    if (job.image_count > 0) {
+      try {
+        const stored = (
+          await pool.query(
+            "SELECT ciphertext FROM reply_job_images WHERE job_id=$1",
+            [job.id],
+          )
+        ).rows[0];
+        if (!vault || !stored) throw new Error("MISSING_IMAGES");
+        images = decodeReplyImages(
+          vault.open(stored.ciphertext, imageContext(job.id)),
+        );
+        if (images.length !== job.image_count)
+          throw new Error("MISSING_IMAGES");
+      } catch {
+        throw new DefinitelyNotSent("REPLY_IMAGES_UNAVAILABLE");
+      }
+    }
     const result = await transport.replyToMessage({
       sessionId: job.session_id,
       groupId: job.group_id,
@@ -81,6 +106,7 @@ export async function dispatchOne(pool: pg.Pool, transport: WhatsAppTransport) {
       body: job.body,
       jobId: job.id,
       sourceMessageId: job.source_message_id,
+      ...(images ? { images } : {}),
     });
     outcome = {
       jobId: job.id,
@@ -105,6 +131,7 @@ export async function dispatchOne(pool: pg.Pool, transport: WhatsAppTransport) {
 export async function startMockWorker(
   pool: pg.Pool,
   transport: WhatsAppTransport,
+  vault?: Vault,
 ) {
   const lease = await pool.connect();
   const leaseKey = transport.provider === "mock" ? 8240002 : 8240004;
@@ -137,7 +164,7 @@ export async function startMockWorker(
         await settle(pool, pending);
         pending = undefined;
       } else {
-        await dispatchOne(pool, transport);
+        await dispatchOne(pool, transport, vault);
       }
     } catch (error) {
       if (error instanceof PendingSettlement) pending = error.outcome;

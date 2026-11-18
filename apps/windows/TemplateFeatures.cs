@@ -51,7 +51,7 @@ public sealed partial class MainPage
             PageBody.Children.Add(Text("لا توجد قوالب مطابقة."));
         Pager(resource, result);
     }
-    private async Task<(JsonNode Source, JsonNode Template)?> ChooseReply(JsonNode assignment)
+    private async Task<(JsonNode Source, JsonNode Template, bool AttachImages)?> ChooseReply(JsonNode assignment)
     {
         var sources = assignment["sources"]!.AsArray();
         if (sources.Count == 0)
@@ -59,6 +59,7 @@ public sealed partial class MainPage
         var source = new ComboBox { Header = "رسالة المصدر", ItemsSource = sources.Select((n, i) => $"{i + 1}. {V(n, "groupTitle")} • {V(n, "sessionLabel")} • {V(n, "receivedAt")}").ToArray(), SelectedIndex = 0, MaxWidth = 440 };
         var template = new ComboBox { Header = "القالب المتاح لهذه المهمة والمجموعة" };
         var hint = Text("");
+        var attach = new CheckBox { Content = "إرفاق صور (اختياري)" };
         var matching = new List<JsonNode>();
         var generation = 0;
         var closed = false;
@@ -84,12 +85,12 @@ public sealed partial class MainPage
         }
         source.SelectionChanged += async (_, _) => { if (source.SelectedIndex < 0) return; try { await UpdateTemplates(); } catch (Exception error) { if (!closed) { hint.Text = "تعذر تحميل القوالب. أغلق الحوار وحدّث الاتصال قبل المحاولة."; connectionState.Failed(error); ShowConnectionProblem(); } } };
         await UpdateTemplates();
-        var confirmed = await Dialog("اختيار الرد", Stack(source, template, hint), "معاينة");
+        var confirmed = await Dialog("اختيار الرد", Stack(source, template, attach, hint), "متابعة");
         closed = true;
         if (!confirmed)
             return null;
         if (template.SelectedIndex < 0)
             throw new InvalidOperationException("لا يوجد قالب متاح يطابق المصدر المحدد.");
-        return (sources[source.SelectedIndex]!, matching[template.SelectedIndex]);
+        return (sources[source.SelectedIndex]!, matching[template.SelectedIndex], attach.IsChecked == true);
     }
 }

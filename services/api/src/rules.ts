@@ -19,7 +19,7 @@ export function routingContext(raw: string) {
           (!student ||
             s.kind === "course" ||
             (s.kind === "text" &&
-              /^(?:المطلوب|المهمة|المادة|مواد|واجب|اختبار|حل|task|homework|quiz)\s*[:：\s]/iu.test(
+              /^(?:المطلوب|المهمة|المادة|مواد|واجب|اختبار|حل|نشاط|التكليف|activity|task|homework|quiz)\s*[:：\s]/iu.test(
                 s.value,
               ))) &&
           !/^\s*(name|user(?:name)?|password|pass|otp|code|email|phone|الاسم|اليوزر|المستخدم|كلمة المرور|الرمز|رمز|الهاتف|البريد)\s*[:：]/i.test(

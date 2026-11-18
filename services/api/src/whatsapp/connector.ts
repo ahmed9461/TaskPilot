@@ -1,3 +1,4 @@
+import { finishFragmentWindow } from "../split-intake.js";
 import type pg from "pg";
 import { toDataURL } from "qrcode";
 import { randomUUID } from "node:crypto";
@@ -10,6 +11,7 @@ import {
   type SocketFactory,
   type SocketUpdate,
   type QuoteKey,
+  type ReplyMedia,
 } from "./socket.js";
 import { Vault, hash } from "../security.js";
 import { transaction, event, isRetryableDatabaseError } from "../db.js";
@@ -608,15 +610,61 @@ export class WhatsAppConnector implements WhatsAppTransport {
     )
       throw new DefinitelyNotSent("QUOTE_TARGET_MISMATCH");
     const socket = this.active.get(target.sessionId)!.socket!;
-    const id = await socket.send(
-      row.external_group_id,
-      target.body,
-      key,
-      hash("taskpilot:" + target.jobId)
-        .slice(0, 32)
-        .toUpperCase(),
-    );
-    return { providerMessageId: id };
+    const images = target.images ?? [];
+    let relayed = false;
+    const send = async (
+      suffix: string,
+      text: string,
+      quote: QuoteKey | null,
+      media?: ReplyMedia,
+    ) => {
+      if (
+        !this.canSend(target.sessionId) ||
+        this.active.get(target.sessionId)?.socket !== socket
+      ) {
+        if (relayed) throw new Error("REPLY_PARTIALLY_SENT");
+        throw new DefinitelyNotSent("WHATSAPP_NOT_READY");
+      }
+      try {
+        const id = await socket.send(
+          row.external_group_id,
+          text,
+          quote,
+          hash("taskpilot:" + target.jobId + suffix)
+            .slice(0, 32)
+            .toUpperCase(),
+          media,
+        );
+        relayed = true;
+        return id;
+      } catch (error) {
+        if (relayed) throw new Error("REPLY_PARTIALLY_SENT");
+        throw error;
+      }
+    };
+    if (images.length <= 1) {
+      const image = images[0];
+      return {
+        providerMessageId: await send(
+          "",
+          target.body,
+          key,
+          image ? { kind: "image", image } : undefined,
+        ),
+      };
+    }
+    const albumId = await send("", "", key, {
+      kind: "album",
+      imageCount: images.length,
+    });
+    for (const [index, image] of images.entries()) {
+      await send(":image:" + index, index === 0 ? target.body : "", null, {
+        kind: "image",
+        image,
+        albumParentId: albumId,
+      });
+    }
+    return { providerMessageId: albumId };
   }
   async drainOnce() {
     let claimed: string | undefined;
@@ -650,6 +698,7 @@ export class WhatsAppConnector implements WhatsAppTransport {
               text: item.text,
             },
             item.key,
+            item.timestamp,
           );
         } catch (error) {
           if (!(error instanceof Fault && error.code === "GROUP_NOT_ENABLED"))
@@ -680,6 +729,8 @@ export class WhatsAppConnector implements WhatsAppTransport {
       running = true;
       try {
         for (let i = 0; i < 10; i++) if (!(await this.drainOnce())) break;
+        for (let i = 0; i < 10; i++)
+          if (!(await finishFragmentWindow(this.pool, this.vault))) break;
       } catch {
         /* Encrypted rows stay pending; no raw logs. */
       } finally {

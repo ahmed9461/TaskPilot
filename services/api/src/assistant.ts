@@ -481,7 +481,7 @@ export class AssistantService {
       const getTasks = async () =>
         (
           await db.query(
-            `SELECT t.id,t.version,t.status,t.priority,t.period_key,t.created_at,t.completed_at,a.id account_id,a.display_name,a.username_normalized,tt.name task_name,COALESCE((SELECT string_agg(DISTINCT g.title,'، ' ORDER BY g.title) FROM assignment_sources az JOIN source_messages sz ON sz.id=az.source_message_id JOIN groups g ON g.id=sz.group_id WHERE az.assignment_id=t.id),'بلا مصدر مجموعة') groups FROM assignments t JOIN accounts a ON a.id=t.account_id JOIN task_types tt ON tt.id=t.task_type_id WHERE ${taskWhere} ORDER BY ${taskOrder} LIMIT 20`,
+            `SELECT t.id,t.version,t.status,t.priority,t.period_key,t.activity_label,t.created_at,t.completed_at,a.id account_id,a.display_name,a.username_normalized,tt.name task_name,COALESCE((SELECT string_agg(DISTINCT g.title,'، ' ORDER BY g.title) FROM assignment_sources az JOIN source_messages sz ON sz.id=az.source_message_id JOIN groups g ON g.id=sz.group_id WHERE az.assignment_id=t.id),'بلا مصدر مجموعة') groups FROM assignments t JOIN accounts a ON a.id=t.account_id JOIN task_types tt ON tt.id=t.task_type_id WHERE ${taskWhere} ORDER BY ${taskOrder} LIMIT 20`,
             params,
           )
         ).rows;

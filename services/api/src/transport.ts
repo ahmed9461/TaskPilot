@@ -1,9 +1,11 @@
+import type { ReplyImage } from "./reply-images.js";
 export interface ReplyTarget {
   sessionId: string;
   groupId: string;
   externalMessageId: string;
   body: string;
   jobId: string;
+  images?: ReplyImage[];
   sourceMessageId?: string;
 }
 export class DefinitelyNotSent extends Error {}
@@ -20,6 +22,7 @@ export interface WhatsAppTransport {
 export class MockTransport implements WhatsAppTransport {
   readonly provider = "mock";
   sent: ReplyTarget[] = [];
+  constructor(private capture = true) {}
   async connect(_id: string) {}
   async disconnect(_id: string) {}
   async listGroups(_id: string) {
@@ -29,7 +32,7 @@ export class MockTransport implements WhatsAppTransport {
     return "MOCK";
   }
   async replyToMessage(target: ReplyTarget) {
-    this.sent.push(target);
+    if (this.capture) this.sent.push(target);
     return { providerMessageId: `mock:${target.jobId}` };
   }
 }

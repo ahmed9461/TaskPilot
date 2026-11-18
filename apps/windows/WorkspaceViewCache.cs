@@ -39,6 +39,9 @@ public sealed class WorkspaceViewCache<T>(TimeProvider? clock = null)
         if (page is "audit" or "operations") return true;
         if (page == "notifications") return ChangeFeed.NeedsAttention(type);
         if (type.StartsWith("CLIENT_", StringComparison.Ordinal) || type is "REVIEW_REVEALED" or "CREDENTIAL_REVEALED" or "REPORT_EXPORTED" or "GROUP_CREDENTIALS_EXPORTED") return false;
+        if (type is "FOLLOWUP_ACTIVITY_CREATED" or "GROUP_WORK_CREATED") return page is "dashboard" or "assignments" or "accounts" or "account-details" or "assistant";
+        if (type is "FOLLOWUP_ENABLED" or "FOLLOWUP_PAUSED") return page is "account-details";
+        if (type is "REPLY_BATCH_APPROVED" or "REPLY_BATCH_CANCELED") return page is "replies" or "assistant";
         if (type is "MESSAGE_MISSING_FIELDS" or "CREDENTIAL_REVIEW_REQUIRED") return page is "inbox" or "dashboard";
         if (type.StartsWith("AI_", StringComparison.Ordinal)) return page is "ai" or "inbox" or "dashboard";
         if (type is "MESSAGE_PROCESSED" or "REVIEW_RESOLVED" || type.StartsWith("ACCOUNT", StringComparison.Ordinal) || type.StartsWith("CREDENTIAL_", StringComparison.Ordinal)) return page is "accounts" or "account-details" or "assignments" or "inbox" or "dashboard";

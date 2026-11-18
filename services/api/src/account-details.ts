@@ -40,7 +40,7 @@ export async function accountDetails(
         from: "assignments a JOIN task_types t ON t.id=a.task_type_id",
         where: "a.account_id=$1",
         fields:
-          "a.id,a.status,a.version,a.period_key,a.priority,a.created_at,a.completed_at,t.code task_code,t.name task_name,(SELECT count(*)::int FROM assignment_sources x WHERE x.assignment_id=a.id) source_count,(SELECT count(*)::int FROM reply_jobs r WHERE r.assignment_id=a.id) reply_count",
+          "a.id,a.activity_label,a.status,a.version,a.period_key,a.priority,a.created_at,a.completed_at,t.code task_code,t.name task_name,(SELECT count(*)::int FROM assignment_sources x WHERE x.assignment_id=a.id) source_count,(SELECT count(*)::int FROM reply_jobs r WHERE r.assignment_id=a.id) reply_count",
         order: "a.created_at DESC,a.id",
         prefix: "",
       },

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { createPool } from "../../src/db.js";
 import { migrate } from "../../src/migrate.js";
 import { createApp } from "../../src/app.js";
@@ -28,6 +28,7 @@ class FakeSocket implements LiveSocket {
   sent: any[] = [];
   ended = 0;
   fail = false;
+  failAt = 0;
   onUpdate(fn: typeof this.update) {
     this.update = fn;
   }
@@ -45,7 +46,8 @@ class FakeSocket implements LiveSocket {
   }
   async send(...args: any[]) {
     this.sent.push(args);
-    if (this.fail) throw Error("ambiguous synthetic relay");
+    if (this.fail || this.sent.length === this.failAt)
+      throw Error("ambiguous synthetic relay");
     return "synthetic-provider-id";
   }
   async end() {
@@ -799,6 +801,54 @@ test("WhatsApp adapter PostgreSQL acceptance with fake sockets only", async (t) 
           ).rows[0].status,
           "UNKNOWN_DELIVERY",
         );
+        const count = s.sent.length;
+        s.fail = false;
+        s.failAt = count + 3;
+        const jpeg = Buffer.from("ffd8ff0102", "hex");
+        const media = [jpeg, jpeg].map((bytes) => ({
+          mime: "image/jpeg" as const,
+          size: bytes.length,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        }));
+        const mediaPreview = await service.replyPreview({
+          assignmentId: source.assignment_id,
+          sourceMessageId: source.id,
+          templateId: template.id,
+          images: media,
+        });
+        const mediaJob = await service.approveReply(
+          mediaPreview.approvalToken,
+          randomUUID(),
+          true,
+          [jpeg.toString("base64"), jpeg.toString("base64")],
+        );
+        assert.equal(await dispatchOne(pool, sending, vault), mediaJob.id);
+        assert.equal(s.sent.length, count + 3);
+        assert.equal(s.sent[count][2].id, "pending-other");
+        assert.deepEqual(s.sent[count][4], { kind: "album", imageCount: 2 });
+        assert.equal(s.sent[count + 1][1], mediaPreview.body);
+        assert.equal(s.sent[count + 2][1], "");
+        assert.deepEqual(s.sent[count + 1][4].image.bytes, jpeg);
+        assert.ok(
+          s.sent
+            .slice(count + 1)
+            .every(
+              (call) =>
+                call[2] === null &&
+                call[4].albumParentId === "synthetic-provider-id",
+            ),
+        );
+        assert.notEqual(s.sent[count][3], s.sent[count + 1][3]);
+        assert.equal(
+          (
+            await pool.query("SELECT status FROM reply_jobs WHERE id=$1", [
+              mediaJob.id,
+            ])
+          ).rows[0].status,
+          "UNKNOWN_DELIVERY",
+        );
+        assert.equal(await dispatchOne(pool, sending, vault), null);
+        assert.equal(s.sent.length, count + 3);
         s.update({ connection: "close", code: 401 });
         await sending.settled(session.id);
         assert.equal(

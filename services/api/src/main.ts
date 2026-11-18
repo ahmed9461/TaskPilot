@@ -1,3 +1,4 @@
+import { startTaskReminders } from "./task-reminders.js";
 import { readFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { AiRuntime } from "./ai-runtime.js";
@@ -60,16 +61,25 @@ const app = await createApp(
   ai,
   assistant,
 );
-const stop = await startMockWorker(pool, new MockTransport());
+const stop = await startMockWorker(
+  pool,
+  new MockTransport(false),
+  new Vault(encryptionKey),
+);
 // Recover interrupted live SENDING jobs even when live use is disabled.
 // canSend keeps the worker dormant until both policy and session are ready.
-const stopLive = await startMockWorker(pool, whatsapp);
+const stopLive = await startMockWorker(
+  pool,
+  whatsapp,
+  new Vault(encryptionKey),
+);
 if (!whatsapp.connectionEnabled)
   await pool.query(
     "UPDATE whatsapp_sessions SET status='STOPPED',last_error_code='WHATSAPP_POLICY_DISABLED' WHERE provider='baileys' AND status IN ('CONNECTING','CONNECTED','QR_AVAILABLE','RECONNECTING')",
   );
 const stopIngress = whatsapp.startIngressWorker();
 const stopAi = ai.startFallbackWorker();
+const stopReminders = startTaskReminders(pool);
 await app.listen({
   host,
   port: Number(process.env.TASKPILOT_BIND_PORT ?? 8240),
@@ -80,6 +90,7 @@ for (const signal of ["SIGINT", "SIGTERM"])
     await app.close();
     await stopIngress();
     await stopAi();
+    await stopReminders();
     await stopLive();
     await stop();
     await whatsapp.close();

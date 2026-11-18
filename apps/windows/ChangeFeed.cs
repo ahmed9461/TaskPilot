@@ -38,7 +38,7 @@ public sealed class ChangeFeed
         FreshTypes = freshTypes;
         return new(added, attention);
     }
-    public static bool NeedsAttention(string? type) => type is "MESSAGE_PROCESSED" or "MESSAGE_MISSING_FIELDS" or "CREDENTIAL_REVIEW_REQUIRED" or "AI_SUGGESTION_READY" or "CREDENTIAL_ERROR_VERIFIED" or "ACCOUNT_CREDENTIALS_UNVERIFIED" or "REPLY_SENT" or "REPLY_FAILED" or "REPLY_DELIVERY_UNKNOWN";
+    public static bool NeedsAttention(string? type) => type is "TASK_REMINDER_DUE" or "FOLLOWUP_ACTIVITY_CREATED" or "MESSAGE_PROCESSED" or "MESSAGE_MISSING_FIELDS" or "CREDENTIAL_REVIEW_REQUIRED" or "AI_SUGGESTION_READY" or "CREDENTIAL_ERROR_VERIFIED" or "ACCOUNT_CREDENTIALS_UNVERIFIED" or "REPLY_SENT" or "REPLY_FAILED" or "REPLY_DELIVERY_UNKNOWN";
     // OS notification text accepts a count only, never an event body or account identifier.
     public static string SafeSummary(int count) => count is > 0 and <= 500 ? $"لديك {count} تحديثات جديدة في مساحة العمل. افتح TaskPilot للمراجعة." : throw new ArgumentOutOfRangeException(nameof(count));
 }

@@ -12,7 +12,8 @@ public sealed partial class MainPage
         var result = await api.Send("GET", $"/v1/accounts/{detailAccountId}/details?section={detailSection}&limit=50&offset={detailOffset}");
         var account = result["account"]!;
         Card(V(account,"display_name"), V(account,"namespace") + " / " + V(account,"username_normalized") + " • " + (V(account,"archived_at")=="" ? "نشط" : "مؤرشف"),
-            Button("عرض بيانات الحساب", () => ShowAccountCredentials(V(account, "id"), V(account, "display_name"), V(account, "username_normalized"))));
+            Button("عرض بيانات الحساب", () => ShowAccountCredentials(V(account, "id"), V(account, "display_name"), V(account, "username_normalized"))),
+            Button("متابعة الحساب", () => FollowupAccount(V(account, "id"))));
         PageBody.Children.Add(Button("العودة للحسابات", async () => { page="accounts"; await Render(); }));
         var section = Choice("عرض التفاصيل", [("tasks","المهام"),("sources","مصادر الرسائل"),("flags","بلاغات الاعتماد المسجلة"),("history","نشاط السجلات الحالية")],detailSection);
         TrackDraft(section);
@@ -23,7 +24,7 @@ public sealed partial class MainPage
             switch(detailSection)
             {
                 case "tasks":
-                    Card(V(n,"task_name") + " • " + V(n,"task_code"), $"{StateLabel(V(n,"status"))} • الفترة: {V(n,"period_key")} • أولوية {V(n,"priority")}\nالمصادر: {V(n,"source_count")} • الردود: {V(n,"reply_count")} • الإنشاء: {V(n,"created_at")}\n{V(n,"id")}");
+                    Card(ActivityTaskLabel(n) + " • " + V(n,"task_code"), $"{StateLabel(V(n,"status"))} • الفترة: {V(n,"period_key")} • أولوية {V(n,"priority")}\nالمصادر: {V(n,"source_count")} • الردود: {V(n,"reply_count")} • الإنشاء: {V(n,"created_at")}\n{V(n,"id")}");
                     break;
                 case "sources":
                     Card(V(n,"group_title"), $"الجلسة: {V(n,"session_label")} • {V(n,"provider")} • {V(n,"state")}\nالاستلام: {V(n,"received_at")} • مهام مرتبطة: {V(n,"task_count")}\nرسالة المصدر: {V(n,"external_message_id")}\n{V(n,"id")}");

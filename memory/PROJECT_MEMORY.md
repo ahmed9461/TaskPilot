@@ -1,5 +1,9 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
+## D-095 — Assistant workflows and account follow-up
+
+A reply batch freezes one quote per eligible account in one group, with separate authorization, delivery counts and waiting-job cancellation. Images remain optional in individual replies; the first image carries the text template and multiple images are associated with an album that quotes the source. Split messages are joined only for review within the same sender, group and session. Keep the login message as the quote source. The persistent account/group follow-up is independent of assignment status; named activities deduplicate by account, type, period and title. Task notes are encrypted. Reapply through the normal release path using migrations 017–021 and the current runtime grants. See live status in PROJECT_STATE.
+
 ## D-094 — اختيار نموذج بالمُعرّف في Windows 0.9.2
 
 يميّز التطبيق بين مفتاح OpenRouter المحفوظ في إعدادات المزود ومعرّف النموذج الذي يكتبه المستخدم في المساعد أو الإعدادات. لصق معرّف OpenRouter كاملًا في «تلقائي» يجلب النماذج المتاحة للمفتاح ويحدّد التطابق دون اختيار ثانٍ من قائمة. الكتابة الجزئية تعرض اقتراحات. الاختيار في المساعد يخص المحادثة، وحفظ الإعدادات يغير النموذج الافتراضي. تحقق المسار على سطح المكتب ومع دليل OpenRouter الحي.

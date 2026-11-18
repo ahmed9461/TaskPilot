@@ -1,5 +1,17 @@
 // User notifications are separate from the complete technical change/audit stream.
 const catalog = {
+  TASK_REMINDER_DUE: {
+    title: "حان موعد متابعة مهمة",
+    detail: "افتح المهمة لقراءة ملاحظتها ومتابعة العمل.",
+    destination: "assignments",
+    severity: "info",
+  },
+  FOLLOWUP_ACTIVITY_CREATED: {
+    title: "نشاط جديد لحساب متابعة",
+    detail: "أُضيف تكليف مستقل لحساب تحت المتابعة.",
+    destination: "assignments",
+    severity: "info",
+  },
   MESSAGE_PROCESSED: {
     title: "وصل عمل جديد",
     detail: "تم استقبال بيانات الحساب وإنشاء التكليف. افتح المهام لمتابعته.",

@@ -39,7 +39,9 @@ const asciiDigits = (v: string) =>
     );
 const unformat = (v: string) => v.trim().replace(/^(\*{1,2}|_|`)(.+)\1$/, "$2");
 export function studentUsername(value: string): string | undefined {
-  const compact = asciiDigits(unformat(value)).replace(/[ \t]/g, "");
+  const compact = asciiDigits(unformat(value))
+    .replace(/[ \t\u061c\u200e\u200f]/g, "")
+    .replace(/@seu\.edu\.sa$/i, "");
   return /^s2\d{7,10}$/i.test(compact) ? "S" + compact.slice(1) : undefined;
 }
 const course =

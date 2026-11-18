@@ -112,7 +112,7 @@ public sealed partial class MainPage
         }
         var contextMenu = new Button { Content = new SymbolIcon(Symbol.More), Flyout = ActionMenu(("نطاق المحادثة", () => PickAssistantScope(groups)),
             ("إلغاء تحديد الحساب", () => { assistantFocus = null; assistantParent = null; return Task.CompletedTask; }),
-            ("اقتراحات الأسئلة", ShowAssistantSuggestions), ("تحديث المحادثة", RenderCore)) };
+            ("اقتراحات الأسئلة", ShowAssistantSuggestions), ("إجراءات العمل", WorkflowsMenu), ("تحديث المحادثة", RenderCore)) };
         AutomationProperties.SetName(contextMenu, "خيارات المحادثة");
         var heading = Text("المساعد الشخصي", 23);
         heading.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
@@ -136,6 +136,43 @@ public sealed partial class MainPage
         askButton = Button("إرسال", async () => {
             if (string.IsNullOrWhiteSpace(composer.Text)) throw new InvalidOperationException("VALIDATION_ERROR");
             if (assistantPendingTurn is not null) throw new InvalidOperationException("ASSISTANT_REQUEST_PENDING");
+            var send = BatchReplyCommand.Match(composer.Text);
+            if (send.Success)
+            {
+                await ReplyBatch(send.Groups["group"].Value, send.Groups["template"].Value);
+                return;
+            }
+            if (composer.Text.TrimStart().StartsWith("جهز ردود") || composer.Text.TrimStart().StartsWith("جهّز ردود"))
+            {
+                await ReplyBatch(completedOnly: true);
+                return;
+            }
+            var work = composer.Text.Trim().Replace("أ", "ا").Replace("إ", "ا");
+            if (work.StartsWith("راجع وارد") || work.StartsWith("افرز المراجعة") || work.StartsWith("راجع رسائل اليوم"))
+            {
+                await WorkBriefing(true);
+                return;
+            }
+            if (work.StartsWith("تقرير نهاية اليوم") || work.StartsWith("اقفل لي شغل اليوم"))
+            {
+                await WorkBriefing(false);
+                return;
+            }
+            if (work.StartsWith("انشئ تكليفات") || work.StartsWith("اضف واجب") || work.StartsWith("جهز التكليفات"))
+            {
+                await CreateGroupTasks();
+                return;
+            }
+            if (work.StartsWith("جرب قاعدة") || work.StartsWith("جرّب قاعدة") || work.StartsWith("اقترح قاعدة"))
+            {
+                await TryRoutingRule();
+                return;
+            }
+            if (work.StartsWith("ذكرني") || work.StartsWith("ذكّرني") || work.StartsWith("سجل ملاحظة") || work.StartsWith("سجّل ملاحظة"))
+            {
+                await ChooseTaskNote(work);
+                return;
+            }
             var requestId = Guid.NewGuid().ToString(); assistantPendingTurn = requestId;
             askButton!.IsEnabled = composer.IsEnabled = false;
             var waiting = Text("جارٍ تجهيز الإجابة…");

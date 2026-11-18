@@ -67,6 +67,14 @@ public sealed partial class MainPage : Page
         "REAUTH_REQUIRED" => "انتهى التحقق أو استُخدم. أعد فتح معاينة العملية للتحقق من جديد.",
         "PERMISSION_DENIED" or "SESSION_EXPIRED" => "انتهت جلسة الاتصال أو أُلغيت. أعد الاتصال للمتابعة.",
         "AI_DISABLED" => "فعّل الاقتراحات والموافقة على اتصال المزود من صفحة الذكاء الاصطناعي.",
+        "ACCOUNT_IDENTIFIER_AMBIGUOUS" => "يوجد سجلان للمعرّف الجامعي نفسه. راجع الحسابين قبل ربط الوارد.",
+        "FOLLOWUP_SCOPE_UNAVAILABLE" => "لا توجد رسالة مصدر صالحة لهذا الحساب في المجموعة، أو الحساب مؤرشف.",
+        "REMINDER_TIME_UNAVAILABLE" => "اختر موعدًا مستقبليًا لمهمة مفتوحة.",
+        "FOLLOWUP_NOT_ACTIVE" => "فعّل متابعة الحساب في المجموعة أولًا.",
+        "BATCH_TOO_LARGE" => "عدد الحسابات يتجاوز ١٠٠. جرّب خيار المهام المكتملة أو الرد الفردي.",
+        "BATCH_SCOPE_UNAVAILABLE" => "المجموعة أو القالب لم يعد متاحًا لهذه الدفعة.",
+        "REPLY_IMAGE_MISMATCH" => "المرفقات تختلف عن معاينة الرد، أو ليست بصيغة PNG أو JPEG صالحة.",
+        "REPLY_IMAGE_LIMIT" => "اختر حتى ٤ صور، بحجم ٤ ميغابايت للصورة و٨ ميغابايت إجمالًا.",
         "AI_CONFIGURATION_REQUIRED" => "مفتاح المزود غير مضبوط على الخادم.",
         "AI_KEY_REJECTED" => "رفض OpenRouter المفتاح أو صلاحيات الوصول إلى النماذج. تحقق من المفتاح وأعد المحاولة.",
         "AI_CATALOG_UNAVAILABLE" => "تعذر التحقق لدى OpenRouter. حاول الحفظ مرة أخرى عند عودة الاتصال.",
@@ -580,8 +588,8 @@ public sealed partial class MainPage : Page
             var n = r!;
             var status = Choice("الحالة", StatusCodes.Select(c => (c, StateLabel(c))), V(n, "status"));
             TrackDraft(status);
-            Card(V(n, "display_name"), $"{V(n, "task_name")} • {V(n, "period_key")} • {StateLabel(V(n, "status"))} • أولوية {V(n, "priority")}", status,
-            Button("حفظ الحالة", async () => { await api.Send("PATCH", "/v1/assignments/" + V(n, "id") + "/status", new { status = Selected(status), version = Ver(n) }); await Render(); }), Button("معاينة رد", () => Reply(n)), MoreActions(("مشكلة اعتماد", () => Flag(n)), ("حذف التكليف", () => PurgeAssignment(n))));
+            Card(V(n, "display_name"), $"{ActivityTaskLabel(n)} • {V(n, "period_key")} • {StateLabel(V(n, "status"))} • أولوية {V(n, "priority")}", status,
+            Button("حفظ الحالة", async () => { await api.Send("PATCH", "/v1/assignments/" + V(n, "id") + "/status", new { status = Selected(status), version = Ver(n) }); await Render(); }), Button("معاينة رد", () => Reply(n)), MoreActions(("ملاحظة وتذكير", () => TaskNote(V(n, "id"))), ("مشكلة اعتماد", () => Flag(n)), ("حذف التكليف", () => PurgeAssignment(n))));
         }
         Pager("assignments", result);
     }
@@ -607,31 +615,42 @@ public sealed partial class MainPage : Page
         var selection = await ChooseReply(a);
         if (selection is null)
             return;
+        var images = selection.Value.AttachImages ? await PickReplyImages() : [];
+        if (images is null) return;
         var p = await api.Send("POST", "/v1/reply-jobs/preview", new
         {
             assignmentId = V(a, "id"),
             sourceMessageId = V(selection.Value.Source, "id"),
-            templateId = V(selection.Value.Template, "id")
+            templateId = V(selection.Value.Template, "id"),
+            images = images.Select(image => image.Manifest).ToArray()
         });
         var reauth = ReauthField();
         var real = V(p,"provider") == "baileys";
         var target = $"المجموعة: {V(p, "groupTitle")}\nالجلسة: {V(p, "sessionLabel")}\nاستلام المصدر: {V(p, "receivedAt")}";
+        var content = Stack(Text(V(p, "body"), 20), Text(target));
+        if (images.Length > 0) content.Children.Add(await ReplyImagePreview(images));
         if (real && !liveSendingEnabled)
         {
-            await new ContentDialog { Title = "معاينة الرد — الإرسال معطّل", Content = Stack(Text(V(p, "body"), 20), Text(target), Text("هذه معاينة فقط؛ لم يُعتمد الرد ولم يُدرج في طابور الإرسال.")), CloseButtonText = "إغلاق", XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft }.ShowAsync();
+            await new ContentDialog { Title = "معاينة الرد — الإرسال معطّل", Content = content, CloseButtonText = "إغلاق", XamlRoot = XamlRoot, FlowDirection = FlowDirection.RightToLeft }.ShowAsync();
             return;
         }
-        if (!await Dialog(real ? "إقرار إرسال رد واتساب حقيقي" : "إقرار رد محاكى", Stack(Text(V(p, "body"), 20), Text(target + "\n" + (real ? "سيُرسل النص إلى رسالة المصدر في واتساب بعد الإقرار." : "موصل mock؛ لا إرسال واتساب حقيقي.")), reauth), real ? "إرسال الرد الحقيقي" : "إقرار المحاكاة"))
-            return;
-        await api.Send("POST", "/v1/reply-jobs/approve", new
+        content.Children.Add(reauth);
+        try
         {
-            approvalToken = V(p, "approvalToken"),
-            idempotencyKey = Guid.NewGuid().ToString()
-        }, await Reauth(reauth.Password));
-        reauth.Password = "";
+            if (!await Dialog(real ? "إقرار إرسال رد واتساب حقيقي" : "إقرار رد محاكى", content, real ? "إرسال الرد الحقيقي" : "إقرار المحاكاة"))
+                return;
+            await api.Send("POST", "/v1/reply-jobs/approve", new
+            {
+                approvalToken = V(p, "approvalToken"),
+                idempotencyKey = Guid.NewGuid().ToString(),
+                images = images.Select(image => Convert.ToBase64String(image.Bytes)).ToArray()
+            }, await Reauth(reauth.Password));
+        }
+        finally { reauth.Password = ""; }
         await Render();
         Connection.Message = "أُدرج طلب الرد في الطابور؛ تابع نتيجته في سجل الردود.";
     }
+
     private async Task Inbox()
     {
         if (mockToolsEnabled) PageBody.Children.Add(Button("إدخال رسالة اختبار وهمية", async () =>
@@ -655,12 +674,20 @@ public sealed partial class MainPage : Page
             content.Text = "";
             await Render();
         }));
+        var reviewType = Choice("نوع المراجعة", [("", "كل الرسائل"), ("combined", "حساب مجمّع من رسائل"),
+            ("routing", "قاعدة ملتبسة"), ("credential", "تعارض الاعتماد"), ("suggested", "اقتراح AI جاهز")], Filter("inbox", "reviewKind"));
+        PageBody.Children.Add(Toolbar(reviewType, Button("عرض", async () =>
+        {
+            filters["inbox"] = new(Filters("inbox")) { ["reviewKind"] = Selected(reviewType) };
+            offsets["inbox"] = 0;
+            await Render();
+        })));
         var result = await PageData("inbox");
         var rows = result["items"]!.AsArray();
         foreach (var row in rows)
         {
             var n = row!;
-            Card("بيانات تحتاج مراجعة", V(n, "group_title") + " • " + V(n, "external_message_id") + (V(n,"ai_status")=="SUCCEEDED" ? "\nاقتراح AI جاهز؛ افتح المراجعة للتحقق من الحقول." : V(n,"ai_status")=="UNAVAILABLE" ? "\nتعذر تحليل AI؛ تبقى الرسالة محفوظة للمراجعة." : ""),
+            Card(n["fragment_count"]?.GetValue<int>() > 1 ? "حساب مُجمّع من رسائل متقاربة" : "بيانات تحتاج مراجعة", V(n, "group_title") + " • " + V(n, "external_message_id") + (V(n,"ai_status")=="SUCCEEDED" ? "\nاقتراح AI جاهز؛ افتح المراجعة للتحقق من الحقول." : V(n,"ai_status")=="UNAVAILABLE" ? "\nتعذر تحليل AI؛ تبقى الرسالة محفوظة للمراجعة." : ""),
                 Button("مراجعة", () => ReviewSource(n)), Button("اقتراح بالذكاء الاصطناعي", () => AiSuggest(n)));
         }
         if (rows.Count == 0)
@@ -755,9 +782,15 @@ public sealed partial class MainPage : Page
     {
         await TemplateList();
         PageBody.Children.Add(Text("سجل الردود", 24));
+        PageBody.Children.Add(Button("تجهيز ردود مجموعة", () => ReplyBatch()));
+        var seen = new HashSet<string>();
         foreach (var n in (await api.Send("GET", "/v1/reply-jobs")).AsArray())
         {
+            var batchId = V(n, "batch_id");
+            if (batchId != "" && seen.Add(batchId))
+                PageBody.Children.Add(Button("نتيجة دفعة الردود", () => ShowReplyBatch(batchId)));
             var detail = $"{V(n, "display_name")} • {V(n, "task_name")}\nالمجموعة: {V(n, "group_title")} • الجلسة: {V(n, "session_label")}\n{V(n, "body")}";
+            if (n?["image_count"]?.GetValue<int>() is > 0 and int count) detail += $"\nالمرفقات {count}";
             if (V(n, "status") == "UNKNOWN_DELIVERY")
                 Card("تسليم يحتاج تحققًا", detail, Button("حسم حالة التسليم", () => Reconcile(n!)));
             else if (V(n, "status") == "APPROVED")

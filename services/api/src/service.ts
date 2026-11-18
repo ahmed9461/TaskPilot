@@ -1,10 +1,23 @@
+import { acceptIncomingActivity } from "./followups.js";
+import { stageFragment } from "./split-intake.js";
+import type { QuoteKey } from "./whatsapp/socket.js";
+import {
+  imageContext,
+  validateReplyImages,
+  type ReplyImageManifest,
+} from "./reply-images.js";
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import type { PoolClient } from "pg";
 import { transaction, event } from "./db.js";
 import { Vault, token, hash } from "./security.js";
 import { routeTask } from "./rules.js";
-import { normalize, parseMessage, hasAccountHint } from "./parser.js";
+import {
+  normalize,
+  parseMessage,
+  hasAccountHint,
+  studentUsername,
+} from "./parser.js";
 import type { MessageInput } from "../../../packages/contracts/src/index.js";
 export class Fault extends Error {
   constructor(
@@ -29,16 +42,28 @@ export class Service {
     },
     updateCredential = false,
   ) {
+    const namespace = normalize(input.namespace);
+    const student = studentUsername(input.username);
+    let username = normalize(student ?? input.username);
+    if (student) {
+      const keyedName = hash(JSON.stringify([namespace, username]));
+      await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+        keyedName,
+      ]);
+      const existing = (
+        await c.query<{ username_normalized: string }>(
+          "SELECT username_normalized FROM accounts WHERE namespace=$1 AND username_normalized=ANY($2::text[]) ORDER BY username_normalized FOR UPDATE",
+          [namespace, [username, username + "@seu.edu.sa"]],
+        )
+      ).rows;
+      if (existing.length > 1) throw new Fault("ACCOUNT_IDENTIFIER_AMBIGUOUS");
+      if (existing.length) username = existing[0]!.username_normalized;
+    }
     const row = (
       await c.query(
         `INSERT INTO accounts(id,namespace,username_normalized,display_name) VALUES($1,$2,$3,$4)
       ON CONFLICT(namespace,username_normalized) DO UPDATE SET username_normalized=EXCLUDED.username_normalized RETURNING *`,
-        [
-          randomUUID(),
-          normalize(input.namespace),
-          normalize(input.username),
-          input.displayName,
-        ],
+        [randomUUID(), namespace, username, input.displayName],
       )
     ).rows[0];
     if (input.password) {
@@ -67,7 +92,11 @@ export class Service {
     }
     return row;
   }
-  async ingest(input: MessageInput, transportKey?: unknown) {
+  async ingest(
+    input: MessageInput,
+    transportKey?: QuoteKey,
+    timestamp?: number,
+  ) {
     return transaction(this.pool, async (c) => {
       const group = (
         await c.query(
@@ -118,6 +147,31 @@ export class Service {
         ],
       );
       if (
+        transportKey?.participant &&
+        timestamp !== undefined &&
+        (await stageFragment(
+          c,
+          messageId,
+          input.sessionId,
+          input.groupId,
+          input.text,
+          transportKey.participant,
+          timestamp,
+        ))
+      )
+        return { id: messageId, state: "FRAGMENT_PENDING" };
+      if (!route.ambiguous) {
+        const activity = await acceptIncomingActivity(
+          c,
+          input.text,
+          messageId,
+          group,
+          route.taskTypeId,
+          route.priority,
+        );
+        if (activity) return activity;
+      }
+      if (
         !parsed.username &&
         !parsed.displayName &&
         !parsed.password &&
@@ -159,13 +213,26 @@ export class Service {
       } catch (e) {
         if (
           !(e instanceof Fault) ||
-          !["CREDENTIAL_CONFLICT", "ACCOUNT_ARCHIVED"].includes(e.code)
+          ![
+            "CREDENTIAL_CONFLICT",
+            "ACCOUNT_ARCHIVED",
+            "ACCOUNT_IDENTIFIER_AMBIGUOUS",
+          ].includes(e.code)
         )
           throw e;
         await c.query("ROLLBACK TO SAVEPOINT extraction");
         await c.query(
-          "UPDATE source_messages SET review_account_id=(SELECT id FROM accounts WHERE namespace=$2 AND username_normalized=$3) WHERE id=$1",
-          [messageId, normalize(group.namespace), normalize(parsed.username!)],
+          "UPDATE source_messages SET review_account_id=(SELECT min(id::text)::uuid FROM accounts WHERE namespace=$2 AND username_normalized=ANY($3::text[]) HAVING count(*)=1) WHERE id=$1",
+          [
+            messageId,
+            normalize(group.namespace),
+            studentUsername(parsed.username!)
+              ? [
+                  normalize(parsed.username!),
+                  normalize(parsed.username!) + "@seu.edu.sa",
+                ]
+              : [normalize(parsed.username!)],
+          ],
         );
         await event(c, "CREDENTIAL_REVIEW_REQUIRED", messageId);
         return { id: messageId, state: "REVIEW" };
@@ -188,7 +255,7 @@ export class Service {
     const assignment = (
       await c.query(
         `INSERT INTO assignments(id,account_id,task_type_id,period_key,priority) VALUES($1,$2,$3,$4,$5)
-      ON CONFLICT(account_id,task_type_id,period_key) DO UPDATE SET priority=GREATEST(assignments.priority,EXCLUDED.priority),version=assignments.version+CASE WHEN EXCLUDED.priority>assignments.priority THEN 1 ELSE 0 END RETURNING *`,
+      ON CONFLICT(account_id,task_type_id,period_key,activity_key) DO UPDATE SET priority=GREATEST(assignments.priority,EXCLUDED.priority),version=assignments.version+CASE WHEN EXCLUDED.priority>assignments.priority THEN 1 ELSE 0 END RETURNING *`,
         [
           randomUUID(),
           account.id,
@@ -393,6 +460,7 @@ export class Service {
     assignmentId: string;
     sourceMessageId: string;
     templateId: string;
+    images?: ReplyImageManifest;
   }) {
     return transaction(this.pool, async (c) => {
       const row = (
@@ -415,8 +483,8 @@ export class Service {
       )
         throw new Fault("TEMPLATE_SCOPE_MISMATCH");
       const body = row.body
-        .replaceAll("{displayName}", row.display_name)
-        .replaceAll("{taskName}", row.task_name);
+        .replaceAll("{displayName}", () => row.display_name)
+        .replaceAll("{taskName}", () => row.task_name);
       if (body.includes("{") || body.includes("}"))
         throw new Fault("UNSAFE_TEMPLATE");
       const approvalToken = await this.approval(c, "reply", {
@@ -430,6 +498,7 @@ export class Service {
       return {
         approvalToken,
         body,
+        imageCount: input.images?.length ?? 0,
         sessionId: row.session_id,
         groupId: row.group_id,
         groupTitle: row.title,
@@ -441,9 +510,18 @@ export class Service {
       };
     });
   }
-  async approveReply(value: string, key: string, allowLive = false) {
+  async approveReply(
+    value: string,
+    key: string,
+    allowLive = false,
+    uploads: string[] = [],
+  ) {
     return transaction(this.pool, async (c) => {
       const p = await this.consume(c, value, "reply");
+      const images = validateReplyImages(p.images ?? [], uploads);
+      const manifestHash = images.length
+        ? hash(JSON.stringify(p.images))
+        : null;
       const session = (
         await c.query("SELECT provider FROM whatsapp_sessions WHERE id=$1", [
           p.sessionId,
@@ -484,15 +562,16 @@ export class Service {
         if (
           prior.assignment_id !== p.assignmentId ||
           prior.source_message_id !== p.sourceMessageId ||
-          prior.body !== p.body
+          prior.body !== p.body ||
+          prior.image_manifest_hash !== manifestHash
         )
           throw new Fault("IDEMPOTENCY_CONFLICT");
         return prior;
       }
       const job = (
         await c.query(
-          `INSERT INTO reply_jobs(id,assignment_id,source_message_id,session_id,template_id,body,status,idempotency_key)
-        VALUES($1,$2,$3,$4,$5,$6,'APPROVED',$7) RETURNING *`,
+          `INSERT INTO reply_jobs(id,assignment_id,source_message_id,session_id,template_id,body,status,idempotency_key,image_count,image_manifest_hash)
+        VALUES($1,$2,$3,$4,$5,$6,'APPROVED',$7,$8,$9) RETURNING *`,
           [
             randomUUID(),
             p.assignmentId,
@@ -501,9 +580,27 @@ export class Service {
             p.templateId,
             p.body,
             key,
+            images.length,
+            manifestHash,
           ],
         )
       ).rows[0];
+      if (images.length)
+        await c.query(
+          "INSERT INTO reply_job_images(job_id,ciphertext) VALUES($1,$2)",
+          [
+            job.id,
+            this.vault.seal(
+              JSON.stringify(
+                images.map((image) => ({
+                  mime: image.mime,
+                  data: image.bytes.toString("base64"),
+                })),
+              ),
+              imageContext(job.id),
+            ),
+          ],
+        );
       await c.query(
         "UPDATE accounts SET version=version+1 WHERE id=(SELECT account_id FROM assignments WHERE id=$1)",
         [p.assignmentId],

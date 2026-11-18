@@ -75,6 +75,13 @@ public sealed partial class MainPage
     private async Task AssignmentFilters()
     {
         const string r = "assignments";
+        if (Filter(r, "assignmentId") != "")
+            PageBody.Children.Add(Button("عرض كل المهام", async () =>
+            {
+                filters[r] = new();
+                offsets[r] = 0;
+                await Render();
+            }));
         var search = Field("الاسم أو المستخدم", Filter(r, "search"));
         var period = Field("الفترة", Filter(r, "periodKey"));
         var status = Choice("الحالة", new[] { ("", "الكل") }.Concat(StatusCodes.Select(s => (s, StateLabel(s)))), Filter(r, "status"));

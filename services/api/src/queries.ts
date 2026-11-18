@@ -2,6 +2,9 @@ import { z } from "zod";
 import type pg from "pg";
 import { transaction } from "./db.js";
 import { assignmentStatus, id } from "../../../packages/contracts/src/index.js";
+const currentSuggestion = `EXISTS(SELECT 1 FROM ai_requests ar WHERE ar.source_id=s.id
+      AND ar.source_version=s.version AND ar.settings_version=(SELECT version FROM ai_settings WHERE id=true)
+      AND ar.status='SUCCEEDED')`;
 export const querySchema = z.object({
   search: z.string().max(200).default(""),
   limit: z.coerce.number().int().min(1).max(500).default(100),
@@ -14,6 +17,10 @@ export const querySchema = z.object({
   groupId: id.optional(),
   taskTypeId: id.optional(),
   accountId: id.optional(),
+  assignmentId: id.optional(),
+  reviewKind: z
+    .enum(["combined", "routing", "credential", "suggested"])
+    .optional(),
   periodKey: z.string().max(200).optional(),
   minPriority: z.coerce.number().int().min(0).max(100).optional(),
 });
@@ -46,6 +53,7 @@ export async function queryResource(
       );
   }
   if (resource === "assignments") {
+    if (p.assignmentId) where.push(`a.id=${add(p.assignmentId)}`);
     for (const [key, column] of [
       ["status", "a.status"],
       ["taskTypeId", "a.task_type_id"],
@@ -65,6 +73,15 @@ export async function queryResource(
   }
   if (resource === "inbox") {
     where.push("s.state='REVIEW'");
+    if (p.reviewKind)
+      where.push(
+        {
+          combined: "s.fragment_count>1",
+          routing: "s.routing_ambiguous",
+          credential: "s.review_account_id IS NOT NULL",
+          suggested: currentSuggestion,
+        }[p.reviewKind],
+      );
     if (p.sessionId) where.push(`s.session_id=${add(p.sessionId)}`);
     if (p.groupId) where.push(`s.group_id=${add(p.groupId)}`);
   }
@@ -79,7 +96,7 @@ export async function queryResource(
       ? "ac.id,ac.namespace,ac.username_normalized,ac.display_name,ac.archived_at,ac.version,ac.created_at"
       : resource === "assignments"
         ? `a.*,ac.namespace,ac.display_name,ac.username_normalized,t.name task_name,COALESCE((SELECT json_agg(json_build_object('id',s.id,'sessionId',s.session_id,'groupId',s.group_id,'externalMessageId',s.external_message_id,'groupTitle',g.title,'sessionLabel',ws.label,'receivedAt',s.received_at) ORDER BY s.received_at,s.id) FROM assignment_sources x JOIN source_messages s ON s.id=x.source_message_id JOIN groups g ON g.id=s.group_id JOIN whatsapp_sessions ws ON ws.id=s.session_id WHERE x.assignment_id=a.id),'[]') sources`
-        : "s.id,s.session_id,s.group_id,s.external_message_id,s.state,s.version,s.received_at,s.routing_task_type_id,s.routing_ambiguous,g.namespace,g.title group_title,(SELECT ar.status FROM ai_requests ar WHERE ar.source_id=s.id AND ar.source_version=s.version AND ar.settings_version=(SELECT version FROM ai_settings WHERE id=true) ORDER BY ar.created_at DESC LIMIT 1) ai_status";
+        : "s.id,s.session_id,s.group_id,s.external_message_id,s.state,s.version,s.received_at,s.routing_task_type_id,s.routing_ambiguous,s.fragment_count,g.namespace,g.title group_title,(SELECT ar.status FROM ai_requests ar WHERE ar.source_id=s.id AND ar.source_version=s.version AND ar.settings_version=(SELECT version FROM ai_settings WHERE id=true) ORDER BY ar.created_at DESC LIMIT 1) ai_status";
   const condition = where.length ? " WHERE " + where.join(" AND ") : "";
   const order =
     resource === "accounts"

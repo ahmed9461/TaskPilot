@@ -40,6 +40,10 @@ public sealed partial class MainPage
     {
         "MESSAGE_PROCESSED" => "تمت معالجة رسالة",
         "AI_SUGGESTION_READY" => "اقتراح AI جاهز للمراجعة",
+        "FOLLOWUP_ACTIVITY_CREATED" => "نشاط متابعة جديد",
+        "TASK_REMINDER_DUE" => "حان موعد التذكير",
+        "REPLY_BATCH_APPROVED" => "اعتماد دفعة ردود",
+        "REPLY_BATCH_CANCELED" => "إلغاء ردود منتظرة من دفعة",
         "MESSAGE_MISSING_FIELDS" => "رسالة تحتاج مراجعة",
         "CREDENTIAL_REVIEW_REQUIRED" => "اعتماد يحتاج مراجعة",
         "ACCOUNT_SAVED" => "حُفظ حساب",
@@ -82,7 +86,9 @@ public sealed partial class MainPage
             var n = row!;
             var destination = V(n, "destination");
             var actions = new List<UIElement>();
-            if (destination is "assignments" or "inbox" or "accounts" or "replies")
+            if (V(n, "type") is "TASK_REMINDER_DUE" or "FOLLOWUP_ACTIVITY_CREATED")
+                actions.Add(Button("فتح المهمة", async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); await OpenReminderAssignment(V(n, "subject_id")); }));
+            else if (destination is "assignments" or "inbox" or "accounts" or "replies")
                 actions.Add(Button("فتح " + PageTitle(destination), async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); currentViewBuiltAt = DateTimeOffset.MinValue; await OpenSection(destination); }));
             if (V(n, "read_at") == "") actions.Add(Button("تمت القراءة", async () => { await api.Send("POST", "/v1/notifications/" + V(n, "id") + "/read", new { }); await Render(); }));
             var time = DateTimeOffset.TryParse(V(n, "created_at"), out var timestamp) ? timestamp.ToLocalTime().ToString("dd MMM، HH:mm") : "";
