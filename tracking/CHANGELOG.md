@@ -1,5 +1,10 @@
 # سجل التغيير
 
+## [0.9.1 deployed] — 2026-11-18
+
+- Added write-only OpenRouter key management in AI Settings. Reauthorization, provider validation and a settings version check precede replacement. The encrypted field participates in backup and key rotation.
+- OpenRouter catalogs now use the authenticated user-specific model list. The assistant filters the loaded list as the user types.
+
 ## [0.9.0 deployed] — 2026-11-18
 
 - Released on New-VPS and replaced the Windows desktop shortcut. Verified native dashboard sync and assistant loading with the saved device.

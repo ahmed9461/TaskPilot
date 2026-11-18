@@ -1,0 +1,58 @@
+{
+  "release": "0.9.1",
+  "date": "2026-11-18",
+  "code": "a29fdcbdf6dcdaf0e1db35b6f5d2a920d569e985",
+  "databaseSchema": 16,
+  "validation": {
+    "unit": 54,
+    "postgresTests": 140,
+    "windowsOfflineGroups": 52,
+    "winuiBuildWarnings": 0,
+    "syntheticApi": [
+      "save and replace using protected route",
+      "refuse missing reauthorization",
+      "invalid or stale replacement preserves prior working key",
+      "ciphertext opens with the scoped vault context",
+      "rotation with commit and rollback",
+      "key specific model catalog"
+    ],
+    "nativeSynthetic": {
+      "modelsLoaded": 3,
+      "search": "REASON",
+      "matches": 1,
+      "selected": "fixture/reasoner",
+      "shownInHeader": true
+    },
+    "personalWindows": {
+      "shortcutLaunched": true,
+      "connectedViaTailscale": true,
+      "protectedProfilePreserved": true,
+      "settingsDisplayedAddOpenRouterKey": true,
+      "liveOpenRouterKeyUsed": false
+    }
+  },
+  "deployment": {
+    "installedFilesMatched": 530,
+    "zipSha256": "707574d8887aa2595b524cbcdd4f3a7dac6f09e033bff8a6d94fc3dc5d3faf43",
+    "priorServer": "7466881",
+    "priorDesktop": "cd557b4",
+    "nonTaskPilotServicesChecked": 42,
+    "changedOtherServices": 0,
+    "missingBaselineRows": 0,
+    "existingCredentialsAndPairedIdentityPreserved": true
+  },
+  "backups": [
+    {
+      "name": "pre-openrouter-091-20261118.tpg",
+      "schema": 15,
+      "encryptedBytes": 339349,
+      "sha256": "49fcce904d9b9334e3e4527dd6a260ae4cc9e9356436bf14ecb569528b7a05f6"
+    },
+    {
+      "name": "post-openrouter-091-20261118.tpg",
+      "schema": 16,
+      "encryptedBytes": 339540,
+      "sha256": "241833934a2ff767df5c26f6455450e527c39bc550eab45cd3b4c97528aa5195"
+    }
+  ]
+}

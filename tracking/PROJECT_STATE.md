@@ -1,5 +1,9 @@
 # الحالة الحالية — 2026-11-18 (Asia/Riyadh)
 
+## D-093 — إصدار 0.9.1 منشور على New-VPS وسطح المكتب
+
+الخادم وتطبيق Windows عند `a29fdcb` ومخطط البيانات 16. فتح الاختصار التطبيق واتصل عبر Tailscale، وظهرت بطاقة إضافة مفتاح OpenRouter. يحفظ الخادم المفتاح مشفّرًا بعد التحقق منه. الإضافة والاستبدال وفشل التحقق اختُبرت بمفتاح اصطناعي، وجُرّب البحث والاختيار من نافذة المساعد. [دليل النشر](evidence/openrouter-091-deployment-20261118.json)
+
 ## D-092 — 0.9.0 deployed and verified on Windows
 
 - API `7466881` is active on New-VPS with schema 15. The desktop shortcut launches Windows `cd557b4`. Verified the dashboard's persistent Tailscale connection and the new chat workspace against the live service. [Deployment evidence](evidence/workspace-090-deployment-20261118.json)

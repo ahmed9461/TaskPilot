@@ -1,5 +1,11 @@
 # نتائج الاختبار الفعلية
 
+## D-093 — release a29fdcb — 2026-11-18
+
+54 unit tests, 140 isolated PostgreSQL tests and 52 offline Windows checks/groups passed. Windows Release built with zero warnings/errors. The key tests exercised reauthorization, valid replacement, rejected key, stale settings version, scoped decryption and key rotation. Native Windows fetched three synthetic models, filtered to one with uppercase partial input and displayed the selected model in the conversation header.
+
+Live acceptance used the desktop shortcut and existing device profile. The connected UI displayed the OpenRouter add-key control. The owner's OpenRouter account was not used for a provider call. Both encrypted backups restored to isolated databases on their matching schema versions, with offhost hashes verified. [Evidence](evidence/openrouter-091-deployment-20261118.json)
+
 ## D-092 — live deployment and shortcut acceptance — 2026-11-18
 
 API 0.9.0 readiness, correct service working directory and final owner-data checks passed. All 42 other baseline services retained their invocation and state. The pre-release encrypted backup restored in isolation with schema 15 and matched its offhost copy. All 530 installed Windows files matched the tested ZIP. Launch through the updated desktop shortcut showed a connected, synchronizing dashboard over persistent Tailscale. The assistant loaded its history, DeepSeek model and composer. The saved profile hash and single device issuance matched before and after. The live probe read provider configuration. No chat generation, credential display/export or WhatsApp message was needed for this deployment. [Evidence](evidence/workspace-090-deployment-20261118.json)

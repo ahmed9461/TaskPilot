@@ -1,5 +1,11 @@
 # خطة التنفيذ والتتبع — 2026-11-18
 
+## D-093 — OpenRouter
+
+- [x] إضافة المفتاح واستبداله من إعدادات Windows، مع تحقق المزود وتشفير الحقل وتدويره.
+- [x] جلب قائمة الحساب والبحث في معرّفات النماذج واختيار نموذج للمحادثة.
+- [x] النشر والتحقق من اتصال النسخة المثبتة. يستطيع المالك الآن إدخال مفتاحه من التطبيق.
+
 ## D-092 — Account data and assistant chat
 
 - [x] Protected account details and group Markdown export in isolated PostgreSQL and native Windows. Clean chat, immediate section selection, model options and history tested on Windows.

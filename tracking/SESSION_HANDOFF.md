@@ -1,5 +1,9 @@
 # TaskPilot handoff — 2026-11-18
 
+## D-093 deployed
+
+API and Windows `a29fdcb` (0.9.1). The desktop shortcut opens the verified build. The new app is open on AI Settings, with the original Tailscale profile. Live OpenRouter setup is owner-managed. The previous 0.9.0 window was minimized and was left open to preserve any work. Rollback points are the previous API `7466881`, the 0.9.0 client and `outputs/TaskPilot-before-0.9.1.lnk`. Migration 016 adds a nullable column. Pre- and post-release database packets were restored separately and copied offhost.
+
 ## D-092 released on New-VPS and Desktop
 
 Feature commit `7466881` and clean workspace commit `cd557b4` are on `feat/mvp-foundation`. Artifact `work/TaskPilot-0.9.0-win-x64-cd557b4.zip` is the packed native-checked candidate. The API stages and both synthetic DBs are separate from the owner service. The isolated listener and tunnel were stopped after verification.
