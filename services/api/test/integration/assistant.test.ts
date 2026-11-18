@@ -38,7 +38,18 @@ test("project secretary grounded reads, privacy, shared budget and atomic comman
     new Vault(config.encryptionKey),
     async () => "synthetic-only",
     (c) =>
-      new ChatProvider(c, (async (_url, init) => {
+      new ChatProvider(c, (async (url, init) => {
+        if (String(url).endsWith("/models"))
+          return Response.json({
+            data: [
+              {
+                id:
+                  c.provider === "openrouter"
+                    ? "fixture/model"
+                    : "deepseek-flash",
+              },
+            ],
+          });
         calls++;
         body = String(init!.body);
         if (fail) throw Error("provider-private-body");
@@ -146,6 +157,104 @@ test("project secretary grounded reads, privacy, shared budget and atomic comman
     )
   ).rows;
   const first = assignments.find((a) => a.account_id === account.id)!;
+
+  await t.test(
+    "group Markdown export and complete account reveal require reauthentication",
+    async () => {
+      const exportPath = `/v1/groups/${group.id}/accounts-markdown`;
+      const revealPath = `/v1/accounts/${account.id}/reveal`;
+      assert.equal((await req("POST", exportPath, {})).statusCode, 403);
+      assert.equal((await req("POST", revealPath, {})).statusCode, 403);
+      const result = await ok("POST", exportPath, {}, sensitive);
+      assert.equal(result.count, 2);
+      assert.ok(
+        result.content.includes(
+          "حسن الوهمي\n```\ns240000000\nSynthetic-Pass!42\n```",
+        ),
+      );
+      assert.equal(result.content.split("\n\n---\n\n").length, 2);
+      assert.deepEqual(await ok("POST", revealPath, {}, sensitive), {
+        displayName: "حسن الوهمي",
+        username: "s240000000",
+        password: "Synthetic-Pass!42",
+        expiresInSeconds: 30,
+      });
+      assert.equal(
+        (
+          await req(
+            "POST",
+            `/v1/groups/${randomUUID()}/accounts-markdown`,
+            {},
+            sensitive,
+          )
+        ).statusCode,
+        404,
+      );
+    },
+  );
+
+  await t.test(
+    "local account pointers and archive commands do not reveal credentials or mutate on ask",
+    async () => {
+      const before = calls;
+      const reveal = await ask("اعرض بيانات الحساب S240000000");
+      assert.equal(reveal.accountReference.id, account.id);
+      assert.doesNotMatch(JSON.stringify(reveal), /Synthetic-Pass/);
+      const archived = await ask("أرشف الحساب S240000000");
+      assert.equal(archived.accountAction.kind, "archive");
+      assert.equal(
+        (
+          await pool.query("SELECT archived_at FROM accounts WHERE id=$1", [
+            account.id,
+          ])
+        ).rows[0].archived_at,
+        null,
+      );
+      await ok("POST", `/v1/accounts/${account.id}/archive`, {
+        version: archived.accountAction.version,
+      });
+      const restore = await ask("استرجع الحساب S240000000");
+      assert.equal(restore.accountAction.kind, "restore");
+      assert.equal(
+        (
+          await req("POST", `/v1/accounts/${account.id}/restore`, {
+            version: archived.accountAction.version,
+          })
+        ).statusCode,
+        409,
+      );
+      await ok("POST", `/v1/accounts/${account.id}/restore`, {
+        version: restore.accountAction.version,
+      });
+      assert.equal(calls, before);
+    },
+  );
+
+  await t.test(
+    "catalog model selection is scoped to this assistant turn and uses the shared policy",
+    async () => {
+      const options = await ok("GET", "/v1/assistant/models");
+      assert.equal(options.defaultProvider, "deepseek");
+      assert.ok(
+        options.providers.find((p: any) => p.provider === "openrouter")
+          .configured,
+      );
+      const chosen = await ask("ملخص العمل اليوم", {
+        modelChoice: { provider: "openrouter", model: "fixture/model" },
+      });
+      assert.equal(chosen.modelStatus, "SUCCEEDED");
+      assert.equal(chosen.provider, "openrouter");
+      assert.equal(chosen.model, "fixture/model");
+      assert.equal(JSON.parse(body).model, "fixture/model");
+      const before = calls;
+      const unavailable = await ask("ملخص العمل اليوم", {
+        modelChoice: { provider: "openrouter", model: "unsupported/model" },
+      });
+      assert.equal(unavailable.modelStatus, "AI_MODEL_UNAVAILABLE");
+      assert.equal(calls, before);
+      assert.equal((await ok("GET", "/v1/ai/config")).provider, "deepseek");
+    },
+  );
 
   await t.test("unauthorized chat and actions stay denied", async () => {
     assert.equal(

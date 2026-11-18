@@ -18,11 +18,19 @@ import {
 } from "./assistant-plan.js";
 type ProviderName = "deepseek" | "openrouter";
 type FactoryConfig = ConstructorParameters<typeof ChatProvider>[0];
+const modelId = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_.:/-]{0,199}$/);
+export const assistantModelInput = z
+  .object({
+    provider: z.enum(["deepseek", "openrouter"]),
+    model: modelId,
+  })
+  .strict();
+type AssistantModelChoice = z.infer<typeof assistantModelInput>;
 export const aiSettingsInput = z
   .object({
     version: z.number().int().positive(),
     provider: z.enum(["deepseek", "openrouter"]),
-    model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_.:/-]{0,199}$/),
+    model: modelId,
     enabled: z.boolean(),
     outboundApproved: z.boolean(),
     dailyRequestLimit: z.number().int().min(1).max(100),
@@ -53,6 +61,10 @@ export function estimatedAiCost(
   );
 }
 export class AiRuntime {
+  private readonly catalogs = new Map<
+    ProviderName,
+    { keyHash: string; until: number; models: string[] }
+  >();
   constructor(
     private pool: pg.Pool,
     private vault: Vault,
@@ -78,11 +90,15 @@ export class AiRuntime {
       "UPDATE ai_requests SET status='UNAVAILABLE',error_code='AI_PROCESS_INTERRUPTED',completed_at=now() WHERE status='REQUESTED'",
     );
   }
-  private async provider(p: ProviderName, model: string) {
+  private async configuredKey(p: ProviderName) {
     let key = "";
     try {
       key = await this.key(p);
     } catch {}
+    return key;
+  }
+  private async provider(p: ProviderName, model: string, key?: string) {
+    key ??= await this.configuredKey(p);
     if (!key) throw new Fault("AI_CONFIGURATION_REQUIRED", 409);
     return this.factory({
       provider: p,
@@ -91,6 +107,21 @@ export class AiRuntime {
       enabled: true,
       outboundApproved: true,
     });
+  }
+  async assistantOptions() {
+    const cfg = await this.cfg();
+    const providers = await Promise.all(
+      (["deepseek", "openrouter"] as const).map(async (provider) => ({
+        provider,
+        configured: !!(await this.configuredKey(provider)),
+      })),
+    );
+    return {
+      providers,
+      defaultProvider: cfg.provider,
+      defaultModel: cfg.model,
+      enabled: cfg.enabled && cfg.outbound_approved,
+    };
   }
   async settings(db: pg.Pool | pg.PoolClient = this.pool) {
     const c = await this.cfg(db);
@@ -116,9 +147,22 @@ export class AiRuntime {
   }
   async models(p: ProviderName) {
     try {
+      const key = await this.configuredKey(p);
+      const models = [
+        ...new Set(
+          (await (await this.provider(p, "catalog", key)).listModels()).filter(
+            (id) => modelId.safeParse(id).success,
+          ),
+        ),
+      ].sort();
+      this.catalogs.set(p, {
+        keyHash: hash(key),
+        until: Date.now() + 300_000,
+        models,
+      });
       return {
         provider: p,
-        models: await (await this.provider(p, "catalog")).listModels(),
+        models,
       };
     } catch (e) {
       if (e instanceof Fault) throw e;
@@ -444,12 +488,28 @@ export class AiRuntime {
       while (running) await new Promise((r) => setTimeout(r, 20));
     };
   }
-  async assistantPlan(input: SafeAssistantInput, turnId: string) {
+  async assistantPlan(
+    input: SafeAssistantInput,
+    turnId: string,
+    selection?: AssistantModelChoice,
+  ) {
     const safe = safeAssistantInput.parse(input),
       cfg = await this.cfg();
     if (!cfg.enabled || !cfg.outbound_approved)
       throw new Fault("AI_DISABLED", 403);
-    const provider = await this.provider(cfg.provider, cfg.model);
+    const providerName: ProviderName = selection?.provider ?? cfg.provider;
+    const model: string = selection?.model ?? cfg.model;
+    const key = await this.configuredKey(providerName);
+    if (!key) throw new Fault("AI_CONFIGURATION_REQUIRED", 409);
+    if (selection) {
+      const catalog = this.catalogs.get(providerName);
+      const models =
+        catalog && catalog.keyHash === hash(key) && catalog.until > Date.now()
+          ? catalog.models
+          : (await this.models(providerName)).models;
+      if (!models.includes(model)) throw new Fault("AI_MODEL_UNAVAILABLE", 409);
+    }
+    const provider = await this.provider(providerName, model, key);
     const reserved = Buffer.byteLength(JSON.stringify(safe), "utf8") + 1800;
     const selected = await transaction(this.pool, async (db) => {
       await db.query("SELECT pg_advisory_xact_lock(8240007)");
@@ -485,8 +545,8 @@ export class AiRuntime {
             randomUUID(),
             hash(`assistant:${turnId}`),
             cfg.version,
-            cfg.provider,
-            cfg.model,
+            providerName,
+            model,
             reserved,
           ],
         )
@@ -513,8 +573,8 @@ export class AiRuntime {
           result.promptTokens,
           result.completionTokens,
           estimatedAiCost(
-            cfg.provider,
-            cfg.model,
+            providerName,
+            model,
             result.promptTokens,
             result.completionTokens,
             result.cacheHitTokens ?? null,

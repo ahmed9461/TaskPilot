@@ -6,7 +6,7 @@ import { transaction, event } from "./db.js";
 import { hash, token } from "./security.js";
 import { Fault } from "./service.js";
 import { parseMessage } from "./parser.js";
-import { AiRuntime } from "./ai-runtime.js";
+import { AiRuntime, assistantModelInput } from "./ai-runtime.js";
 import {
   assistantPlan,
   assistantSearchTerms,
@@ -27,6 +27,7 @@ const askInput = z
     question: z.string().trim().min(1).max(1200),
     focusAccountId: id.nullable().default(null),
     groupId: id.nullable().default(null),
+    modelChoice: assistantModelInput.optional(),
   })
   .strict();
 const actionInput = z
@@ -118,10 +119,18 @@ export class AssistantService {
       )
     ).rows[0];
   }
-  private async resolve(question: string, focus: string | null) {
+  private async resolve(
+    question: string,
+    focus: string | null,
+    includeArchived = false,
+    groupId: string | null = null,
+  ) {
     const terms = assistantSearchTerms(question);
+    const scope = `($1::boolean OR a.archived_at IS NULL) AND ($2::uuid IS NULL OR EXISTS(
+      SELECT 1 FROM assignments t JOIN assignment_sources az ON az.assignment_id=t.id
+      JOIN source_messages s ON s.id=az.source_message_id WHERE t.account_id=a.id AND s.group_id=$2))`;
     if (terms.length) {
-      const params: string[] = [];
+      const params: (string | boolean | null)[] = [includeArchived, groupId];
       const where = terms
         .map((term) => {
           params.push(`%${escapeLike(term)}%`);
@@ -131,7 +140,7 @@ export class AssistantService {
       return {
         accounts: (
           await this.pool.query(
-            `SELECT ${accountProjection} FROM accounts a WHERE a.archived_at IS NULL AND ${where} ORDER BY a.display_name,a.id LIMIT 20`,
+            `SELECT ${accountProjection} FROM accounts a WHERE ${scope} AND ${where} ORDER BY a.display_name,a.id LIMIT 20`,
             params,
           )
         ).rows,
@@ -142,8 +151,8 @@ export class AssistantService {
       return {
         accounts: (
           await this.pool.query(
-            `SELECT ${accountProjection} FROM accounts a WHERE a.id=$1 AND a.archived_at IS NULL`,
-            [focus],
+            `SELECT ${accountProjection} FROM accounts a WHERE ${scope} AND a.id=$3`,
+            [includeArchived, groupId, focus],
           )
         ).rows,
         searched: true,
@@ -197,9 +206,27 @@ export class AssistantService {
       !global && parent?.account_ids?.length === 1
         ? parent.account_ids[0]
         : null;
+    const accountCommand = normalized.match(
+      /^(?:من فضلك )?(ارشف|ارشفة|ارشفه|استرجع|استرجاع) (?:هذا )?الحساب(?: (.+))?$/u,
+    );
+    const revealCommand = normalized.match(
+      /^(?:اعرض|اظهر|وريني) (?:بيانات الحساب(?: الكامله)?|كلمه المرور(?: للحساب)?|الباسورد(?: للحساب)?)(?: (.+))?$/u,
+    );
+    const accountOperation = accountCommand
+      ? accountCommand[1]!.startsWith("استرج")
+        ? "restore"
+        : "archive"
+      : revealCommand
+        ? "reveal"
+        : null;
+    const lookup = accountOperation
+      ? (accountCommand?.[2] ?? revealCommand?.[1] ?? "")
+      : p.question;
     const resolved = await this.resolve(
-      p.question,
-      p.focusAccountId ?? inherited,
+      lookup,
+      global ? null : (p.focusAccountId ?? inherited),
+      accountOperation !== null,
+      p.groupId,
     );
     let plan = localAssistantIntent(p.question, resolved.accounts.length === 1);
     if (resolved.searched && resolved.accounts.length !== 1)
@@ -218,6 +245,14 @@ export class AssistantService {
       plan = {
         ...plan,
         tool: "help",
+        action: "NONE",
+        actionStatus: null,
+        priority: null,
+      };
+    if (accountOperation)
+      plan = {
+        ...plan,
+        tool: resolved.accounts.length === 1 ? "account_details" : "accounts",
         action: "NONE",
         actionStatus: null,
         priority: null,
@@ -243,7 +278,7 @@ export class AssistantService {
         p.threadId,
         p.parentId,
         fingerprint,
-        JSON.stringify(safe),
+        JSON.stringify(accountOperation ? { ...safe, accountOperation } : safe),
         JSON.stringify(plan),
         resolved.accounts.map((a) => a.id),
         p.groupId,
@@ -265,11 +300,16 @@ export class AssistantService {
       aiRequestId: string | null = null;
     // Ambiguity/unsupported actions are answered locally, without a paid model call.
     if (
+      !accountOperation &&
       plan.tool !== "help" &&
       !(resolved.searched && resolved.accounts.length !== 1)
     ) {
       try {
-        const result = await this.ai.assistantPlan(safe, p.requestId);
+        const result = await this.ai.assistantPlan(
+          safe,
+          p.requestId,
+          p.modelChoice,
+        );
         aiRequestId = result.requestId;
         modelStatus = result.status;
         if (result.plan) plan = result.plan;
@@ -280,6 +320,7 @@ export class AssistantService {
             "AI_DISABLED",
             "AI_DAILY_LIMIT",
             "AI_CONFIGURATION_REQUIRED",
+            "AI_MODEL_UNAVAILABLE",
             "CONFLICT",
           ].includes(e.code)
             ? e.code
@@ -337,7 +378,7 @@ export class AssistantService {
   async turn(turnId: string) {
     const row = (
       await this.pool.query(
-        "SELECT *,anchor_date::text anchor FROM assistant_turns WHERE id=$1",
+        "SELECT t.*,t.anchor_date::text anchor,r.provider,r.model FROM assistant_turns t LEFT JOIN ai_requests r ON r.id=t.ai_request_id WHERE t.id=$1",
         [id.parse(turnId)],
       )
     ).rows[0];
@@ -349,6 +390,9 @@ export class AssistantService {
       id: row.id,
       threadId: row.thread_id,
       title: titles[plan.tool],
+      provider: row.provider ?? null,
+      model: row.model ?? null,
+      requestLabel: titles[assistantPlan.parse(row.safe_input.baseline).tool],
       state: row.state,
       modelStatus: row.model_status,
       origin: row.state === "READY" ? "AI_TOOL_PLAN" : "LOCAL_TOOLS",
@@ -361,6 +405,8 @@ export class AssistantService {
       summary: "",
       sections,
       action: null,
+      accountAction: null,
+      accountReference: null,
       contextAccountId:
         row.account_ids.length === 1 ? row.account_ids[0] : null,
     };
@@ -373,11 +419,18 @@ export class AssistantService {
         "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY",
       );
       const accountIds: string[] = row.account_ids;
+      const operation = row.safe_input.accountOperation;
+      if (operation === "reveal") result.requestLabel = "عرض بيانات الحساب";
+      if (operation === "archive") result.requestLabel = "أرشفة الحساب";
+      if (operation === "restore") result.requestLabel = "استرجاع الحساب";
       const selected = accountIds.length
         ? (
             await db.query(
-              `SELECT ${accountProjection} FROM accounts a WHERE a.id=ANY($1::uuid[]) AND a.archived_at IS NULL ORDER BY a.display_name,a.id`,
-              [accountIds],
+              `SELECT ${accountProjection} FROM accounts a WHERE a.id=ANY($1::uuid[]) AND ($2::boolean OR a.archived_at IS NULL) ORDER BY a.display_name,a.id`,
+              [
+                accountIds,
+                ["archive", "restore", "reveal"].includes(operation),
+              ],
             )
           ).rows
         : [];
@@ -387,6 +440,31 @@ export class AssistantService {
         return;
       }
       const focus = selected.length === 1 ? selected[0].id : null;
+      if (focus) {
+        const account = selected[0];
+        result.accountReference = {
+          id: focus,
+          name: account.display_name,
+          username: account.username_normalized,
+        };
+        if (
+          (operation === "archive" && account.archived_at === null) ||
+          (operation === "restore" && account.archived_at !== null)
+        )
+          result.accountAction = {
+            ...result.accountReference,
+            kind: operation,
+            version: account.version,
+          };
+        if (["archive", "restore", "reveal"].includes(operation)) {
+          result.summary = `${account.display_name} • ${account.username_normalized}`;
+          if (operation === "archive" && !result.accountAction)
+            result.summary += " • الحساب مؤرشف بالفعل";
+          if (operation === "restore" && !result.accountAction)
+            result.summary += " • الحساب نشط بالفعل";
+          return;
+        }
+      }
       const counts = await this.counts(db, focus, row.group_id);
       const params = [focus, row.group_id, range.start, range.end, plan.status];
       const taskDate =

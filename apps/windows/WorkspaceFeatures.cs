@@ -70,7 +70,7 @@ public sealed partial class MainPage
         var ns = Field("النظام", Filter("accounts", "namespace"));
         var archived = Choice("الأرشفة", [("all", "الكل"), ("active", "نشط"), ("archived", "مؤرشف")], Filter("accounts", "archived"));
         TrackDraft(search, ns, archived);
-        PageBody.Children.Add(Stack(FilterPanel("البحث والتصفية", Stack(search, ns, archived, Button("تطبيق التصفية", async () => { filters["accounts"] = new() { ["search"] = search.Text, ["namespace"] = ns.Text, ["archived"] = Selected(archived) }; offsets["accounts"] = 0; await Render(); }))), Button("تصدير الصفحة CSV", () => ExportPage("accounts"))));
+        PageBody.Children.Add(FilterPanel("البحث والتصفية", Stack(search, ns, archived, Button("تطبيق التصفية", async () => { filters["accounts"] = new() { ["search"] = search.Text, ["namespace"] = ns.Text, ["archived"] = Selected(archived) }; offsets["accounts"] = 0; await Render(); }))));
     }
     private async Task AssignmentFilters()
     {
@@ -78,12 +78,16 @@ public sealed partial class MainPage
         var search = Field("الاسم أو المستخدم", Filter(r, "search"));
         var period = Field("الفترة", Filter(r, "periodKey"));
         var status = Choice("الحالة", new[] { ("", "الكل") }.Concat(StatusCodes.Select(s => (s, StateLabel(s)))), Filter(r, "status"));
-        var sessions = Choice("الجلسة", Options((await api.Send("GET", "/v1/sessions")).AsArray(), "label"), Filter(r, "sessionId"));
-        var groups = Choice("المجموعة", Options((await api.Send("GET", "/v1/groups")).AsArray(), "title"), Filter(r, "groupId"));
-        var tasks = Choice("المهمة", Options((await api.Send("GET", "/v1/task-types")).AsArray(), "name"), Filter(r, "taskTypeId"));
+        var sessionsRead = api.Send("GET", "/v1/sessions");
+        var groupsRead = api.Send("GET", "/v1/groups");
+        var tasksRead = api.Send("GET", "/v1/task-types");
+        await Task.WhenAll(sessionsRead, groupsRead, tasksRead);
+        var sessions = Choice("الجلسة", Options((await sessionsRead).AsArray(), "label"), Filter(r, "sessionId"));
+        var groups = Choice("المجموعة", Options((await groupsRead).AsArray(), "title"), Filter(r, "groupId"));
+        var tasks = Choice("المهمة", Options((await tasksRead).AsArray(), "name"), Filter(r, "taskTypeId"));
         var priority = Choice("الحد الأدنى للأولوية", [("", "الكل"), ("50", "عالية: 50"), ("80", "حرجة: 80")], Filter(r, "minPriority"));
         TrackDraft(search, period, status, sessions, groups, tasks, priority);
-        PageBody.Children.Add(Stack(FilterPanel("البحث وتصفية المهام", Stack(search, period, status, sessions, groups, tasks, priority, Button("تطبيق التصفية", async () => { filters[r] = new() { ["search"] = search.Text, ["periodKey"] = period.Text, ["status"] = Selected(status), ["sessionId"] = Selected(sessions), ["groupId"] = Selected(groups), ["taskTypeId"] = Selected(tasks), ["minPriority"] = Selected(priority) }; offsets[r] = 0; await Render(); }))), Button("تصدير الصفحة CSV", () => ExportPage(r))));
+        PageBody.Children.Add(FilterPanel("البحث وتصفية المهام", Stack(search, period, status, sessions, groups, tasks, priority, Button("تطبيق التصفية", async () => { filters[r] = new() { ["search"] = search.Text, ["periodKey"] = period.Text, ["status"] = Selected(status), ["sessionId"] = Selected(sessions), ["groupId"] = Selected(groups), ["taskTypeId"] = Selected(tasks), ["minPriority"] = Selected(priority) }; offsets[r] = 0; await Render(); }))));
     }
     private async Task ExportPage(string resource)
     {

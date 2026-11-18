@@ -23,6 +23,7 @@ public sealed partial class MainPage : Page
         if (shuttingDown)
             return;
         shuttingDown = true;
+        pageRead?.Cancel();
         ClearAssistant();
         viewCache.Clear();
         timer.Stop();
@@ -38,6 +39,8 @@ public sealed partial class MainPage : Page
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(10) };
     private static string FriendlyError(string code) => code switch
     {
+        "ACCOUNT_MD_EXPORT_LIMIT" => "المجموعة أكبر من حد التصدير الحالي: 2000 حساب أو 4 ميغابايت.",
+        "ACCOUNT_MD_EXPORT_EMPTY" => "لا توجد حسابات مرتبطة برسائل مصدر لهذه المجموعة.",
         "CONFLICT" or "STALE_PREVIEW" => "تغيرت البيانات. حدّث القائمة وأنشئ معاينة جديدة.",
         "ASSISTANT_CREDENTIAL_INPUT_REJECTED" => "لا تلصق كلمات المرور في المحادثة. استخدم اسم الحساب أو اليوزر للسؤال عن العمل.",
         "ASSISTANT_ONE_ACCOUNT_AT_A_TIME" => "حدد حسابًا واحدًا في البحث، أو استخدم نطاق المجموعة لتجهيز تغيير عدة مهام.",
@@ -90,7 +93,7 @@ public sealed partial class MainPage : Page
     private static TextBlock Text(string s, int size = 14) => new() { Text = s, FontSize = size, TextWrapping = TextWrapping.Wrap };
     internal static TextBox Field(string label, string s = "") => new() { Header = label, Text = s, MaxLength = 200 };
     private static PasswordBox Secret(string label) => new() { Header = label, PasswordRevealMode = PasswordRevealMode.Hidden };
-    private PasswordBox ReauthField() => new() { Header = sshConnection is null ? "سر إعادة التحقق" : "ستُؤكد العملية تلقائيًا عبر الاتصال الخاص", IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
+    private PasswordBox ReauthField() => new() { Header = "سر إعادة التحقق", Visibility = sshConnection is null ? Visibility.Visible : Visibility.Collapsed, IsEnabled = sshConnection is null, PasswordRevealMode = PasswordRevealMode.Hidden };
     private static StackPanel Stack(params UIElement[] items)
     {
         var p = new StackPanel { Spacing = 12 };
@@ -341,14 +344,17 @@ public sealed partial class MainPage : Page
             return;
         var nextPage = e.IsSettingsSelected ? "settings" : e.SelectedItemContainer?.Tag?.ToString() ?? "dashboard";
         if (nextPage == page && renderedPage == page) return;
-        if (!busy) RememberCurrentView();
+        RememberCurrentView();
         page = nextPage;
+        pageRead?.Cancel();
+        if (RestoreView()) return;
+        ShowSelectedSection();
         if (busy)
         {
             renderPending = true;
             return;
         }
-        if (!RestoreView()) await Run(RenderCore);
+        await Run(RenderCore);
     }
     private async Task<bool> Dialog(string title, UIElement content, string primary = "حفظ", Func<string?>? validate = null)
     {
@@ -382,13 +388,15 @@ public sealed partial class MainPage : Page
             Settings();
             return;
         }
-        await ReadWorkspaceIdentity();
+        // Only an uninitialized connection blocks the page on identity. Polling refreshes policy later.
+        if (identityRevision != connectionState.Revision) await ReadWorkspaceIdentity();
         if (shuttingDown)
             return;
         Connection.Severity = InfoBarSeverity.Success;
         Connection.Title = "متصل بالخادم";
         Connection.Message = TransportSummary;
-        PageBody.Children.Add(target == "dashboard" ? Toolbar(Button("تحديث", Render), Button("اسأل المساعد", () => OpenSection("assistant"))) : Button("تحديث", Render));
+        if (target is not ("assistant" or "accounts" or "assignments"))
+            PageBody.Children.Add(target == "dashboard" ? Toolbar(Button("تحديث", Render), Button("اسأل المساعد", () => OpenSection("assistant"))) : Button("تحديث", Render));
         switch (target)
         {
             case "dashboard":
@@ -482,9 +490,9 @@ public sealed partial class MainPage : Page
     }
     private async Task Accounts()
     {
-        AccountFilters();
         var selectedIds = new HashSet<string>();
-        PageBody.Children.Add(Toolbar(Button("إضافة حساب", () => AccountForm(null)), Button("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }), Button("معاينة حذف الكل", () => Purge(null))));
+        PageBody.Children.Add(Toolbar(Button("إضافة حساب", () => AccountForm(null)), Button("تصدير حسابات مجموعة MD", () => ExportGroupCredentials()), Button("تحديث", Render), MoreActions(("تصدير الصفحة CSV", () => ExportPage("accounts")), ("معاينة حذف المحدد", async () => { if (selectedIds.Count == 0) throw new InvalidOperationException("حدد حسابًا واحدًا على الأقل."); await Purge(null, selectedIds.ToArray()); }), ("معاينة حذف الكل", () => Purge(null)))));
+        AccountFilters();
         var result = await PageData("accounts");
         var rows = result["items"]!.AsArray();
         foreach (var r in rows)
@@ -493,7 +501,14 @@ public sealed partial class MainPage : Page
             var select = new CheckBox { Content = "تحديد" };
             select.Checked += (_, _) => { selectedIds.Add(V(n, "id")); MarkDraft(); };
             select.Unchecked += (_, _) => { selectedIds.Remove(V(n, "id")); MarkDraft(); };
-            Card(V(n, "display_name"), $"{V(n, "namespace")} / {V(n, "username_normalized")} • {(V(n, "archived_at") == "" ? "نشط" : "مؤرشف")}", select, Button("التفاصيل والسجل", async () => { detailAccountId = V(n,"id"); detailSection = "tasks"; detailOffset = 0; page = "account-details"; await Render(); }), Button("تعديل", () => AccountForm(n)), Button("عرض الاعتماد", () => Reveal(n)), Button(V(n, "archived_at") == "" ? "أرشفة" : "استرجاع", async () => { await api.Send("POST", $"/v1/accounts/{V(n, "id")}/{(V(n, "archived_at") == "" ? "archive" : "restore")}", new { version = Ver(n) }); await Render(); }), Button("حذف", () => Purge(V(n, "id"))));
+            var id = V(n, "id");
+            var name = V(n, "display_name");
+            var username = V(n, "username_normalized");
+            var archived = V(n, "archived_at") != "";
+            Card(name, $"{V(n, "namespace")} / {username} • {(archived ? "مؤرشف" : "نشط")}",
+                Button("عرض بيانات الحساب", () => ShowAccountCredentials(id, name, username)),
+                Button("التفاصيل والسجل", async () => { detailAccountId = id; detailSection = "tasks"; detailOffset = 0; page = "account-details"; await Render(); }),
+                MoreActions(("تعديل", () => AccountForm(n)), (archived ? "استرجاع" : "أرشفة", () => ChangeAccountArchive(id, name, username, Ver(n), archived)), ("حذف", () => Purge(id))), select);
         }
         if (rows.Count == 0)
             PageBody.Children.Add(Text("لا توجد حسابات مطابقة."));
@@ -526,23 +541,6 @@ public sealed partial class MainPage : Page
         pass.Password = reauth.Password = "";
         await Render();
     }
-    private async Task Reveal(JsonNode n)
-    {
-        var reauth = ReauthField();
-        if (!await Dialog("عرض مؤقت لمدة 30 ثانية", reauth, "تحقق"))
-            return;
-        var result = await api.Send("POST", "/v1/accounts/" + V(n, "id") + "/reveal", new
-        {
-        }, await Reauth(reauth.Password));
-        reauth.Password = "";
-        var secret = new PasswordBox { Header = "الاعتماد", Password = V(result, "password"), PasswordRevealMode = PasswordRevealMode.Peek };
-        var expiry = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-        expiry.Tick += (_, _) => { secret.Password = ""; expiry.Stop(); };
-        expiry.Start();
-        await Dialog("بيانات الحساب", secret, "إغلاق");
-        secret.Password = "";
-        expiry.Stop();
-    }
     private async Task Purge(string? id, string[]? selected = null)
     {
         var targets = selected ?? (id is null ? null : new[] { id });
@@ -568,15 +566,18 @@ public sealed partial class MainPage : Page
     }
     private async Task Assignments()
     {
-        await AssignmentFilters();
-        var result = await PageData("assignments");
+        PageBody.Children.Add(Toolbar(Button("تحديث", Render), MoreActions(("تصدير الصفحة CSV", () => ExportPage("assignments")))));
+        var pageReadTask = PageData("assignments");
+        // Observe both requests, including when a newer section cancels the page.
+        await Task.WhenAll(pageReadTask, AssignmentFilters());
+        var result = await pageReadTask;
         foreach (var r in result["items"]!.AsArray())
         {
             var n = r!;
             var status = Choice("الحالة", StatusCodes.Select(c => (c, StateLabel(c))), V(n, "status"));
             TrackDraft(status);
             Card(V(n, "display_name"), $"{V(n, "task_name")} • {V(n, "period_key")} • {StateLabel(V(n, "status"))} • أولوية {V(n, "priority")}", status,
-            Button("حفظ الحالة", async () => { await api.Send("PATCH", "/v1/assignments/" + V(n, "id") + "/status", new { status = Selected(status), version = Ver(n) }); await Render(); }), Button("معاينة رد", () => Reply(n)), Button("مشكلة اعتماد", () => Flag(n)), Button("حذف التكليف", () => PurgeAssignment(n)));
+            Button("حفظ الحالة", async () => { await api.Send("PATCH", "/v1/assignments/" + V(n, "id") + "/status", new { status = Selected(status), version = Ver(n) }); await Render(); }), Button("معاينة رد", () => Reply(n)), MoreActions(("مشكلة اعتماد", () => Flag(n)), ("حذف التكليف", () => PurgeAssignment(n))));
         }
         Pager("assignments", result);
     }
@@ -743,7 +744,7 @@ public sealed partial class MainPage : Page
         {
             var n = r!;
             var enabled = n["enabled"]!.GetValue<bool>();
-            Card(V(n, "title"), $"المهمة الافتراضية: {taskNames.GetValueOrDefault(V(n, "task_type_id"), "غير متاحة")}\nمساحة الحسابات: {V(n, "namespace")} • الفترة: {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button("المهمة الافتراضية", () => GroupDefaultTask(n)), Button("القواعد", () => Rules(n)), Button(enabled ? "إيقاف" : "تفعيل", () => ToggleGroup(n, !enabled)));
+            Card(V(n, "title"), $"المهمة الافتراضية: {taskNames.GetValueOrDefault(V(n, "task_type_id"), "غير متاحة")}\nمساحة الحسابات: {V(n, "namespace")} • الفترة: {V(n, "period_key")} • {(enabled ? "مفعّلة" : "متوقفة")}", Button("القواعد", () => Rules(n)), Button("تصدير الحسابات MD", () => ExportGroupCredentials(V(n, "id"))), MoreActions(("المهمة الافتراضية", () => GroupDefaultTask(n)), (enabled ? "إيقاف الاستقبال" : "تفعيل الاستقبال", () => ToggleGroup(n, !enabled))));
         }
     }
     private async Task Replies()

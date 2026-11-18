@@ -63,6 +63,7 @@ public sealed partial class MainPage
         "TEMPLATE_CREATED" => "أُضيف قالب رد",
         "TEMPLATE_UPDATED" => "عُدل قالب رد",
         "REPORT_EXPORTED" => "صُدر تقرير",
+        "GROUP_CREDENTIALS_EXPORTED" => "جُهّز تصدير بيانات حسابات مجموعة",
         _ => "نشاط في مساحة العمل"
     };
     private async Task Notifications()

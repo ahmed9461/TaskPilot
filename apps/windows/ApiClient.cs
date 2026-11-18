@@ -13,6 +13,7 @@ public sealed class ApiClient : IDisposable
 {
     private readonly HttpClient http;
     private readonly TimeProvider clock;
+    private readonly AsyncLocal<CancellationToken> pageRead = new();
     private DateTimeOffset? expiresAt;
     public ApiClient(HttpMessageHandler? handler = null, TimeProvider? clock = null)
     {
@@ -44,6 +45,13 @@ public sealed class ApiClient : IDisposable
         expiresAt = null;
         Connected = false;
     }
+    internal async Task ReadPage(Func<Task> build, CancellationToken cancellation)
+    {
+        var previous = pageRead.Value;
+        pageRead.Value = cancellation;
+        try { await build(); }
+        finally { pageRead.Value = previous; }
+    }
     public async Task<JsonNode> Send(string method, string path, object? payload = null, string? reauth = null)
     {
         if (!Connected)
@@ -55,8 +63,9 @@ public sealed class ApiClient : IDisposable
             req.Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
         if (reauth is not null)
             req.Headers.Add("X-Reauth-Secret", reauth);
-        using var response = await http.SendAsync(req);
-        var json = JsonNode.Parse(await response.Content.ReadAsStringAsync()) ?? new JsonObject();
+        var cancellation = method == "GET" ? pageRead.Value : CancellationToken.None;
+        using var response = await http.SendAsync(req, cancellation);
+        var json = JsonNode.Parse(await response.Content.ReadAsStringAsync(cancellation)) ?? new JsonObject();
         if (!response.IsSuccessStatusCode)
             throw new ApiFailure(json["code"]?.ToString() ?? "SERVICE_UNAVAILABLE", (int)response.StatusCode);
         return json;

@@ -11,6 +11,7 @@ import {
 import release from "../../../package.json" with { type: "json" };
 import { accountDetails } from "./account-details.js";
 import { AssistantService } from "./assistant.js";
+import { exportGroupAccounts } from "./account-export.js";
 import { AiRuntime } from "./ai-runtime.js";
 import { PrivacyService } from "./privacy.js";
 import type { SendingState } from "./sending-policy.js";
@@ -171,6 +172,7 @@ export async function createApp(
     return { status: "ready" };
   });
   app.get("/v1/ai/config", () => ai.settings());
+  app.get("/v1/assistant/models", () => ai.assistantOptions());
   app.patch("/v1/ai/config", async (req) => {
     await reauth(req);
     return ai.configure(req.body);
@@ -735,17 +737,30 @@ export async function createApp(
     return transaction(pool, async (c) => {
       const row = (
         await c.query(
-          "SELECT ciphertext FROM account_credentials WHERE account_id=$1",
+          "SELECT a.display_name,a.username_normalized,c.ciphertext FROM accounts a LEFT JOIN account_credentials c ON c.account_id=a.id WHERE a.id=$1",
           [accountId],
         )
       ).rows[0];
       if (!row) throw new Fault("NOT_FOUND", 404);
       await event(c, "CREDENTIAL_REVEALED", accountId);
       return {
-        password: service.vault.open(row.ciphertext, `credential:${accountId}`),
+        displayName: row.display_name,
+        username: row.username_normalized,
+        password:
+          row.ciphertext === null
+            ? null
+            : service.vault.open(row.ciphertext, `credential:${accountId}`),
         expiresInSeconds: 30,
       };
     });
+  });
+  app.post("/v1/groups/:id/accounts-markdown", async (req) => {
+    await reauth(req);
+    return exportGroupAccounts(
+      pool,
+      service.vault,
+      uuidParam.parse(req.params).id,
+    );
   });
   for (const action of ["archive", "restore"] as const)
     app.post(`/v1/accounts/:id/${action}`, async (req) => {

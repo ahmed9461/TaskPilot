@@ -11,7 +11,8 @@ public sealed partial class MainPage
     {
         var result = await api.Send("GET", $"/v1/accounts/{detailAccountId}/details?section={detailSection}&limit=50&offset={detailOffset}");
         var account = result["account"]!;
-        Card(V(account,"display_name"), V(account,"namespace") + " / " + V(account,"username_normalized") + " • " + (V(account,"archived_at")=="" ? "نشط" : "مؤرشف"));
+        Card(V(account,"display_name"), V(account,"namespace") + " / " + V(account,"username_normalized") + " • " + (V(account,"archived_at")=="" ? "نشط" : "مؤرشف"),
+            Button("عرض بيانات الحساب", () => ShowAccountCredentials(V(account, "id"), V(account, "display_name"), V(account, "username_normalized"))));
         PageBody.Children.Add(Button("العودة للحسابات", async () => { page="accounts"; await Render(); }));
         var section = Choice("عرض التفاصيل", [("tasks","المهام"),("sources","مصادر الرسائل"),("flags","بلاغات الاعتماد المسجلة"),("history","نشاط السجلات الحالية")],detailSection);
         TrackDraft(section);

@@ -6,6 +6,7 @@ public sealed partial class MainPage
 {
     private readonly WorkspaceViewCache<StackPanel> viewCache = new();
     private StackPanel? buildingContent, visibleContent;
+    private CancellationTokenSource? pageRead;
     private string? renderedPage;
     private DateTimeOffset currentViewBuiltAt;
     private long identityRevision = -1;
@@ -14,6 +15,18 @@ public sealed partial class MainPage
     private void MarkDraft() { hasDraft = true; draftRevision++; }
     private static string PageTitle(string value) => value switch { "dashboard" => "لوحة التحكم", "accounts" => "الحسابات", "account-details" => "تفاصيل الحساب", "assignments" => "المهام", "inbox" => "صندوق المراجعة", "replies" => "الردود والقوالب", "groups" => "المجموعات", "sessions" => "الجلسات", "notifications" => "الإشعارات", "audit" => "سجل النشاط", "assistant" => "المساعد الشخصي", "ai" => "إعدادات الذكاء الاصطناعي", "operations" => "المراقبة", "privacy" => "الخصوصية والاحتفاظ", _ => "الإعدادات" };
     private StackPanel PageBody => buildingContent ?? visibleContent ?? Body;
+    private void ShowSelectedSection()
+    {
+        if (renderedPage == page) return;
+        Heading.Text = PageTitle(page);
+        Body.Children.Clear();
+        visibleContent = null;
+        renderedPage = null;
+        pendingChanges = false;
+        hasDraft = false;
+        Body.Children.Add(Text("جارٍ فتح " + PageTitle(page) + "…"));
+        ContentScroll.ChangeView(null, 0, null, true);
+    }
     private void RememberCurrentView()
     {
         if (visibleContent is null || renderedPage is null || !api.Connected || connectionState.Phase != ConnectionPhase.Connected) return;
@@ -55,14 +68,17 @@ public sealed partial class MainPage
     {
         if (shuttingDown) return;
         var target = page;
+        ShowSelectedSection();
         var revision = connectionState.Revision;
         var draftAtStart = draftRevision;
         var content = new StackPanel { Spacing = 14 };
+        using var read = new CancellationTokenSource();
+        pageRead = read;
         buildingContent = content;
         try
         {
-            await BuildPage(target);
-            if (shuttingDown || revision != connectionState.Revision || target != page)
+            await api.ReadPage(() => BuildPage(target), read.Token);
+            if (read.IsCancellationRequested || shuttingDown || revision != connectionState.Revision || target != page)
             {
                 if (!shuttingDown && target != page) renderPending = true;
                 return;
@@ -85,15 +101,16 @@ public sealed partial class MainPage
             pendingChanges = false; hasDraft = false;
             ContentScroll.ChangeView(null, 0, null, true);
         }
+        catch (OperationCanceledException) when (read.IsCancellationRequested) { }
         catch
         {
-            if (renderedPage is not null && page == target && target != renderedPage)
+            if (renderedPage is null && page == target && !shuttingDown)
             {
-                page = renderedPage;
-                Nav.SelectedItem = page == "settings" ? Nav.SettingsItem : Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(item => item.Tag?.ToString() == page);
+                Body.Children.Clear();
+                Body.Children.Add(Button("إعادة تحميل القسم", Render));
             }
             throw;
         }
-        finally { buildingContent = null; }
+        finally { buildingContent = null; pageRead = null; }
     }
 }
