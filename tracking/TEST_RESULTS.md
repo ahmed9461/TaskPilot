@@ -1,5 +1,12 @@
 # نتائج الاختبار الفعلية
 
+## D-095 — 0.10.0 candidate 7350b6e — 2026-11-19
+
+- Node build and 54 checks passed. All 152 PostgreSQL integration checks passed in an isolated test database with migrations 001–021. The new cases covered snapshot drift, approval replay, exact quote selection, pending cancellation, disabled live sending, split inbox scoping and event time, existing email-identifier compatibility, recurring task identity, workflow briefing and reminders.
+- With a fake socket, the album quoted its source, associated both photos with the album ID and put the template on the first image. An interruption on a later image produced UNKNOWN_DELIVERY and no automatic retry. Encrypted queued attachment bytes were removed on a terminal state.
+- 52 offline Windows checks/groups passed. Release x64 publication produced 530 files. The isolated native Windows session displayed the two-account preview from a typed command, rejected approval before the count, displayed two PNGs for individual reply preview, and saved follow-up for one synthetic account. The native fixture queued zero replies.
+- The WhatsApp client rendering of a delivered album remains to be checked in an authorized test group. [Verification record](evidence/owner-workflows-0100-20261119.json)
+
 ## D-094 — Windows 0.9.2 — 2026-11-18
 
 Release build succeeded with zero warnings or errors. All 52 offline Windows checks/groups passed. In a fresh synthetic assistant picker, pasting `FIXTURE/REASONER` in automatic mode and clicking Use displayed `OpenRouter • fixture/reasoner` in the conversation header. In AI Settings the unavailable ID showed a no-match message, partial `FLA` showed the single matching suggestion, and the full uppercase ID resolved to `deepseek-flash`. The installed personal client connected over Tailscale and resolved `openai/gpt-4o` against the real key catalog. The personal dialog stayed open without applying the selection or running inference. [Release evidence](evidence/windows-model-id-092.json)

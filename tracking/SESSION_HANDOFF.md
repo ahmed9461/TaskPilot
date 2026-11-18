@@ -1,5 +1,9 @@
 # TaskPilot handoff — 2026-11-18
 
+## D-095 — Candidate source 7350b6e
+
+Source and docs describe Windows and API 0.10.0. Apply migrations 017–021 and runtime grants only when the owner authorizes deployment. Existing New-VPS personal release remains a29fdcb (API 0.9.1 / schema 16); the Desktop shortcut retains Windows 0.9.2. Native candidate opened on a mock-only loopback server and previewed two quoted targets from a typed Arabic command, rejected approval without the count, showed thumbnails for two generated PNGs and enabled a synthetic account follow-up. Native checks stopped before confirming any reply; the fixture API returned zero reply jobs. The temporary client, port-forward and test unit were stopped. Native WhatsApp rendering remains open for an authorized test.
+
 ## D-094 — Windows 0.9.2 delivered
 
 The desktop shortcut opens Windows `eb5c57c`. The personal assistant picker was left open with the live OpenRouter match `openai/gpt-4o` for the owner to apply or replace. No personal default was saved and no inference was requested. The tool was applied to a conversation in the isolated fixture. The previous 0.9.1 client and its shortcut backup in `outputs/TaskPilot-before-0.9.2.lnk` are available. The production API is 0.9.1, schema 16. The temporary fixture process, unit and SSH forward were stopped.
