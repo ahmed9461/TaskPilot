@@ -28,24 +28,22 @@ public sealed partial class MainPage
         Card("مفتاح OpenRouter", keyConfigured ? "المفتاح مضبوط على الخادم." : "لم يُضف مفتاح بعد.",
             Button(keyConfigured ? "تغيير مفتاح OpenRouter" : "إضافة مفتاح OpenRouter", () => EditOpenRouterKey(Ver(c))));
         var provider = new ComboBox { Header = "المزود", ItemsSource = new[] { "deepseek", "openrouter" }, SelectedItem = V(c,"provider") };
-        var model = new ComboBox { Header = "النموذج", ItemsSource = new[] { V(c,"model") }, SelectedIndex = 0 };
+        var model = new ModelIdPicker(_ => (string)provider.SelectedItem, ReadModelCatalog, V(c, "model"));
+        provider.SelectionChanged += (_, _) => model.ChangeProvider(load: true);
         var enabled = new CheckBox { Content = "تفعيل AI للمساعد واقتراحات الوارد", IsChecked = c["enabled"]?.GetValue<bool>() };
         var outbound = new CheckBox { Content = "السماح بالتحليل المنقّح ومفردات المساعد المحددة", IsChecked = c["outboundApproved"]?.GetValue<bool>() };
         var automatic = new CheckBox { Content = "تحليل الرسائل الملتبسة تلقائيًا للمراجعة", IsChecked = c["automaticFallback"]?.GetValue<bool>() };
         var requests = new NumberBox { Header = "الحد اليومي للطلبات (UTC)", Minimum = 1, Maximum = 100, Value = c["dailyRequestLimit"]!.GetValue<int>() };
         var tokens = new NumberBox { Header = "حد التوكنات والحجوزات يوميًا", Minimum = 1000, Maximum = 100000, Value = c["dailyTokenLimit"]!.GetValue<int>() };
-        PageBody.Children.Add(Stack(Text("استخراج محلي مع اقتراحات AI للمراجعة",24),Text("الصيغ الواضحة تُستخرج محليًا. للحالات الملتبسة ترسل رموز المهام وأنواع الحقول وترتيبها فقط؛ لا ترسل النص أو الاسم أو المستخدم أو كلمة المرور. يقترح AI مواضع الحقول وتبقى قيمها على الخادم للمراجعة قبل الحفظ. لا يرسل ردًا."),Text(c["keyConfigured"]?.GetValue<bool>() == true ? "مفتاح المزود مضبوط على الخادم." : "مفتاح المزود غير مضبوط على الخادم."),provider,model,
-            Button("جلب النماذج من المزود", async () => {
-                var catalog = await api.Send("GET", "/v1/ai/models?provider=" + provider.SelectedItem);
-                var items = catalog["models"]!.AsArray().Select(n=>n!.ToString()).ToArray();
-                model.ItemsSource=items;
-                model.SelectedItem=items.Contains(V(c,"model")) ? V(c,"model") : items.FirstOrDefault();
-            }),enabled,outbound,automatic,requests,tokens,
+        PageBody.Children.Add(Stack(Text("استخراج محلي مع اقتراحات AI للمراجعة",24),Text("الصيغ الواضحة تُستخرج محليًا. للحالات الملتبسة ترسل رموز المهام وأنواع الحقول وترتيبها فقط؛ لا ترسل النص أو الاسم أو المستخدم أو كلمة المرور. يقترح AI مواضع الحقول وتبقى قيمها على الخادم للمراجعة قبل الحفظ. لا يرسل ردًا."),Text(c["keyConfigured"]?.GetValue<bool>() == true ? "مفتاح المزود مضبوط على الخادم." : "مفتاح المزود غير مضبوط على الخادم."),provider,model.View,
+            enabled,outbound,automatic,requests,tokens,
             Button("حفظ إعدادات الذكاء الاصطناعي", async () => {
-                if (model.SelectedItem is null || !double.IsFinite(requests.Value) || !double.IsFinite(tokens.Value)) throw new InvalidOperationException("VALIDATION_ERROR");
+                var chosen = model.Model;
+                if (chosen is null) { await AssistantNotice("اختيار النموذج", "أدخل معرّفًا متاحًا كاملًا أو اختر نموذجًا من النتائج."); return; }
+                if (!double.IsFinite(requests.Value) || !double.IsFinite(tokens.Value)) throw new InvalidOperationException("VALIDATION_ERROR");
                 var reauth=ReauthField();
                 if (!await Dialog("حفظ المزود والحدود",Stack(Text("التحليل التلقائي اختياري للحالات الملتبسة فقط، مع حدود يومية وطلب واحد لكل إصدار. النتيجة تحتاج مراجعتك ولا تحفظ حسابًا أو ترسل ردًا تلقائيًا."),reauth))) return;
-                await api.Send("PATCH","/v1/ai/config",new { version=Ver(c),provider=provider.SelectedItem?.ToString(),model=model.SelectedItem.ToString(),enabled=enabled.IsChecked==true,outboundApproved=outbound.IsChecked==true,automaticFallback=automatic.IsChecked==true,dailyRequestLimit=(int)requests.Value,dailyTokenLimit=(int)tokens.Value },await Reauth(reauth.Password));
+                await api.Send("PATCH","/v1/ai/config",new { version=Ver(c),provider=provider.SelectedItem?.ToString(),model=chosen,enabled=enabled.IsChecked==true,outboundApproved=outbound.IsChecked==true,automaticFallback=automatic.IsChecked==true,dailyRequestLimit=(int)requests.Value,dailyTokenLimit=(int)tokens.Value },await Reauth(reauth.Password));
                 reauth.Password=""; await Render();
             })));
         var today=usage["today"]!;
