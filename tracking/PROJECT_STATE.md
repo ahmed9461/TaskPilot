@@ -1,4 +1,10 @@
-# الحالة الحالية — 2026-11-17 (Asia/Riyadh)
+# الحالة الحالية — 2026-11-18 (Asia/Riyadh)
+
+## D-092 — 0.9.0 candidate verified in isolation
+
+- API feature source `7466881`, schema 15. Windows candidate `cd557b4`. The installed Windows 0.8.0 and deployed API 0.8.9 remain at the D-091 baseline. The D-092 stage is built and tested, pending separately authorized production cutover under AGENTS.md.
+- Windows has immediate section selection, a wider personal-assistant chat with compact history, bottom composer and no routine connection strip, a clearer account data view, and one-group Markdown export. Model choice, account reference and archive/restore proposal use existing authorization and AI limits.
+- API feature exact hosted run 44327965985 passed Windows and Backend, with 54 unit and 139 isolated PostgreSQL tests. Final WinUI package verified at 1233×696; earlier candidate exercised timed reveal, export file and fake OpenRouter selection. See TEST_RESULTS for verification boundaries.
 
 ## User handbook delivered — 2026-11-17 (documentation only)
 Added docs/18_USER_HANDBOOK_AR.md: standalone Arabic handbook for Windows0.8.0/API0.8.9,21numbered sections, clickable contents and return links. Covers setup/Tailscale/WhatsApp/groups/rules/message formats/review/accounts/tasks/replies/sending/secretary/AI/notifications/export/privacy/recovery/troubleshooting/daily use, with synthetic examples and explicit current limits. Matched current UI labels and code paths; no app/server behavior changed. Desktop copy TaskPilot-دليل-الاستخدام.md is hash-identical. Structure check:22unique anchors/42internal links/0missing targets/14balanced fence markers/703lines/57134bytes. Runtime tests not rerun for prose-only changes; no provider request, WhatsApp action, live-data mutation, deployment or profile change. Current code/artifact acceptance remains D091 below.

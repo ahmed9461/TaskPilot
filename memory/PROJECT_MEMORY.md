@@ -1,5 +1,11 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
+## D-092 — tested 0.9.0 candidate — 2026-11-18
+
+`7466881` API feature source/schema 15 and `cd557b4` final Windows. Native chat check at 1233×696, scoped Markdown and timed reveal checked on isolated fixtures, fake model options tested. Preserve separation between assistant account references and the password display: reference renders a button for the same audited reauthenticated account view, never a credential in chat or external provider input. Keep the account archive/restore preview and explicit confirmation. Group export is explicit local plaintext.
+
+Current deployed baseline is D-091, with a revocable Tailscale device and existing sending policy. D-092 is prepared for later authorized release. Installed profile, real AI config and WhatsApp not altered. Detailed evidence and candidate access are in TEST_RESULTS and SESSION_HANDOFF.
+
 ## User handbook delivered — 2026-11-17 (documentation only)
 Added docs/18_USER_HANDBOOK_AR.md: standalone Arabic handbook for Windows0.8.0/API0.8.9,21numbered sections, clickable contents and return links. Covers setup/Tailscale/WhatsApp/groups/rules/message formats/review/accounts/tasks/replies/sending/secretary/AI/notifications/export/privacy/recovery/troubleshooting/daily use, with synthetic examples and explicit current limits. Matched current UI labels and code paths; no app/server behavior changed. Desktop copy TaskPilot-دليل-الاستخدام.md is hash-identical. Structure check:22unique anchors/42internal links/0missing targets/14balanced fence markers/703lines/57134bytes. Runtime tests not rerun for prose-only changes; no provider request, WhatsApp action, live-data mutation, deployment or profile change. Current code/artifact acceptance remains D091 below.
 

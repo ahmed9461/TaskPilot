@@ -1,4 +1,10 @@
-# خطة التنفيذ والتتبع — 2026-11-17
+# خطة التنفيذ والتتبع — 2026-11-18
+
+## D-092 — Account data and assistant chat
+
+- [x] Protected account details and group Markdown export in isolated PostgreSQL and native Windows. Clean chat, immediate section selection, model options and history tested on Windows.
+- [x] Synthetic privacy and action tests, protected reveal, archive/restore stale-version handling, selected model and group scoping.
+- [ ] D092_RELEASE: guarded TaskPilot-only rollout and Desktop replacement with separate authorization, then read-only live capability checks and rollback evidence.
 
 ## D-089/D-090 delivered — 2026-11-16
 - [x] API088/1075953 deployed; persistent root-issued revocable device auth and user-notification catalog, same14migrations.

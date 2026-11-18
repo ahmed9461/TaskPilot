@@ -1,5 +1,7 @@
 # سجل المخاطر
 
+D-092 local export risk: files explicitly saved as Markdown contain plaintext credentials. Use the protected, single-use-reauth route and chosen path. Logs/history retain a technical receipt and no file content. Existing protected view keeps its 30-second lifetime. These controls do not remove a plaintext file after the user saves it.
+
 | Risk ID | الوصف | الأثر | الاحتمال | الأولوية | المعالجة | الحالة |
 |---|---|---|---|---|---|---|
 | R-01 | موصل واتساب غير رسمي قد ينقطع أو يقيد الرقم | عالٍ | متوسط/مرتفع | حرجة | عزل provider واختبار رقم مخصص وخيار بديل | مفتوح |

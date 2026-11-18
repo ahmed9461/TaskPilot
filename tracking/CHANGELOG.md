@@ -1,5 +1,12 @@
 # سجل التغيير
 
+## [0.9.0 verified candidate] — 2026-11-18
+
+- Open separate assistant chat and history areas, place the composer at the bottom, and group scope/suggestions under a compact options menu. Hide routine connection status in the assistant and preserve problems as alerts.
+- Switch section identity and contents immediately, discard obsolete page reads, reuse recently built pages and retain independent writes.
+- Show all three account fields together in a protected timed view. Choose a local destination for a group Markdown export containing recorded credentials.
+- Support selecting a model from configured DeepSeek/OpenRouter catalogs, opening protected account details from verified local references and confirming archive or restore proposals.
+
 ## [API0.8.8 / Windows0.7.0 delivered] — 2026-11-16
 - Persistent revocable Tailscale device connection with DPAPI-protected restart resume; retain per-action short reauth and per-reply approval. No own Funnel; shared handlers untouched.
 - Six responsive dashboard cards and consistent shared controls/toolbars; contextual user notifications separated from complete technical audit/change stream.
