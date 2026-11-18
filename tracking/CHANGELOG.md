@@ -1,7 +1,8 @@
 # سجل التغيير
 
-## [0.10.0 candidate]
+## [0.10.0 deployed] — 2026-11-19
 
+- Deployed API and Windows 0.10.0, with exact-group live verification of a two-target batch and a two-image album.
 - Added approved and deduplicated one-reply-per-account batches, pending batch cancellation, and optional images in individual quoted replies.
 - Added supervised split-message intake and active account follow-up across distinct activities.
 - Added assistant work actions for review categories, group task creation, rule simulation, task reminders and Riyadh end-of-day briefings.

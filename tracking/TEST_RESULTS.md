@@ -1,11 +1,19 @@
 # نتائج الاختبار الفعلية
 
+## D-095 — Production release and exact-group live test — 2026-11-19
+
+- Cutover to `7350b6e` on schema 21 passed service readiness. All baseline rows and encrypted credentials remained present. Paired WhatsApp identity, Tailscale Serve, sending policy and systemd unit matched. All 42 other observed running services matched at the checks.
+- The built Windows 0.10.0 shortcut launched successfully. All 530 installed files matched the verified package. The protected connection profile retained its hash and the dashboard showed Tailscale connection.
+- Exactly two synthetic intake messages entered from WhatsApp in «مجموعة الاختبار». The Windows assistant preview displayed the two targets. One confirmed batch produced two SENT rows with provider IDs. The recipient WhatsApp window displayed both replies against their respective source messages.
+- One individual album response quoted the first fixture. The recipient displayed two PNGs within one album with the template caption below them. The job was SENT with two images and a provider ID. Encrypted queued media was cleared. All three test reply rows reference the authorized group and fixture accounts.
+- Pre/post encrypted restore drills and offhost SHA-256 checks passed. The schema-21 rollback bridge preserved ordinary assignment deduplication in the isolated migrated restore. [دليل النشر والاختبار](evidence/workflows-0100-deployment-20261119.json)
+
 ## D-095 — 0.10.0 candidate 7350b6e — 2026-11-19
 
 - Node build and 54 checks passed. All 152 PostgreSQL integration checks passed in an isolated test database with migrations 001–021. The new cases covered snapshot drift, approval replay, exact quote selection, pending cancellation, disabled live sending, split inbox scoping and event time, existing email-identifier compatibility, recurring task identity, workflow briefing and reminders.
 - With a fake socket, the album quoted its source, associated both photos with the album ID and put the template on the first image. An interruption on a later image produced UNKNOWN_DELIVERY and no automatic retry. Encrypted queued attachment bytes were removed on a terminal state.
 - 52 offline Windows checks/groups passed. Release x64 publication produced 530 files. The isolated native Windows session displayed the two-account preview from a typed command, rejected approval before the count, displayed two PNGs for individual reply preview, and saved follow-up for one synthetic account. The native fixture queued zero replies.
-- The WhatsApp client rendering of a delivered album remains to be checked in an authorized test group. [Verification record](evidence/owner-workflows-0100-20261119.json)
+- The release test above records the subsequent live rendering check. [Verification record](evidence/owner-workflows-0100-20261119.json)
 
 ## D-094 — Windows 0.9.2 — 2026-11-18
 

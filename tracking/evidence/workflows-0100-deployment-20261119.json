@@ -1,0 +1,56 @@
+{
+  "release": "0.10.0",
+  "date": "2026-11-19",
+  "code": "7350b6e824c055c7f4953ddcba4e240e5aacce9f",
+  "schema": 21,
+  "server": {
+    "previousRelease": "a29fdcb",
+    "ready": true,
+    "pairedIdentityPreserved": true,
+    "existingCredentialCiphertextPreserved": true,
+    "missingBaselineRows": 0,
+    "comparedOtherServices": 42,
+    "changedOtherServicesAtChecks": 0,
+    "rollbackOnSchema21": "a29fdcb-schema21-rollback-20261119",
+    "rollbackOnMigratedRestoreIngestAndDedupePassed": true
+  },
+  "windows": {
+    "installedFilesMatched": 530,
+    "desktopShortcutLaunched": true,
+    "connectedViaTailscale": true,
+    "protectedProfilePreserved": true,
+    "handbookUpdated": true,
+    "packageSha256": "6f86118645938b04757ac0b789f7250fc8346e4f8667d957c5f3573a23958cf4"
+  },
+  "liveTest": {
+    "scope": "owner-approved dedicated test group",
+    "syntheticInboundMessages": 2,
+    "batches": 1,
+    "batchRepliesWithProviderIds": 2,
+    "batchRepliesObservedWithQuotesOnRecipient": 2,
+    "albumJobsWithProviderId": 1,
+    "imagesInObservedGroupedAlbum": 2,
+    "albumQuoteAndCaptionObserved": true,
+    "testRepliesOutsideAuthorizedGroup": 0,
+    "testRepliesOutsideSyntheticTargets": 0,
+    "retainedQueueImagePayloads": 0
+  },
+  "backups": [
+    {
+      "name": "pre-0.10.0-20261119.tpg",
+      "schema": 16,
+      "bytes": 340999,
+      "sha256": "ec3e6070eb5ed2721ab24f8bc0287ecfce91770a28b0e7de5302c97a6a70f9c0",
+      "isolatedRestorePassed": true,
+      "offhostHashMatched": true
+    },
+    {
+      "name": "post-0.10.0-20261119.tpg",
+      "schema": 21,
+      "bytes": 355444,
+      "sha256": "308254325f497c952a5b8682b4f07c0fc444ea3baec8c480c978a5cc547c4c5d",
+      "isolatedRestorePassed": true,
+      "offhostHashMatched": true
+    }
+  ]
+}

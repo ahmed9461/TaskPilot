@@ -1,8 +1,14 @@
-# TaskPilot handoff — 2026-11-18
+# TaskPilot handoff — 2026-11-19
 
-## D-095 — Candidate source 7350b6e
+## D-095 — 0.10.0 deployed and received on WhatsApp
 
-Source and docs describe Windows and API 0.10.0. Apply migrations 017–021 and runtime grants only when the owner authorizes deployment. Existing New-VPS personal release remains a29fdcb (API 0.9.1 / schema 16); the Desktop shortcut retains Windows 0.9.2. Native candidate opened on a mock-only loopback server and previewed two quoted targets from a typed Arabic command, rejected approval without the count, showed thumbnails for two generated PNGs and enabled a synthetic account follow-up. Native checks stopped before confirming any reply; the fixture API returned zero reply jobs. The temporary client, port-forward and test unit were stopped. Native WhatsApp rendering remains open for an authorized test.
+New-VPS and the Desktop shortcut now run `7350b6e` (API/Windows 0.10.0, schema 21). Keep the prior shortcut `outputs/TaskPilot-before-0.10.0.lnk`. Server rollback for schema 21 uses `/opt/taskpilot/releases/a29fdcb-schema21-rollback-20261119`, the previous API plus the four-column assignment conflict target. That bridge ingested and deduplicated synthetic work on a migrated restore before cutover. The unmodified a29fdcb release applies to schema 16. Private deployment markers and commands are under `/var/lib/taskpilot/deployments/0.10.0-20261119`. Encrypted pre/post backups were restored separately and copied to the existing offhost directory.
+
+The test left two labeled synthetic accounts and two templates scoped to «مجموعة الاختبار». The installed Windows assistant generated and approved the two-account batch. The album used the same protected API workflow for two generated PNGs and one quote. WhatsApp on the laptop displayed both replies and one grouped album with its caption. The test audit confirms exactly three outgoing jobs, zero outside the test group, and zero retained attachment uploads. [دليل النشر والاختبار](evidence/workflows-0100-deployment-20261119.json)
+
+## D-095 — Isolated candidate validation before deployment
+
+Source and docs describe Windows and API 0.10.0. At this stage, New-VPS ran a29fdcb (API 0.9.1 / schema 16) and the Desktop shortcut opened Windows 0.9.2. Native candidate opened on a mock-only loopback server and previewed two quoted targets from a typed Arabic command, rejected approval without the count, showed thumbnails for two generated PNGs and enabled a synthetic account follow-up. Native checks stopped before confirming any reply; the fixture API returned zero reply jobs. The temporary client, port-forward and test unit were stopped. Live rendering was subsequently verified in the release check above.
 
 ## D-094 — Windows 0.9.2 delivered
 

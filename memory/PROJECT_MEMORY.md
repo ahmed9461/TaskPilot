@@ -1,5 +1,9 @@
 # ذاكرة المشروع طويلة الأمد — TaskPilot
 
+## D-095 live acceptance — New-VPS and Windows 0.10.0
+
+Release `7350b6e` is installed on New-VPS and the Desktop shortcut with PostgreSQL schema 21. Live acceptance is tied to «مجموعة الاختبار» and two labeled synthetic accounts. The Windows assistant approved one batch. The receiving WhatsApp window showed both quoted text responses and one two-image quoted album with the text template as its caption. Backups before and after were restored and copied offhost. For rollback after migration 020, use the tested prior API bridge with the four-column assignment constraint, preserving the upgraded database. Detailed checks are in the deployment record under tracking/evidence.
+
 ## D-095 — Assistant workflows and account follow-up
 
 A reply batch freezes one quote per eligible account in one group, with separate authorization, delivery counts and waiting-job cancellation. Images remain optional in individual replies; the first image carries the text template and multiple images are associated with an album that quotes the source. Split messages are joined only for review within the same sender, group and session. Keep the login message as the quote source. The persistent account/group follow-up is independent of assignment status; named activities deduplicate by account, type, period and title. Task notes are encrypted. Reapply through the normal release path using migrations 017–021 and the current runtime grants. See live status in PROJECT_STATE.
